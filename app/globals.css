@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* LEVER-Inspired Color System */
+    --brand-navy: #1A1F3F;
+    --accent-blue: #556AF9;
+    --secondary-blue: #8896FF;
+    
+    /* Spacing System (8-point grid) */
+    --space-unit: 0.5rem;
+  }
+  
+  body {
+    @apply bg-white text-gray-900 font-sans antialiased;
+  }
+
+  /* Remove tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth scroll behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Container */
+  .container {
+    @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+  }
+
+  /* Button Base Styles */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-brand-navy text-white hover:bg-opacity-90 focus:ring-brand-navy;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-brand-navy border-2 border-brand-navy hover:bg-gray-50 focus:ring-brand-navy;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-gray-600 hover:text-brand-navy hover:bg-gray-100;
+  }
+
+  /* Button Sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-md {
+    @apply px-5 py-2.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-8 py-4 text-base;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  /* Form Styles */
+  .form-label {
+    @apply block text-sm font-bold text-gray-700 mb-2;
+  }
+
+  .form-input {
+    @apply w-full px-4 py-3 text-base bg-white border border-gray-300 rounded-lg transition-all duration-200 focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 focus:outline-none placeholder:text-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed;
+  }
+
+  .form-error {
+    @apply text-xs text-red-500 mt-1;
+  }
+
+  .form-helper {
+    @apply text-xs text-gray-500 mt-1;
+  }
+
+  /* Navigation Active State */
+  .nav-item {
+    @apply px-4 py-2 text-sm font-bold text-gray-700 hover:text-brand-navy transition-colors duration-200;
+  }
+
+  .nav-item-active {
+    @apply text-brand-navy;
+  }
+
+  /* Section Spacing */
+  .section {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  /* Dropdown Shadow */
+  .dropdown-shadow {
+    @apply shadow-lg ring-1 ring-black ring-opacity-5;
+  }
+}
+
+@layer utilities {
+  /* Text Balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Fade Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  /* Custom Scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded-full hover:bg-gray-500;
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "/api/smartplace/info/[placeId]/route": "app/api/smartplace/info/[placeId]/route.js",
+  "/diagnosis/smartplace/page": "app/diagnosis/smartplace/page.js"
+}

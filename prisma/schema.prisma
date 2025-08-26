@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  password        String
+  name            String
+  phone           String?
+  role            String    @default("user") // admin, agency, branch, academy, user
+  plan            String    @default("basic") // basic, platinum, premium
+  academyName     String?   @map("academy_name")
+  academyAddress  String?   @map("academy_address")
+  agencyId        Int?      @map("agency_id")
+  branchId        Int?      @map("branch_id")
+  coin            Float     @default(100.00)
+  usedCoin        Float     @default(0.00) @map("used_coin")
+  purchasedCoin   Float     @default(0.00) @map("purchased_coin")
+  joinDate        DateTime  @default(now()) @map("join_date")
+  planExpiry      DateTime? @map("plan_expiry")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  sessions         Session[]
+  blogProjects     BlogProject[]
+  keywords         Keyword[]
+  smartplaceInfo   SmartplaceInfo[]
+  aiGenerationLogs AIGenerationLog[]
+  apiUsageLogs     APIUsageLog[]
+  blogContent      BlogContent[]
+  rankingResults   RankingResult[]
+
+  @@map("users")
+}
+
+// Session model for authentication
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Blog Project model
+model BlogProject {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  name          String
+  targetBlogUrl String?  @map("target_blog_url")
+  description   String?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords       Keyword[]
+  rankingResults RankingResult[]
+
+  @@map("blog_projects")
+}
+
+// Keyword model
+model Keyword {
+  id            Int      @id @default(autoincrement())
+  projectId     Int?     @map("project_id")
+  userId        Int      @map("user_id")
+  keyword       String
+  location      String?
+  type          String   @default("general") // general, blog, smartplace
+  searchVolume  Int?     @map("search_volume")
+  competition   String?
+  avgCpc        Float?   @map("avg_cpc")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  project        BlogProject?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rankingResults RankingResult[]
+
+  @@map("keywords")
+}
+
+// Ranking Result model
+model RankingResult {
+  id        Int      @id @default(autoincrement())
+  keywordId Int      @map("keyword_id")
+  projectId Int?     @map("project_id")
+  userId    Int      @map("user_id")
+  checkDate DateTime @map("check_date")
+  rank      Int?
+  found     Boolean  @default(false)
+  url       String?
+  title     String?
+  type      String   @default("organic") // organic, ad, local
+  createdAt DateTime @default(now()) @map("created_at")
+
+  keyword Keyword      @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  project BlogProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ranking_results")
+}
+
+// Smartplace Info model
+model SmartplaceInfo {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  placeId     String   @unique @map("place_id")
+  name        String
+  address     String?
+  phone       String?
+  rating      Float?
+  reviewCount Int?     @map("review_count")
+  category    String?
+  lastUpdated DateTime @default(now()) @map("last_updated")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("smartplace_info")
+}
+
+// AI Generation Log model
+model AIGenerationLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  serviceType String   @map("service_type") // blog, instagram, thumbnail, etc.
+  prompt      String?
+  response    String?
+  model       String?
+  tokensUsed  Int?     @map("tokens_used")
+  costInNyang Float?   @map("cost_in_nyang")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_generation_logs")
+}
+
+// API Usage Log model
+model APIUsageLog {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  serviceType  String   @map("service_type") // naver, google, instagram, etc.
+  endpoint     String?
+  costInNyang  Float?   @map("cost_in_nyang")
+  responseTime Int?     @map("response_time")
+  statusCode   Int?     @map("status_code")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_usage_logs")
+}
+
+// Blog Content model
+model BlogContent {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  title       String
+  content     String
+  toc         String?
+  keywords    String?
+  gptType     String?   @map("gpt_type")
+  status      String    @default("draft") // draft, published, scheduled
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("blog_content")
+}
