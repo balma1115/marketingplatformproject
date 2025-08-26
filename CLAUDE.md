@@ -565,6 +565,32 @@ netstat -ano | findstr :3000
 taskkill /PID <PID> /F
 ```
 
+## 📝 페이지 레이아웃 가이드
+
+### 모든 페이지 필수 구조
+**중요**: 모든 페이지는 반드시 Header 컴포넌트를 포함해야 합니다.
+
+```tsx
+import Header from '@/components/navigation/Header'
+
+export default function PageName() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="p-6 max-w-7xl mx-auto">
+        {/* 페이지 콘텐츠 */}
+      </div>
+    </div>
+  )
+}
+```
+
+### 페이지 생성 체크리스트
+- [ ] Header 컴포넌트 import
+- [ ] min-h-screen bg-gray-50 컨테이너
+- [ ] Header 컴포넌트 렌더링
+- [ ] p-6 max-w-7xl mx-auto 콘텐츠 래퍼
+
 ## 📚 참고 문서
 
 - [Next.js 14 Documentation](https://nextjs.org/docs)

@@ -16,56 +16,25 @@ interface MenuItem {
   }[]
 }
 
-const menuItems: MenuItem[] = [
-  {
-    label: '진단',
-    href: '/diagnosis',
-    subItems: [
-      { label: '스플 진단', href: '/diagnosis/smartplace' },
-      { label: '내블로그 진단', href: '/diagnosis/blog' },
-      { label: '인스타그램 진단', href: '/diagnosis/instagram' }
-    ]
-  },
-  {
-    label: '관리',
-    href: '/management',
-    subItems: [
-      { label: '중점키워드 관리', href: '/management/keywords' },
-      { label: '광고 상태', href: '/management/ads-status' }
-    ]
-  },
-  {
-    label: '블로그',
-    href: '/blog',
-    subItems: [
-      { label: '블로그 원고생성', href: '/blog/content' },
-      { label: '블로그 키워드 관리', href: '/blog/keywords' },
-      { label: '키워드 분석', href: '/blog/analysis' }
-    ]
-  },
-  {
-    label: '스플',
-    href: '/smartplace',
-    subItems: [
-      { label: '스플키워드관리', href: '/smartplace/keywords' }
-    ]
-  },
-  {
-    label: '인스타',
-    href: '/instagram',
-    subItems: [
-      { label: '인스타 트렌드', href: '/instagram/trends' }
-    ]
-  },
-  {
-    label: '디자인',
-    href: '/design',
-    subItems: [
-      { label: '썸네일 제작기', href: '/design/thumbnail' },
-      { label: '숏폼 생성기', href: '/design/shortform' }
-    ]
+// Dashboard href will be dynamically set based on user role
+const getDashboardHref = (role?: string) => {
+  if (!role) return '/dashboard'
+  
+  switch (role) {
+    case 'user':
+      return '/dashboard/user'
+    case 'academy':
+      return '/dashboard/academy'
+    case 'branch':
+      return '/dashboard/branch'
+    case 'agency':
+      return '/dashboard/agency'
+    case 'admin':
+      return '/dashboard/admin'
+    default:
+      return '/dashboard'
   }
-]
+}
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -73,6 +42,62 @@ export default function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { user, logout } = useAuth()
   const router = useRouter()
+
+  // Create menuItems dynamically based on user role
+  const menuItems: MenuItem[] = [
+    {
+      label: '대시보드',
+      href: getDashboardHref(user?.role)
+    },
+    {
+      label: '진단',
+      href: '/diagnosis',
+      subItems: [
+        { label: '스플 진단', href: '/diagnosis/smartplace' },
+        { label: '내블로그 진단', href: '/diagnosis/blog' },
+        { label: '인스타그램 진단', href: '/diagnosis/instagram' }
+      ]
+    },
+    {
+      label: '관리',
+      href: '/management',
+      subItems: [
+        { label: '중점키워드 관리', href: '/management/keywords' },
+        { label: '광고 상태', href: '/management/ads-status' }
+      ]
+    },
+    {
+      label: '블로그',
+      href: '/blog',
+      subItems: [
+        { label: '블로그 원고생성', href: '/blog/content' },
+        { label: '블로그 키워드 관리', href: '/blog/keywords' },
+        { label: '키워드 분석', href: '/blog/analysis' }
+      ]
+    },
+    {
+      label: '스플',
+      href: '/smartplace',
+      subItems: [
+        { label: '스플키워드관리', href: '/smartplace/keywords' }
+      ]
+    },
+    {
+      label: '인스타',
+      href: '/instagram',
+      subItems: [
+        { label: '인스타 트렌드', href: '/instagram/trends' }
+      ]
+    },
+    {
+      label: '디자인',
+      href: '/design',
+      subItems: [
+        { label: '썸네일 제작기', href: '/design/thumbnail' },
+        { label: '숏폼 생성기', href: '/design/shortform' }
+      ]
+    }
+  ]
 
   useEffect(() => {
     const handleScroll = () => {
@@ -147,7 +172,7 @@ export default function Header() {
                       </div>
                       <div className="p-2">
                         <Link
-                          href={`/dashboard/${user.role}`}
+                          href={getDashboardHref(user.role)}
                           className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                           onClick={() => setUserMenuOpen(false)}
                         >
@@ -360,7 +385,7 @@ function MobileMenu({
               </div>
             </div>
             <Link
-              href={`/dashboard/${user.role}`}
+              href={getDashboardHref(user.role)}
               className="block px-4 py-3 text-base font-bold text-gray-700 hover:text-brand-navy"
               onClick={onClose}
             >

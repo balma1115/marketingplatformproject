@@ -620,52 +620,75 @@ export class PlaywrightCrawlerService {
             await page.waitForTimeout(1500)
           }
           
-          // Extract blog reviews - use time elements which work
-          const blogTimeElements = await workingPage.$$('time')
-          if (blogTimeElements.length > 0) {
-            const maxBlogReviews = Math.min(5, blogTimeElements.length)
+          // Navigate to blog reviews subtab
+          console.log('Clicking blog review subtab...')
+          const blogReviewSubtab = await workingPage.$('#_subtab_view > div > a:nth-child(2)')
+          if (blogReviewSubtab) {
+            await blogReviewSubtab.click()
+            await page.waitForTimeout(2000)
             
-            for (let i = 0; i < maxBlogReviews; i++) {
-              const dateText = await blogTimeElements[i].textContent()
-              if (dateText) {
-                // Format: YY.M.D.요일 -> YYYY-MM-DD
-                const shortDateMatch = dateText.match(/(\d{2})\.(\d{1,2})\.(\d{1,2})/)
-                if (shortDateMatch) {
-                  const year = '20' + shortDateMatch[1]
-                  const month = shortDateMatch[2].padStart(2, '0')
-                  const day = shortDateMatch[3].padStart(2, '0')
-                  const formattedDate = `${year}-${month}-${day}`
-                  
-                  placeDetail.blogReviews?.push({
-                    date: formattedDate,
-                    title: '',
-                    author: ''
-                  })
-                } else {
-                  // Try other date formats
-                  const yearMatch = dateText.match(/(\d{4})년/)
-                  const monthMatch = dateText.match(/(\d{1,2})월/)
-                  const dayMatch = dateText.match(/(\d{1,2})일/)
-                  
-                  if (yearMatch && monthMatch && dayMatch) {
-                    const year = yearMatch[1]
-                    const month = monthMatch[1].padStart(2, '0')
-                    const day = dayMatch[1].padStart(2, '0')
-                    const formattedDate = `${year}-${month}-${day}`
-                    
-                    placeDetail.blogReviews?.push({
-                      date: formattedDate,
-                      title: '',
-                      author: ''
-                    })
+            // Click on "최신순" (latest) sorting option
+            console.log('Clicking latest sort option...')
+            const latestSortButton = await workingPage.$('#app-root > div > div > div:nth-child(7) > div:nth-child(3) > div > div.place_section_content > div > div > div.fHbwT > div > a:nth-child(2)')
+            if (latestSortButton) {
+              await latestSortButton.click()
+              await page.waitForTimeout(2000)
+            }
+            
+            // Extract blog review dates from the list
+            const blogReviewList = await workingPage.$('#app-root > div > div > div:nth-child(7) > div:nth-child(3) > div > div.place_section_content > ul')
+            if (blogReviewList) {
+              // Get all list items
+              const listItems = await blogReviewList.$$('li')
+              const maxReviews = Math.min(5, listItems.length)
+              
+              for (let i = 0; i < maxReviews; i++) {
+                // Extract date from each review item
+                const dateSelector = `li:nth-child(${i + 1}) > a > div.pui__ohfV4v > div.pui__K2Boyb > div.u5XwJ > span > span`
+                const dateElement = await blogReviewList.$(dateSelector)
+                
+                if (dateElement) {
+                  const dateText = await dateElement.textContent()
+                  if (dateText) {
+                    // Format: YYYY년 M월 D일 요일 -> YYYY-MM-DD
+                    const fullDateMatch = dateText.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/)
+                    if (fullDateMatch) {
+                      const year = fullDateMatch[1]
+                      const month = fullDateMatch[2].padStart(2, '0')
+                      const day = fullDateMatch[3].padStart(2, '0')
+                      const formattedDate = `${year}-${month}-${day}`
+                      
+                      placeDetail.blogReviews?.push({
+                        date: formattedDate,
+                        title: '',
+                        author: ''
+                      })
+                    } else {
+                      // Fallback: YY.MM.DD. -> YYYY-MM-DD
+                      const dateMatch = dateText.match(/(\d{2})\.(\d{2})\.(\d{2})/)
+                      if (dateMatch) {
+                        const year = '20' + dateMatch[1]
+                        const month = dateMatch[2]
+                        const day = dateMatch[3]
+                        const formattedDate = `${year}-${month}-${day}`
+                        
+                        placeDetail.blogReviews?.push({
+                          date: formattedDate,
+                          title: '',
+                          author: ''
+                        })
+                      }
+                    }
                   }
                 }
               }
+              
+              if (placeDetail.blogReviews && placeDetail.blogReviews.length > 0) {
+                console.log('Blog review dates extracted:', placeDetail.blogReviews.map(r => typeof r === 'string' ? r : r.date))
+              }
             }
-            
-            if (placeDetail.blogReviews && placeDetail.blogReviews.length > 0) {
-              console.log('Blog review dates extracted from time elements:', placeDetail.blogReviews.map(r => typeof r === 'string' ? r : r.date))
-            }
+          } else {
+            console.log('Blog review subtab not found')
           }
           console.log('Blog reviews extracted:', placeDetail.blogReviews)
         }

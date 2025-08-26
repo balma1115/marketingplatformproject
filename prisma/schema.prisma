@@ -32,14 +32,17 @@ model User {
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  sessions         Session[]
-  blogProjects     BlogProject[]
-  keywords         Keyword[]
-  smartplaceInfo   SmartplaceInfo[]
-  aiGenerationLogs AIGenerationLog[]
-  apiUsageLogs     APIUsageLog[]
-  blogContent      BlogContent[]
-  rankingResults   RankingResult[]
+  sessions              Session[]
+  blogProjects          BlogProject[]
+  keywords              Keyword[]
+  smartplaceInfo        SmartplaceInfo[]
+  aiGenerationLogs      AIGenerationLog[]
+  apiUsageLogs          APIUsageLog[]
+  blogContent           BlogContent[]
+  rankingResults        RankingResult[]
+  trackingProjects      TrackingProject[]
+  blogTrackingProjects  BlogTrackingProject[]
+  trackingSessions      TrackingSession[]
 
   @@map("users")
 }
@@ -186,4 +189,178 @@ model BlogContent {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("blog_content")
+}
+
+// =====================================================
+// Keyword Management Models (키워드 관리)
+// =====================================================
+
+// Tracking Project model (스마트플레이스)
+model TrackingProject {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  placeName     String   @map("place_name")
+  placeId       String   @map("place_id")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastUpdated   DateTime? @map("last_updated")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords      TrackingKeyword[]
+  schedules     TrackingSchedule[]
+  sessions      TrackingSession[]
+
+  @@unique([userId, placeId])
+  @@index([userId])
+  @@index([placeId])
+  @@map("tracking_projects")
+}
+
+// Tracking Keywords model (스마트플레이스 키워드)
+model TrackingKeyword {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  keyword       String
+  addedDate     DateTime @default(now()) @map("added_date")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project       TrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rankings      TrackingRanking[]
+
+  @@unique([projectId, keyword])
+  @@index([projectId])
+  @@index([keyword])
+  @@index([isActive])
+  @@map("tracking_keywords")
+}
+
+// Tracking Rankings model (스마트플레이스 순위)
+model TrackingRanking {
+  id            Int      @id @default(autoincrement())
+  keywordId     Int      @map("keyword_id")
+  rank          Int?
+  overallRank   Int?     @map("overall_rank")
+  checkDate     DateTime @map("check_date")
+  rankingType   String   @default("organic") @map("ranking_type")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  keyword       TrackingKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordId, checkDate, rankingType])
+  @@index([keywordId])
+  @@index([checkDate])
+  @@map("tracking_rankings")
+}
+
+// Tracking Schedule model (스마트플레이스 스케줄)
+model TrackingSchedule {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  scheduleName  String?  @map("schedule_name")
+  scheduleTime  String   @map("schedule_time")
+  isActive      Boolean  @default(true) @map("is_active")
+  lastRun       DateTime? @map("last_run")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project       TrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([isActive])
+  @@map("tracking_schedules")
+}
+
+// Tracking Session model
+model TrackingSession {
+  id               String   @id @default(uuid())
+  userId           Int      @map("user_id")
+  projectId        Int?     @map("project_id")
+  totalKeywords    Int      @map("total_keywords")
+  completedKeywords Int     @default(0) @map("completed_keywords")
+  status           String   @default("pending")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project          TrackingProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("tracking_sessions")
+}
+
+// Blog Tracking Project model (블로그)
+model BlogTrackingProject {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  blogUrl       String   @map("blog_url")
+  blogName      String   @map("blog_name")
+  blogId        String?  @map("blog_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  lastTrackedAt DateTime? @map("last_tracked_at")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords      BlogTrackingKeyword[]
+  schedules     BlogTrackingSchedule[]
+
+  @@index([userId])
+  @@index([blogId])
+  @@map("blog_tracking_projects")
+}
+
+// Blog Tracking Keywords model (블로그 키워드)
+model BlogTrackingKeyword {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  keyword       String
+  addedDate     DateTime @default(now()) @map("added_date")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project       BlogTrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  results       BlogTrackingResult[]
+
+  @@unique([projectId, keyword])
+  @@index([projectId])
+  @@index([keyword])
+  @@index([isActive])
+  @@map("blog_tracking_keywords")
+}
+
+// Blog Tracking Results model (블로그 순위)
+model BlogTrackingResult {
+  id               Int      @id @default(autoincrement())
+  keywordId        Int      @map("keyword_id")
+  mainTabExposed   Boolean  @default(false) @map("main_tab_exposed")
+  mainTabRank      Int?     @map("main_tab_rank")
+  blogTabRank      Int?     @map("blog_tab_rank")
+  viewTabRank      Int?     @map("view_tab_rank")
+  adRank           Int?     @map("ad_rank")
+  rankingType      String   @default("organic") @map("ranking_type")
+  trackingDate     DateTime @map("tracking_date")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  keyword          BlogTrackingKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@index([trackingDate])
+  @@index([keywordId, trackingDate])
+  @@map("blog_tracking_results")
+}
+
+// Blog Tracking Schedule model (블로그 스케줄)
+model BlogTrackingSchedule {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  scheduleTime  String   @map("schedule_time")
+  isActive      Boolean  @default(true) @map("is_active")
+  lastRun       DateTime? @map("last_run")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project       BlogTrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, scheduleTime])
+  @@index([projectId])
+  @@index([isActive])
+  @@map("blog_tracking_schedules")
 }
