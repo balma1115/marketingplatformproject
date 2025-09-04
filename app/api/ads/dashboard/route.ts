@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
     // 캠페인 목록 가져오기
     const campaigns = await naverAds.getCampaigns()
     
+    console.log(`User: ${auth.userId} (Customer ID: ${user.naverAdCustomerId})`)
     console.log(`Fetching stats for ${campaigns.length} campaigns from ${dateFrom || 'default'} to ${dateTo || 'default'}`)
     
     // 각 캠페인에 대한 통계 가져오기 (날짜 범위 적용)

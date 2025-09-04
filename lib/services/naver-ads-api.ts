@@ -505,8 +505,7 @@ export class NaverAdsAPI {
     dateFrom?: string,
     dateTo?: string
   ): Promise<NaverStatsResponse> {
-    // Use StatReport API for real campaign stats
-    // The /stats endpoint doesn't exist, we must use /stat-reports
+    // Try Stats API first for accurate salesAmt, fallback to StatReport if needed
     
     try {
       // Format dates properly
@@ -526,7 +525,61 @@ export class NaverAdsAPI {
       const startDate = dateFrom ? formatDate(dateFrom) : formatDate(weekAgo)
       const endDate = dateTo ? formatDate(dateTo) : formatDate(today)
       
-      console.log(`📊 Getting stats from ${startDate} to ${endDate}...`)
+      // First, try the /stats endpoint with proper parameters
+      try {
+        const params: any = {
+          fields: JSON.stringify(["impCnt", "clkCnt", "salesAmt", "ctr", "cpc", "avgRnk"])
+        }
+        
+        if (campaignId) {
+          params.ids = campaignId
+        } else {
+          // Get all campaigns and aggregate
+          const campaigns = await this.getCampaigns()
+          if (campaigns.length > 0) {
+            params.ids = campaigns.map(c => c.nccCampaignId).join(',')
+          }
+        }
+        
+        // Use timeRange for custom dates
+        if (dateFrom && dateTo) {
+          params.timeRange = JSON.stringify({
+            since: dateFrom,
+            until: dateTo
+          })
+        } else {
+          // Default to last 7 days
+          params.datePreset = 'last7days'
+        }
+        
+        const statsResponse = await this.request('GET', '/stats', undefined, params)
+        
+        if (statsResponse && Array.isArray(statsResponse) && statsResponse.length > 0) {
+          // Aggregate stats from all campaigns
+          let totalImp = 0, totalClicks = 0, totalCost = 0
+          
+          statsResponse.forEach(stat => {
+            totalImp += stat.impCnt || 0
+            totalClicks += stat.clkCnt || 0
+            totalCost += stat.salesAmt || 0
+          })
+          
+          console.log(`✅ Stats API returned: ${totalImp} impressions, ${totalClicks} clicks, ₩${totalCost} cost`)
+          
+          return {
+            impCnt: totalImp,
+            clkCnt: totalClicks,
+            salesAmt: totalCost,
+            ctr: totalImp > 0 ? (totalClicks / totalImp) * 100 : 0,
+            cpc: totalClicks > 0 ? totalCost / totalClicks : 0,
+            avgRnk: 0
+          }
+        }
+      } catch (statsError) {
+        console.log('Stats API failed, falling back to StatReport API:', statsError)
+      }
+      
+      console.log(`📊 Using StatReport API from ${startDate} to ${endDate}...`)
       
       // Create AD report (most compatible type)
       const reportResponse = await this.request('POST', '/stat-reports', {
@@ -622,16 +675,39 @@ export class NaverAdsAPI {
       const lines = downloadResponse.data.split('\n').filter((line: string) => line.trim())
       const campaignStats = new Map()
       
-      // Parse each line (AD report format without headers)
+      // Parse each line (AD report format without headers - CORRECTED)
+      // Based on actual testing, the TSV columns are:
+      // [0] Date (YYYYMMDD)
+      // [1] Customer ID
+      // [2] Campaign ID
+      // [3-6] Various IDs (Ad Group, Keyword, Ad, etc.)
+      // [7-8] Unknown fields
+      // [9] Clicks (actual click count)
+      // [10] Unknown (often single digit)
+      // [11] Cost related (often fractional, needs *1000)
+      // [12] Impressions (actual impression count)
+      // [13] Unknown
+      
       for (const line of lines) {
         const cells = line.split('\t')
         if (cells.length < 13) continue
         
-        // Columns: Date, CustomerId, CampaignId, AdGroupId, KeywordId, AdId, ChannelId, Hour, ?, ?, Device, Impressions, Clicks, ...
         const parsedCampaignId = cells[2]
-        const impressions = parseInt(cells[11]) || 0
-        const clicks = parseInt(cells[12]) || 0
-        const cost = clicks * 130 // Estimate cost from clicks
+        // SWAPPED: Impressions is in column 12, Clicks in column 9
+        const impressions = parseInt(cells[12]) || 0
+        const clicks = parseInt(cells[9]) || 0
+        
+        // Cost is in column 11 for AD report
+        // The values are fractional and need to be multiplied by 1000
+        let cost = 0
+        if (cells.length > 11 && cells[11]) {
+          const rawCost = parseFloat(cells[11]) || 0
+          // The cost values in TSV are divided by 1000
+          // e.g., 0.19 actually means 190 won
+          if (rawCost > 0) {
+            cost = Math.round(rawCost * 1000)
+          }
+        }
         
         if (!campaignStats.has(parsedCampaignId)) {
           campaignStats.set(parsedCampaignId, {
