@@ -223,8 +223,15 @@ export class NaverAdsAPI {
    * API 요청 래퍼 with retry logic
    */
   private async request(method: string, endpoint: string, data?: any, retryCount = 0): Promise<any> {
-    // endpoint가 이미 /ncc로 시작하면 그대로 사용, 아니면 /ncc 추가
-    const uri = endpoint.startsWith('/ncc') ? endpoint : `/ncc${endpoint}`
+    // stat-reports는 /ncc 없이 사용, 나머지는 /ncc 추가
+    let uri: string
+    if (endpoint.startsWith('/stat-reports') || endpoint.startsWith('/report-download')) {
+      uri = endpoint // No /ncc prefix for stat-reports
+    } else if (endpoint.startsWith('/ncc')) {
+      uri = endpoint // Already has /ncc
+    } else {
+      uri = `/ncc${endpoint}` // Add /ncc prefix
+    }
     const fullUrl = `${this.baseURL}${uri}`
     
     try {
@@ -529,6 +536,18 @@ export class NaverAdsAPI {
       })
       
       if (!reportResponse?.reportJobId) {
+        // Check if it's because there's no data
+        if (reportResponse?.code === 10004) {
+          console.log('No data available for the selected period')
+          return {
+            impCnt: 0,
+            clkCnt: 0,
+            salesAmt: 0,
+            ctr: 0,
+            cpc: 0,
+            avgRnk: 0
+          }
+        }
         console.warn('Failed to create stat report')
         return this.getFallbackStats(campaignId)
       }
@@ -539,18 +558,36 @@ export class NaverAdsAPI {
       let reportReady = false
       let downloadUrl = ''
       const maxAttempts = 20
+      let noneCount = 0
       
       for (let i = 0; i < maxAttempts; i++) {
         await new Promise(resolve => setTimeout(resolve, 2000))
         
         const status = await this.request('GET', `/stat-reports/${reportResponse.reportJobId}`)
         
+        console.log(`Report status (attempt ${i + 1}/${maxAttempts}): ${status?.status || 'unknown'}`)
+        
         if (status?.status === 'BUILT' || status?.status === 'DONE') {
           reportReady = true
           downloadUrl = status.downloadUrl
           break
         } else if (status?.status === 'FAILED') {
+          console.log('Report generation failed')
           break
+        } else if (status?.status === 'NONE') {
+          noneCount++
+          // If we get NONE status too many times, it might mean no data
+          if (noneCount > 10) {
+            console.log('Report status remains NONE - likely no data for period')
+            return {
+              impCnt: 0,
+              clkCnt: 0,
+              salesAmt: 0,
+              ctr: 0,
+              cpc: 0,
+              avgRnk: 0
+            }
+          }
         }
       }
       

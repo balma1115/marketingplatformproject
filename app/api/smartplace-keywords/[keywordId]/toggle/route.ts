@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   try {
     // 인증 확인
-    const token = req.cookies.get('token')?.value
+    const token = req.cookies.get('auth-token')?.value || req.cookies.get('token')?.value
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -40,16 +40,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Keyword not found' }, { status: 404 })
     }
 
-    // 상태 토글
+    // 키워드 상태 업데이트
     const updated = await prisma.trackingKeyword.update({
       where: { id: keywordId },
-      data: { isActive: isActive }
+      data: { isActive }
     })
 
-    return NextResponse.json({ 
-      success: true,
-      keyword: updated
-    })
+    return NextResponse.json({ success: true, keyword: updated })
   } catch (error) {
     console.error('Failed to toggle smartplace keyword:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

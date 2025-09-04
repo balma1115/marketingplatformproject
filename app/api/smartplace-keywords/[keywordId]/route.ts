@@ -8,7 +8,7 @@ export async function DELETE(
 ) {
   try {
     // 인증 확인
-    const token = req.cookies.get('token')?.value
+    const token = req.cookies.get('auth-token')?.value || req.cookies.get('token')?.value
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

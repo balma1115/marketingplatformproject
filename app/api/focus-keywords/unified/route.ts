@@ -5,17 +5,22 @@ import { withAuth } from '@/lib/auth-middleware'
 export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
-      // 스마트플레이스 키워드 조회
-      const smartplaceKeywords = await prisma.trackingKeyword.findMany({
+      const userIdNum = parseInt(userId)
+      
+      // 스마트플레이스 조회
+      const smartPlace = await prisma.smartPlace.findFirst({
         where: {
-          project: {
-            userId: userId,
-            isActive: true
-          },
+          userId: userIdNum
+        }
+      })
+
+      // 스마트플레이스 키워드 조회
+      const smartplaceKeywords = smartPlace ? await prisma.smartPlaceKeyword.findMany({
+        where: {
+          smartPlaceId: smartPlace.id,
           isActive: true
         },
         include: {
-          project: true,
           rankings: {
             orderBy: {
               checkDate: 'desc'
@@ -23,26 +28,30 @@ export async function GET(req: NextRequest) {
             take: 1
           }
         }
+      }) : []
+
+      // 블로그 프로젝트 조회
+      const blogProject = await prisma.blogProject.findFirst({
+        where: {
+          userId: userIdNum
+        }
       })
 
       // 블로그 키워드 조회
-      const blogKeywords = await prisma.blogTrackingKeyword.findMany({
+      const blogKeywords = blogProject ? await prisma.blogKeyword.findMany({
         where: {
-          project: {
-            userId: userId
-          },
+          projectId: blogProject.id,
           isActive: true
         },
         include: {
-          project: true,
-          results: {
+          rankings: {
             orderBy: {
-              trackingDate: 'desc'
+              checkDate: 'desc'
             },
             take: 1
           }
         }
-      })
+      }) : []
 
       // 키워드를 통합하여 중복 제거
       const keywordMap = new Map<string, any>()
@@ -53,12 +62,11 @@ export async function GET(req: NextRequest) {
           keyword: sk.keyword,
           smartplace: {
             id: sk.id,
-            projectName: sk.project.placeName,
-            projectId: sk.project.placeId,
-            addedDate: sk.addedDate,
-            currentRank: sk.rankings[0]?.rank || null,
-            overallRank: sk.rankings[0]?.overallRank || null,
-            rankingType: sk.rankings[0]?.rankingType || 'organic',
+            projectName: smartPlace?.placeName || '',
+            projectId: smartPlace?.placeId || '',
+            addedDate: sk.createdAt,
+            currentRank: sk.rankings[0]?.organicRank || null,
+            adRank: sk.rankings[0]?.adRank || null,
             lastTracked: sk.rankings[0]?.checkDate || null
           },
           blog: null
@@ -71,13 +79,13 @@ export async function GET(req: NextRequest) {
         const existing = keywordMap.get(bk.keyword)
         const blogData = {
           id: bk.id,
-          projectName: bk.project.blogName,
-          projectId: bk.project.id.toString(),
+          projectName: blogProject?.blogName || '',
+          projectId: blogProject?.id.toString() || '',
           addedDate: bk.createdAt,
-          mainTabRank: bk.results[0]?.mainTabRank || null,
-          blogTabRank: bk.results[0]?.blogTabRank || null,
-          viewTabRank: bk.results[0]?.viewTabRank || null,
-          lastTracked: bk.results[0]?.trackingDate || null
+          mainTabExposed: bk.rankings[0]?.mainTabExposed || false,
+          mainTabRank: null,  // Not tracked in new structure
+          blogTabRank: bk.rankings[0]?.rank || null,
+          lastTracked: bk.rankings[0]?.checkDate || null
         }
 
         if (existing) {
@@ -101,10 +109,15 @@ export async function GET(req: NextRequest) {
         both: keywords.filter(k => k.smartplace && k.blog).length
       }
 
-      return NextResponse.json({ 
+      const response = NextResponse.json({ 
         keywords,
         stats
       })
+      
+      // 서버사이드 캐싱: 1분간 캐시, 5분까지는 stale-while-revalidate
+      response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
+      
+      return response
     } catch (error) {
       console.error('Failed to fetch unified keywords:', error)
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import { 
@@ -488,75 +488,232 @@ function UsageSection({ userData }: any) {
 
 // API Section Component
 function ApiSection() {
-  const [showKey, setShowKey] = useState(false)
-  const apiKey = 'sk-proj-abcdefghijklmnopqrstuvwxyz123456789'
+  const [naverApiKey, setNaverApiKey] = useState('')
+  const [naverSecret, setNaverSecret] = useState('')
+  const [naverCustomerId, setNaverCustomerId] = useState('')
+  const [instagramAccessToken, setInstagramAccessToken] = useState('')
+  const [instagramUserId, setInstagramUserId] = useState('')
+  const [showNaverKey, setShowNaverKey] = useState(false)
+  const [showNaverSecret, setShowNaverSecret] = useState(false)
+  const [showInstagramToken, setShowInstagramToken] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
+
+  // Load API keys on component mount
+  useEffect(() => {
+    fetchApiKeys()
+  }, [])
+
+  const fetchApiKeys = async () => {
+    try {
+      const response = await fetch('/api/settings/api-keys', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setNaverApiKey(data.naverAdApiKey || '')
+        setNaverSecret(data.naverAdSecret || '')
+        setNaverCustomerId(data.naverAdCustomerId || '')
+        setInstagramAccessToken(data.instagramAccessToken || '')
+        setInstagramUserId(data.instagramUserId || '')
+      }
+    } catch (error) {
+      console.error('Failed to fetch API keys:', error)
+    }
+  }
+
+  const handleSaveApiKeys = async () => {
+    setLoading(true)
+    setMessage(null)
+    
+    try {
+      const response = await fetch('/api/settings/api-keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          naverAdApiKey: naverApiKey,
+          naverAdSecret: naverSecret,
+          naverAdCustomerId: naverCustomerId,
+          instagramAccessToken: instagramAccessToken,
+          instagramUserId: instagramUserId
+        })
+      })
+      
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'API 키가 성공적으로 저장되었습니다.' })
+      } else {
+        setMessage({ type: 'error', text: 'API 키 저장에 실패했습니다.' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: '저장 중 오류가 발생했습니다.' })
+    } finally {
+      setLoading(false)
+    }
+  }
   
   return (
     <div className="space-y-6">
+      {/* Naver Ads API */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">API 키 관리</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">네이버 검색광고 API 설정</h2>
         
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div className="flex items-start">
-            <AlertCircle className="text-amber-500 mt-0.5 mr-2 flex-shrink-0" size={18} />
-            <div className="text-sm text-amber-800">
-              <p className="font-bold mb-1">보안 주의사항</p>
-              <p>API 키는 중요한 보안 정보입니다. 절대 공개적으로 노출하지 마세요.</p>
+            <AlertCircle className="text-blue-500 mt-0.5 mr-2 flex-shrink-0" size={18} />
+            <div className="text-sm text-blue-800">
+              <p className="font-bold mb-1">네이버 검색광고 API 연동 필요 정보</p>
+              <p>네이버 광고관리시스템에서 API 키를 발급받으세요.</p>
+              <a href="https://manage.searchad.naver.com" target="_blank" rel="noopener noreferrer" 
+                 className="underline hover:text-blue-900">네이버 광고관리시스템 바로가기</a>
             </div>
           </div>
         </div>
         
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-bold text-gray-700 mb-2 block">Production API Key</label>
+            <label className="text-sm font-bold text-gray-700 mb-2 block">API Key (Access License)</label>
             <div className="flex space-x-2">
               <div className="flex-1 relative">
                 <input
-                  type={showKey ? 'text' : 'password'}
-                  value={apiKey}
-                  readOnly
+                  type={showNaverKey ? 'text' : 'password'}
+                  value={naverApiKey}
+                  onChange={(e) => setNaverApiKey(e.target.value)}
+                  placeholder="네이버 광고 API 키를 입력하세요"
                   className="form-input font-mono text-sm pr-20"
                 />
                 <button
-                  onClick={() => setShowKey(!showKey)}
+                  onClick={() => setShowNaverKey(!showNaverKey)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showKey ? '숨기기' : '보기'}
+                  {showNaverKey ? '숨기기' : '보기'}
                 </button>
               </div>
-              <button className="btn btn-secondary btn-sm">
-                복사
-              </button>
             </div>
           </div>
           
-          <div className="flex space-x-3">
-            <button className="btn btn-primary btn-sm">
-              새 키 생성
-            </button>
-            <button className="btn btn-ghost btn-sm text-red-600">
-              키 삭제
-            </button>
+          <div>
+            <label className="text-sm font-bold text-gray-700 mb-2 block">Secret Key</label>
+            <div className="flex space-x-2">
+              <div className="flex-1 relative">
+                <input
+                  type={showNaverSecret ? 'text' : 'password'}
+                  value={naverSecret}
+                  onChange={(e) => setNaverSecret(e.target.value)}
+                  placeholder="네이버 광고 Secret Key를 입력하세요"
+                  className="form-input font-mono text-sm pr-20"
+                />
+                <button
+                  onClick={() => setShowNaverSecret(!showNaverSecret)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showNaverSecret ? '숨기기' : '보기'}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label className="text-sm font-bold text-gray-700 mb-2 block">Customer ID (고객 ID)</label>
+            <input
+              type="text"
+              value={naverCustomerId}
+              onChange={(e) => setNaverCustomerId(e.target.value)}
+              placeholder="네이버 광고 계정의 고객 ID를 입력하세요"
+              className="form-input font-mono text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Instagram API */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">인스타그램 API 설정</h2>
+        
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start">
+            <AlertCircle className="text-purple-500 mt-0.5 mr-2 flex-shrink-0" size={18} />
+            <div className="text-sm text-purple-800">
+              <p className="font-bold mb-1">Instagram Graph API 연동 필요 정보</p>
+              <p>Facebook Developer에서 Instagram Business Account를 연동하세요.</p>
+              <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer" 
+                 className="underline hover:text-purple-900">Facebook Developer 바로가기</a>
+            </div>
           </div>
         </div>
         
-        <div className="mt-6 pt-6 border-t">
-          <h3 className="font-bold text-gray-900 mb-3">API 사용량</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">오늘</p>
-              <p className="text-xl font-bold">1,234</p>
-              <p className="text-xs text-gray-500">요청</p>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-bold text-gray-700 mb-2 block">Access Token</label>
+            <div className="flex space-x-2">
+              <div className="flex-1 relative">
+                <input
+                  type={showInstagramToken ? 'text' : 'password'}
+                  value={instagramAccessToken}
+                  onChange={(e) => setInstagramAccessToken(e.target.value)}
+                  placeholder="Instagram Graph API Access Token을 입력하세요"
+                  className="form-input font-mono text-sm pr-20"
+                />
+                <button
+                  onClick={() => setShowInstagramToken(!showInstagramToken)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showInstagramToken ? '숨기기' : '보기'}
+                </button>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">이번 달</p>
-              <p className="text-xl font-bold">45,678</p>
-              <p className="text-xs text-gray-500">요청</p>
+          </div>
+          
+          <div>
+            <label className="text-sm font-bold text-gray-700 mb-2 block">Instagram Business Account ID</label>
+            <input
+              type="text"
+              value={instagramUserId}
+              onChange={(e) => setInstagramUserId(e.target.value)}
+              placeholder="Instagram Business Account ID를 입력하세요"
+              className="form-input font-mono text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Save Button and Messages */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        {message && (
+          <div className={`mb-4 p-4 rounded-lg ${
+            message.type === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              {message.type === 'success' ? (
+                <Check className="mr-2" size={18} />
+              ) : (
+                <AlertCircle className="mr-2" size={18} />
+              )}
+              <span className="text-sm font-bold">{message.text}</span>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">한도</p>
-              <p className="text-xl font-bold">100,000</p>
-              <p className="text-xs text-gray-500">요청/월</p>
+          </div>
+        )}
+        
+        <button 
+          onClick={handleSaveApiKeys}
+          disabled={loading}
+          className="btn btn-primary w-full"
+        >
+          {loading ? '저장 중...' : 'API 키 저장'}
+        </button>
+        
+        <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start">
+            <AlertCircle className="text-amber-500 mt-0.5 mr-2 flex-shrink-0" size={18} />
+            <div className="text-sm text-amber-800">
+              <p className="font-bold mb-1">보안 주의사항</p>
+              <p>API 키는 암호화되어 안전하게 저장됩니다. 절대 공개적으로 노출하지 마세요.</p>
             </div>
           </div>
         </div>

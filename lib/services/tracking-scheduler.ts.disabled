@@ -1,0 +1,137 @@
+import cron from 'node-cron';
+import { addBatchTrackingJobs, clearCompletedJobs } from './tracking-queue';
+import { formatInTimeZone } from 'date-fns-tz';
+
+class TrackingScheduler {
+  private scheduledJobs: Map<string, cron.ScheduledTask> = new Map();
+  
+  constructor() {
+    this.initializeScheduler();
+  }
+
+  private initializeScheduler() {
+    // 매일 자정(00:00) KST에 실행
+    const dailyTrackingJob = cron.schedule(
+      '0 0 * * *',
+      async () => {
+        const kstTime = formatInTimeZone(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+        console.log(`[Scheduler] Starting daily tracking at ${kstTime} KST`);
+        
+        try {
+          // Clear completed jobs from previous run
+          await clearCompletedJobs();
+          
+          // Add all tracking jobs to queue
+          const jobs = await addBatchTrackingJobs();
+          console.log(`[Scheduler] Added ${jobs.length} tracking jobs to queue`);
+          
+        } catch (error) {
+          console.error('[Scheduler] Error in daily tracking:', error);
+        }
+      },
+      {
+        scheduled: false,
+        timezone: 'Asia/Seoul'
+      }
+    );
+    
+    this.scheduledJobs.set('daily-tracking', dailyTrackingJob);
+    
+    // Clean up old jobs every 6 hours
+    const cleanupJob = cron.schedule(
+      '0 */6 * * *',
+      async () => {
+        console.log('[Scheduler] Cleaning up old completed jobs');
+        try {
+          await clearCompletedJobs();
+        } catch (error) {
+          console.error('[Scheduler] Error in cleanup job:', error);
+        }
+      },
+      {
+        scheduled: false,
+        timezone: 'Asia/Seoul'
+      }
+    );
+    
+    this.scheduledJobs.set('cleanup', cleanupJob);
+  }
+
+  // Start all scheduled jobs
+  start() {
+    this.scheduledJobs.forEach((job, name) => {
+      job.start();
+      console.log(`[Scheduler] Started job: ${name}`);
+    });
+  }
+
+  // Stop all scheduled jobs
+  stop() {
+    this.scheduledJobs.forEach((job, name) => {
+      job.stop();
+      console.log(`[Scheduler] Stopped job: ${name}`);
+    });
+  }
+
+  // Manually trigger daily tracking
+  async triggerDailyTracking() {
+    console.log('[Scheduler] Manually triggering daily tracking');
+    try {
+      await clearCompletedJobs();
+      const jobs = await addBatchTrackingJobs();
+      return {
+        success: true,
+        jobsCount: jobs.length,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[Scheduler] Error in manual trigger:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // Get scheduler status
+  getStatus() {
+    const status: Record<string, any> = {};
+    this.scheduledJobs.forEach((job, name) => {
+      status[name] = {
+        running: (job as any).running || false
+      };
+    });
+    return status;
+  }
+}
+
+// Export singleton instance
+export const trackingScheduler = new TrackingScheduler();
+
+// For AWS Lambda
+export async function lambdaHandler(event: any, context: any) {
+  console.log('[Lambda] Starting tracking execution');
+  
+  try {
+    await clearCompletedJobs();
+    const jobs = await addBatchTrackingJobs();
+    
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        success: true,
+        jobsCount: jobs.length,
+        timestamp: new Date().toISOString()
+      })
+    };
+  } catch (error) {
+    console.error('[Lambda] Error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    };
+  }
+}

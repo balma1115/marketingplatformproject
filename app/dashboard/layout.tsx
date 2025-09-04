@@ -17,12 +17,15 @@ import {
   UserCircle,
   ChevronRight,
   Bell,
-  Search
+  Search,
+  Activity
 } from 'lucide-react'
 
 const roleMenus = {
   admin: [
     { href: '/dashboard/admin', label: '대시보드', icon: LayoutDashboard },
+    { href: '/dashboard/admin/organization', label: '조직 관리', icon: Building },
+    { href: '/dashboard/admin/tracking', label: '순위 추적 관리', icon: Activity },
     { href: '/dashboard/admin/users', label: '사용자 관리', icon: Users },
     { href: '/dashboard/admin/agencies', label: '대행사 관리', icon: Building },
     { href: '/dashboard/admin/api', label: 'API 사용량', icon: Target },
@@ -30,6 +33,7 @@ const roleMenus = {
   ],
   agency: [
     { href: '/dashboard/agency', label: '대시보드', icon: LayoutDashboard },
+    { href: '/dashboard/agency/tracking', label: '순위 추적 현황', icon: Activity },
     { href: '/dashboard/agency/branches', label: '지사 관리', icon: Building },
     { href: '/dashboard/agency/academies', label: '학원 관리', icon: GraduationCap },
     { href: '/dashboard/agency/campaigns', label: '캠페인 관리', icon: Target },

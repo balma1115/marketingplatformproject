@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Search, Calendar, TrendingUp, AlertCircle, RefreshCw, Download, Eye, EyeOff, Globe, CheckCircle, Play } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Header from '@/components/layout/Header'
 
 interface BlogKeyword {
@@ -63,7 +64,8 @@ export default function BlogKeywordManagement() {
     try {
       setLoading(true)
       const response = await fetch('/api/blog-keywords/list', {
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store' // 캐시 무시하고 항상 최신 데이터 가져오기
       })
 
       if (response.ok) {

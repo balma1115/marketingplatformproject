@@ -1,0 +1,284 @@
+import { Queue, Worker, QueueEvents } from 'bullmq';
+import IORedis from 'ioredis';
+import { prisma } from '@/lib/db';
+import { ImprovedNaverScraperV3 } from './improved-scraper-v3';
+import { NaverBlogScraperV2 } from './naver-blog-scraper-v2';
+
+// Redis connection configuration
+const connection = new IORedis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  maxRetriesPerRequest: null,
+});
+
+// Create queues
+export const smartplaceQueue = new Queue('smartplace-tracking', { connection });
+export const blogQueue = new Queue('blog-tracking', { connection });
+
+// Queue events for monitoring
+export const smartplaceQueueEvents = new QueueEvents('smartplace-tracking', { connection });
+export const blogQueueEvents = new QueueEvents('blog-tracking', { connection });
+
+interface TrackingJobData {
+  userId: string;
+  userEmail: string;
+  userName: string;
+  type: 'smartplace' | 'blog';
+  priority?: number;
+}
+
+// SmartPlace tracking worker
+const smartplaceWorker = new Worker(
+  'smartplace-tracking',
+  async (job) => {
+    const { userId, userEmail, userName } = job.data;
+    console.log(`[SmartPlace] Starting tracking for user: ${userName} (${userEmail})`);
+
+    try {
+      // Get user's smartplace data
+      const smartPlace = await prisma.smartPlace.findFirst({
+        where: { userId }
+      });
+
+      if (!smartPlace) {
+        console.log(`[SmartPlace] No SmartPlace registered for user: ${userName}`);
+        return { success: false, reason: 'No SmartPlace registered' };
+      }
+
+      // Get active keywords
+      const keywords = await prisma.smartPlaceKeyword.findMany({
+        where: {
+          userId,
+          isActive: true
+        }
+      });
+
+      if (keywords.length === 0) {
+        console.log(`[SmartPlace] No active keywords for user: ${userName}`);
+        return { success: false, reason: 'No active keywords' };
+      }
+
+      // Initialize scraper
+      const scraper = new ImprovedNaverScraperV3();
+      
+      // Prepare keyword data
+      const keywordData = keywords.map(k => ({
+        id: k.id,
+        keyword: k.keyword
+      }));
+
+      // Track all keywords
+      const results = await scraper.trackMultipleKeywords(keywordData, {
+        placeId: smartPlace.placeId,
+        placeName: smartPlace.placeName
+      });
+
+      // Save results to database
+      for (const result of results) {
+        const keyword = keywords.find(k => k.id === result.keywordId);
+        if (!keyword) continue;
+
+        await prisma.smartPlaceRanking.create({
+          data: {
+            keywordId: keyword.id,
+            checkDate: new Date(),
+            organicRank: result.organicRank,
+            adRank: result.adRank,
+            totalResults: result.totalResults,
+            topTenPlaces: result.topTenPlaces
+          }
+        });
+
+        // Update keyword's last checked date
+        await prisma.smartPlaceKeyword.update({
+          where: { id: keyword.id },
+          data: { lastChecked: new Date() }
+        });
+      }
+
+      // Update SmartPlace last updated
+      await prisma.smartPlace.update({
+        where: { id: smartPlace.id },
+        data: { lastUpdated: new Date() }
+      });
+
+      console.log(`[SmartPlace] Completed tracking for user: ${userName}`);
+      return { success: true, resultsCount: results.length };
+
+    } catch (error) {
+      console.error(`[SmartPlace] Error tracking for user ${userName}:`, error);
+      throw error;
+    }
+  },
+  { connection }
+);
+
+// Blog tracking worker
+const blogWorker = new Worker(
+  'blog-tracking',
+  async (job) => {
+    const { userId, userEmail, userName } = job.data;
+    console.log(`[Blog] Starting tracking for user: ${userName} (${userEmail})`);
+
+    try {
+      // Get user's blog data
+      const blog = await prisma.blogProject.findFirst({
+        where: { userId }
+      });
+
+      if (!blog) {
+        console.log(`[Blog] No blog project for user: ${userName}`);
+        return { success: false, reason: 'No blog project' };
+      }
+
+      // Get active keywords
+      const keywords = await prisma.blogKeyword.findMany({
+        where: {
+          userId,
+          isActive: true
+        }
+      });
+
+      if (keywords.length === 0) {
+        console.log(`[Blog] No active keywords for user: ${userName}`);
+        return { success: false, reason: 'No active keywords' };
+      }
+
+      // Initialize scraper
+      const scraper = new NaverBlogScraperV2();
+      
+      // Track all keywords
+      for (const keyword of keywords) {
+        try {
+          const result = await scraper.checkBlogRanking(
+            keyword.keyword,
+            blog.blogUrl || '',
+            blog.blogName || ''
+          );
+
+          // Save ranking result
+          await prisma.blogRanking.create({
+            data: {
+              keywordId: keyword.id,
+              checkDate: new Date(),
+              rank: result.found ? result.rank : null,
+              found: result.found,
+              url: result.url || null,
+              title: result.title || null,
+              totalResults: result.totalResults || 0
+            }
+          });
+
+          // Update keyword's last checked date
+          await prisma.blogKeyword.update({
+            where: { id: keyword.id },
+            data: { lastChecked: new Date() }
+          });
+
+        } catch (error) {
+          console.error(`[Blog] Error tracking keyword "${keyword.keyword}":`, error);
+        }
+      }
+
+      // Update blog project last updated
+      await prisma.blogProject.update({
+        where: { id: blog.id },
+        data: { lastUpdated: new Date() }
+      });
+
+      console.log(`[Blog] Completed tracking for user: ${userName}`);
+      return { success: true, keywordsCount: keywords.length };
+
+    } catch (error) {
+      console.error(`[Blog] Error tracking for user ${userName}:`, error);
+      throw error;
+    }
+  },
+  { connection }
+);
+
+// Add job to queue
+export async function addTrackingJob(data: TrackingJobData) {
+  const queue = data.type === 'smartplace' ? smartplaceQueue : blogQueue;
+  
+  const job = await queue.add(
+    `track-${data.userId}`,
+    data,
+    {
+      priority: data.priority || 0,
+      removeOnComplete: true,
+      removeOnFail: false,
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 2000
+      }
+    }
+  );
+
+  return job;
+}
+
+// Add batch tracking jobs for all users
+export async function addBatchTrackingJobs() {
+  const users = await prisma.user.findMany({
+    where: {
+      role: { in: ['academy', 'branch', 'admin', 'agency'] },
+      isActive: true
+    }
+  });
+
+  const jobs = [];
+
+  for (const user of users) {
+    // Add SmartPlace tracking job
+    const smartplaceJob = await addTrackingJob({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.name,
+      type: 'smartplace'
+    });
+    jobs.push(smartplaceJob);
+
+    // Add Blog tracking job
+    const blogJob = await addTrackingJob({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.name,
+      type: 'blog'
+    });
+    jobs.push(blogJob);
+  }
+
+  return jobs;
+}
+
+// Get queue status
+export async function getQueueStatus() {
+  const [smartplaceStats, blogStats] = await Promise.all([
+    smartplaceQueue.getJobCounts(),
+    blogQueue.getJobCounts()
+  ]);
+
+  return {
+    smartplace: smartplaceStats,
+    blog: blogStats
+  };
+}
+
+// Clear completed jobs
+export async function clearCompletedJobs() {
+  await Promise.all([
+    smartplaceQueue.clean(0, 1000, 'completed'),
+    blogQueue.clean(0, 1000, 'completed')
+  ]);
+}
+
+// Graceful shutdown
+export async function shutdownQueues() {
+  await smartplaceWorker.close();
+  await blogWorker.close();
+  await smartplaceQueue.close();
+  await blogQueue.close();
+  connection.disconnect();
+}

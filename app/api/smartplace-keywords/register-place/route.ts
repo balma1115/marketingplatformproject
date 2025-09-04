@@ -1,18 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth } from '@/lib/auth-middleware'
+import { NaverSmartPlaceScraper } from '@/lib/services/naver-smartplace-scraper'
 
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
-      const { placeName, placeId } = await request.json()
+      const { placeName, placeId, placeUrl } = await request.json()
 
-      if (!placeName || !placeId) {
+      // URL이 제공된 경우 Place ID 자동 추출
+      let finalPlaceId = placeId
+      let extractedPlaceName = placeName
+      
+      if (placeUrl && !placeId) {
+        const scraper = new NaverSmartPlaceScraper()
+        
+        try {
+          // Place ID 추출
+          const extractedId = await scraper.extractPlaceId(placeUrl)
+          if (extractedId) {
+            finalPlaceId = extractedId
+          }
+          
+          // 업체명도 추출
+          if (!placeName) {
+            const extractedName = await scraper.getPlaceName(placeUrl)
+            if (extractedName) {
+              extractedPlaceName = extractedName
+            }
+          }
+        } catch (error) {
+          console.error('Place info extraction error:', error)
+        }
+      }
+
+      if (!extractedPlaceName || !finalPlaceId) {
         return NextResponse.json({ error: '장소 이름과 Place ID를 입력해주세요.' }, { status: 400 })
       }
 
       // Place ID 형식 검증 (숫자만 허용)
-      if (!/^\d+$/.test(placeId)) {
+      if (!/^\d+$/.test(finalPlaceId)) {
         return NextResponse.json({ error: 'Place ID는 숫자만 입력 가능합니다.' }, { status: 400 })
       }
 
@@ -31,8 +58,8 @@ export async function POST(req: NextRequest) {
       const place = await prisma.trackingProject.create({
         data: {
           userId: userId,
-          placeName: placeName,
-          placeId: placeId,
+          placeName: extractedPlaceName,
+          placeId: finalPlaceId,
           isActive: true
         },
         include: {
@@ -50,7 +77,12 @@ export async function POST(req: NextRequest) {
           placeId: place.placeId,
           keywordCount: place._count.keywords,
           isActive: place.isActive,
-          lastUpdated: place.lastUpdated
+          lastUpdated: place.lastUpdated,
+          extractedInfo: placeUrl ? {
+            placeId: finalPlaceId,
+            placeName: extractedPlaceName,
+            sourceUrl: placeUrl
+          } : undefined
         }
       })
     } catch (error) {

@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Plus, Trash2, Search, TrendingUp, AlertCircle, Globe, BookOpen, CheckCircle, XCircle, RefreshCw, Download } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Header from '@/components/layout/Header'
 
 interface UnifiedKeyword {
@@ -12,8 +13,7 @@ interface UnifiedKeyword {
     projectId: string
     addedDate: string
     currentRank: number | null
-    overallRank: number | null
-    rankingType: string
+    adRank: number | null
     lastTracked: string
   } | null
   blog: {
@@ -21,9 +21,9 @@ interface UnifiedKeyword {
     projectName: string
     projectId: string
     addedDate: string
+    mainTabExposed: boolean
     mainTabRank: number | null
     blogTabRank: number | null
-    viewTabRank: number | null
     lastTracked: string
   } | null
 }
@@ -35,15 +35,18 @@ interface Stats {
   both: number
 }
 
-export default function FocusKeywordManagement() {
-  const [keywords, setKeywords] = useState<UnifiedKeyword[]>([])
-  const [stats, setStats] = useState<Stats>({
-    totalKeywords: 0,
-    smartplaceOnly: 0,
-    blogOnly: 0,
-    both: 0
+const fetchUnifiedKeywords = async () => {
+  const response = await fetch('/api/focus-keywords/unified', {
+    credentials: 'include'
   })
-  const [loading, setLoading] = useState(false)
+  if (!response.ok) {
+    throw new Error('Failed to fetch keywords')
+  }
+  return response.json()
+}
+
+export default function FocusKeywordManagement() {
+  const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [addTarget, setAddTarget] = useState<'smartplace' | 'blog' | null>(null)
@@ -51,40 +54,26 @@ export default function FocusKeywordManagement() {
   const [filter, setFilter] = useState<'all' | 'smartplace' | 'blog' | 'both'>('all')
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchKeywords()
-  }, [])
+  // React Query로 데이터 fetching 및 캐싱
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['unifiedKeywords'],
+    queryFn: fetchUnifiedKeywords,
+    staleTime: 5 * 60 * 1000, // 5분간 fresh
+    gcTime: 10 * 60 * 1000, // 10분간 캐시 유지
+  })
 
-  const fetchKeywords = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/focus-keywords/unified', {
-        credentials: 'include'
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setKeywords(data.keywords)
-        setStats(data.stats)
-      }
-    } catch (error) {
-      console.error('Failed to fetch keywords:', error)
-    } finally {
-      setLoading(false)
-    }
+  const keywords = data?.keywords || []
+  const stats = data?.stats || {
+    totalKeywords: 0,
+    smartplaceOnly: 0,
+    blogOnly: 0,
+    both: 0
   }
 
-  const handleAddKeywords = async () => {
-    if (!addTarget || !newKeywords.trim()) return
-
-    const keywordList = newKeywords.split('\n').filter(k => k.trim())
-    if (keywordList.length === 0) return
-
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const endpoint = addTarget === 'smartplace' 
+  // 키워드 추가 mutation
+  const addKeywordsMutation = useMutation({
+    mutationFn: async ({ target, keywords }: { target: 'smartplace' | 'blog', keywords: string[] }) => {
+      const endpoint = target === 'smartplace' 
         ? '/api/focus-keywords/add-to-smartplace'
         : '/api/focus-keywords/add-to-blog'
 
@@ -94,42 +83,56 @@ export default function FocusKeywordManagement() {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify({ keywords: keywordList })
+        body: JSON.stringify({ keywords })
       })
 
-      if (response.ok) {
-        await fetchKeywords()
-        setShowAddModal(false)
-        setNewKeywords('')
-        setAddTarget(null)
-        setError(null)
-      } else {
+      if (!response.ok) {
         const data = await response.json()
-        setError(data.error || '키워드 추가에 실패했습니다.')
+        throw new Error(data.error || '키워드 추가에 실패했습니다.')
       }
-    } catch (error) {
-      console.error('Failed to add keywords:', error)
-      setError('키워드 추가 중 오류가 발생했습니다.')
-    } finally {
-      setLoading(false)
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unifiedKeywords'] })
+      setShowAddModal(false)
+      setNewKeywords('')
+      setAddTarget(null)
+      setError(null)
+    },
+    onError: (error: Error) => {
+      setError(error.message)
     }
+  })
+
+  const handleAddKeywords = async () => {
+    if (!addTarget || !newKeywords.trim()) return
+
+    const keywordList = newKeywords.split('\n').filter(k => k.trim())
+    if (keywordList.length === 0) return
+
+    addKeywordsMutation.mutate({ target: addTarget, keywords: keywordList })
   }
 
-  const handleRemoveKeyword = async (source: 'smartplace' | 'blog', keywordId: number) => {
-    if (!confirm('이 키워드를 제거하시겠습니까?')) return
-
-    try {
+  // 키워드 제거 mutation
+  const removeKeywordMutation = useMutation({
+    mutationFn: async ({ source, keywordId }: { source: 'smartplace' | 'blog', keywordId: number }) => {
       const response = await fetch(`/api/focus-keywords/${source}/${keywordId}`, {
         method: 'DELETE',
         credentials: 'include'
       })
-
-      if (response.ok) {
-        await fetchKeywords()
+      if (!response.ok) {
+        throw new Error('Failed to remove keyword')
       }
-    } catch (error) {
-      console.error('Failed to remove keyword:', error)
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unifiedKeywords'] })
     }
+  })
+
+  const handleRemoveKeyword = async (source: 'smartplace' | 'blog', keywordId: number) => {
+    if (!confirm('이 키워드를 제거하시겠습니까?')) return
+    removeKeywordMutation.mutate({ source, keywordId })
   }
 
   const getRankClass = (rank: number | null): string => {
@@ -154,14 +157,13 @@ export default function FocusKeywordManagement() {
 
   const exportToCSV = () => {
     const csvContent = [
-      ['키워드', '스마트플레이스 순위', '스마트플레이스 전체순위', '블로그 통합검색', '블로그탭', 'VIEW탭'],
+      ['키워드', '스마트플레이스 오가닉', '스마트플레이스 광고', '블로그 통합검색', '블로그탭'],
       ...filteredKeywords.map(k => [
         k.keyword,
         k.smartplace?.currentRank || '-',
-        k.smartplace?.overallRank || '-',
+        k.smartplace?.adRank || '-',
         k.blog?.mainTabRank || '-',
-        k.blog?.blogTabRank || '-',
-        k.blog?.viewTabRank || '-'
+        k.blog?.blogTabRank || '-'
       ])
     ].map(row => row.join(',')).join('\n')
 
@@ -184,7 +186,7 @@ export default function FocusKeywordManagement() {
           <div className="flex gap-2">
             <button 
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 flex items-center gap-2"
-              onClick={fetchKeywords}
+              onClick={() => refetch()}
             >
               <RefreshCw size={18} />
               새로고침
@@ -330,7 +332,7 @@ export default function FocusKeywordManagement() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
+              {isLoading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
                     데이터를 불러오는 중...
@@ -350,14 +352,13 @@ export default function FocusKeywordManagement() {
                     </td>
                     <td className="px-6 py-4">
                       {keyword.smartplace ? (
-                        <div>
+                        <div className="flex items-center gap-2">
                           <span className={`font-bold ${getRankClass(keyword.smartplace.currentRank)}`}>
-                            {keyword.smartplace.currentRank || '-'}위
+                            오가닉: {keyword.smartplace.currentRank || '-'}위
                           </span>
-                          <span className="text-sm text-gray-500 ml-2">{keyword.smartplace.projectName}</span>
-                          {keyword.smartplace.lastTracked && (
-                            <span className="text-xs text-gray-400 ml-2">
-                              {new Date(keyword.smartplace.lastTracked).toLocaleDateString()}
+                          {keyword.smartplace.adRank && (
+                            <span className="text-sm text-orange-600">
+                              광고: {keyword.smartplace.adRank}위
                             </span>
                           )}
                         </div>
@@ -368,14 +369,11 @@ export default function FocusKeywordManagement() {
                     <td className="px-6 py-4">
                       {keyword.blog ? (
                         <div className="flex gap-2">
-                          <span className={`inline-block px-2 py-1 text-xs rounded ${getRankClass(keyword.blog.mainTabRank)} bg-gray-100`}>
-                            통합 {keyword.blog.mainTabRank || '-'}
+                          <span className={`inline-block px-2 py-1 text-xs rounded ${keyword.blog.mainTabExposed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                            통합 {keyword.blog.mainTabExposed ? (keyword.blog.mainTabRank ? `${keyword.blog.mainTabRank}위` : '노출') : '미노출'}
                           </span>
                           <span className={`inline-block px-2 py-1 text-xs rounded ${getRankClass(keyword.blog.blogTabRank)} bg-gray-100`}>
-                            블로그 {keyword.blog.blogTabRank || '-'}
-                          </span>
-                          <span className={`inline-block px-2 py-1 text-xs rounded ${getRankClass(keyword.blog.viewTabRank)} bg-gray-100`}>
-                            VIEW {keyword.blog.viewTabRank || '-'}
+                            블로그탭 {keyword.blog.blogTabRank ? `${keyword.blog.blogTabRank}위` : '미노출'}
                           </span>
                         </div>
                       ) : (
@@ -474,9 +472,9 @@ export default function FocusKeywordManagement() {
                 <button 
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                   onClick={handleAddKeywords}
-                  disabled={loading || !newKeywords.trim()}
+                  disabled={addKeywordsMutation.isPending || !newKeywords.trim()}
                 >
-                  {loading ? '추가 중...' : '키워드 추가'}
+                  {addKeywordsMutation.isPending ? '추가 중...' : '키워드 추가'}
                 </button>
               </div>
             </div>

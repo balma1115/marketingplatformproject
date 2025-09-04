@@ -316,15 +316,19 @@ export default function AdsDashboard() {
             </div>
 
             {/* Stats Notice */}
-            {campaigns.some(c => c.totalChargeCost === 0) && (
+            {campaigns.every(c => c.stats?.impCnt === 0 && c.stats?.clkCnt === 0) && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                   <div>
                     <h3 className="text-sm font-medium text-amber-900">통계 데이터 안내</h3>
                     <p className="text-sm text-amber-700 mt-1">
-                      캠페인이 아직 실행되지 않아 노출수, 클릭수 등의 상세 통계가 0으로 표시됩니다.
-                      캠페인이 실행되면 실제 데이터가 표시됩니다.
+                      선택한 기간에 캠페인 실행 데이터가 없습니다. 
+                      캠페인이 실행 중이면 다른 날짜 범위를 선택해보세요.
+                      새로운 캠페인의 경우 실행 후 데이터가 표시됩니다.
+                    </p>
+                    <p className="text-xs text-amber-600 mt-2">
+                      네이버 광고 통계는 실시간으로 업데이트되지만, 1-2시간의 지연이 있을 수 있습니다.
                     </p>
                   </div>
                 </div>

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { withAuth } from '@/lib/auth-middleware'
 import { ImprovedNaverScraperV3 } from '@/lib/services/improved-scraper-v3'
 import { PlaywrightCrawlerService } from '@/lib/services/playwrightCrawler'
+import { getKSTDate, getKSTToday, getKSTDateString } from '@/lib/utils/timezone'
 
 // SSE 응답을 위한 헬퍼 함수
 function createSSEStream() {
@@ -96,18 +97,22 @@ export async function POST(req: NextRequest) {
       console.log('Using Improved V3 scraper (with pagination)')
       const playwrightCrawler = new PlaywrightCrawlerService()
       
+      // 한국 시간(KST) 기준으로 날짜 설정 - 스냅샷과 랭킹에서 동일하게 사용
+      const checkDate = getKSTDate()
+      console.log(`Tracking Start - KST Check Date: ${getKSTDateString(checkDate)}`)
+      
       // 업체 상세 정보 수집
       let placeDetail = null
       try {
         // PlaywrightCrawlerService는 placeId를 직접 받습니다
         placeDetail = await playwrightCrawler.getPlaceDetails(place.placeId)
         
-        // 스냅샷 저장
+        // 스냅샷 저장 (KST 시간 사용)
         await prisma.trackingSnapshot.create({
           data: {
             sessionId: session.id,
             projectId: place.id,
-            checkDate: new Date(),
+            checkDate: checkDate, // KST 시간 사용
             placeName: placeDetail.name || place.placeName,
             category: placeDetail.category || null,
             directions: placeDetail.directions || null,
@@ -118,6 +123,7 @@ export async function POST(req: NextRequest) {
             address: placeDetail.address || null
           }
         })
+        console.log(`Snapshot saved with KST date: ${getKSTDateString(checkDate)}`)
       } catch (error) {
         console.error('Failed to get place details:', error)
       }
@@ -125,11 +131,12 @@ export async function POST(req: NextRequest) {
       // 각 키워드에 대해 순위 추적
       let successCount = 0
       let failCount = 0
-      const checkDate = new Date()
-      const startOfToday = new Date(checkDate)
-      startOfToday.setHours(0, 0, 0, 0)
-      const endOfToday = new Date(checkDate)
-      endOfToday.setHours(23, 59, 59, 999)
+      const startOfToday = getKSTToday() // KST 자정
+      const endOfToday = new Date(startOfToday)
+      endOfToday.setDate(endOfToday.getDate() + 1)
+      endOfToday.setMilliseconds(-1) // 23:59:59.999
+      
+      console.log(`KST Check Date: ${getKSTDateString(checkDate)}`)
       
       // 오늘 날짜의 기존 추적 데이터 삭제
       console.log(`Deleting existing tracking data for today...`)

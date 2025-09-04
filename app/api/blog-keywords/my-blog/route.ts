@@ -6,9 +6,9 @@ export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
       // 사용자의 블로그 프로젝트 조회 (1개만)
-      const blog = await prisma.blogTrackingProject.findFirst({
+      const blog = await prisma.blogProject.findFirst({
         where: {
-          userId: userId
+          userId: parseInt(userId)
         },
         include: {
           _count: {
@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
       // 데이터 포맷팅
       const formattedBlog = {
         id: blog.id,
-        blogName: blog.blogName,
-        blogUrl: blog.blogUrl,
+        blogName: blog.blogName || blog.name,
+        blogUrl: blog.blogUrl || blog.targetBlogUrl,
         keywordCount: blog._count.keywords
       }
 

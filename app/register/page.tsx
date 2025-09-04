@@ -1,468 +1,415 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Mail, Lock, User, Phone, Building, AlertCircle, Check, ArrowRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { toast } from 'sonner'
+import { Eye, EyeOff, Phone } from 'lucide-react'
+
+interface Subject {
+  id: number
+  name: string
+  code: string
+}
+
+interface Branch {
+  id: number
+  subjectId: number
+  name: string
+}
+
+interface Academy {
+  id: number
+  branchId: number
+  name: string
+}
+
+interface SubjectSelection {
+  selected: boolean
+  branchId: string
+  academyId: string
+}
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState(1)
-  
+
+  // Form data
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
+    passwordConfirm: '',
     name: '',
-    phone: '',
-    academyName: '',
-    academyAddress: '',
-    accountType: 'academy', // academy, agency, branch
-    agreeTerms: false,
-    agreePrivacy: false,
-    agreeMarketing: false
+    phone: ''
   })
 
-  const [passwordValidation, setPasswordValidation] = useState({
-    minLength: false,
-    hasNumber: false,
-    hasSpecial: false,
-    hasUppercase: false
-  })
+  // Organization data
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [academies, setAcademies] = useState<Academy[]>([])
 
-  const validatePassword = (password: string) => {
-    setPasswordValidation({
-      minLength: password.length >= 8,
-      hasNumber: /\d/.test(password),
-      hasSpecial: /[!@#$%^&*]/.test(password),
-      hasUppercase: /[A-Z]/.test(password)
-    })
+  // Subject selections
+  const [subjectSelections, setSubjectSelections] = useState<Record<string, SubjectSelection>>({})
+
+  // Fetch organization data
+  useEffect(() => {
+    fetchOrganizationData()
+  }, [])
+
+  const fetchOrganizationData = async () => {
+    try {
+      // Fetch subjects
+      const subjectsRes = await fetch('/api/public/subjects')
+      const subjectsData = await subjectsRes.json()
+      setSubjects(subjectsData.subjects || [])
+
+      // Initialize subject selections
+      const initialSelections: Record<string, SubjectSelection> = {}
+      subjectsData.subjects?.forEach((subject: Subject) => {
+        initialSelections[subject.id.toString()] = {
+          selected: false,
+          branchId: '',
+          academyId: ''
+        }
+      })
+      setSubjectSelections(initialSelections)
+
+      // Fetch branches
+      const branchesRes = await fetch('/api/public/branches')
+      const branchesData = await branchesRes.json()
+      setBranches(branchesData.branches || [])
+
+      // Fetch academies
+      const academiesRes = await fetch('/api/public/academies')
+      const academiesData = await academiesRes.json()
+      setAcademies(academiesData.academies || [])
+    } catch (error) {
+      console.error('Failed to fetch organization data:', error)
+    }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
-      
-      if (name === 'password') {
-        validatePassword(value)
+  const handleSubjectToggle = (subjectId: string) => {
+    setSubjectSelections(prev => ({
+      ...prev,
+      [subjectId]: {
+        ...prev[subjectId],
+        selected: !prev[subjectId].selected,
+        // Reset selections when toggling off
+        branchId: !prev[subjectId].selected ? prev[subjectId].branchId : '',
+        academyId: !prev[subjectId].selected ? prev[subjectId].academyId : ''
       }
-    }
-    
-    setError('')
+    }))
   }
 
-  const handleNextStep = (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Validate step 1
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError('모든 필수 항목을 입력해주세요')
-      return
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      setError('비밀번호가 일치하지 않습니다')
-      return
-    }
-    
-    if (!Object.values(passwordValidation).every(v => v)) {
-      setError('비밀번호 요구사항을 확인해주세요')
-      return
-    }
-    
-    setStep(2)
+  const handleBranchSelect = (subjectId: string, branchId: string) => {
+    setSubjectSelections(prev => ({
+      ...prev,
+      [subjectId]: {
+        ...prev[subjectId],
+        branchId,
+        academyId: '' // Reset academy when branch changes
+      }
+    }))
   }
 
+  const handleAcademySelect = (subjectId: string, academyId: string) => {
+    setSubjectSelections(prev => ({
+      ...prev,
+      [subjectId]: {
+        ...prev[subjectId],
+        academyId
+      }
+    }))
+  }
+
+
+  // Handle registration
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Validate step 2
-    if (!formData.name || !formData.phone || !formData.academyName) {
-      setError('모든 필수 항목을 입력해주세요')
+    setError('')
+
+    // Validation
+    if (!formData.email || !formData.password || !formData.name || !formData.phone) {
+      setError('필수 정보를 모두 입력해주세요.')
       return
     }
-    
-    if (!formData.agreeTerms || !formData.agreePrivacy) {
-      setError('필수 약관에 동의해주세요')
+
+    if (formData.password !== formData.passwordConfirm) {
+      setError('비밀번호가 일치하지 않습니다.')
       return
     }
-    
+
+    // Check if at least one subject is selected
+    const selectedSubjects = Object.entries(subjectSelections).filter(([_, value]) => value.selected)
+    if (selectedSubjects.length === 0) {
+      setError('최소 하나 이상의 과목을 선택해주세요.')
+      return
+    }
+
+    // Validate all selected subjects have branch and academy
+    for (const [subjectId, selection] of selectedSubjects) {
+      if (!selection.branchId || !selection.academyId) {
+        const subject = subjects.find(s => s.id.toString() === subjectId)
+        setError(`${subject?.name}의 지사와 학원을 모두 선택해주세요.`)
+        return
+      }
+    }
+
     setLoading(true)
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      // Prepare subject data
+      const userSubjects = selectedSubjects.map(([subjectId, selection]) => ({
+        subjectId: parseInt(subjectId),
+        branchId: parseInt(selection.branchId),
+        academyId: parseInt(selection.academyId)
+      }))
+
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          phone: formData.phone,
+          userSubjects
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('회원가입이 완료되었습니다. 지사 승인 후 서비스를 이용할 수 있습니다.')
+        router.push('/login')
+      } else {
+        setError(data.error || '회원가입에 실패했습니다.')
+      }
+    } catch (error) {
+      setError('회원가입 중 오류가 발생했습니다.')
+    } finally {
       setLoading(false)
-      // Redirect to login on success
-      router.push('/login?registered=true')
-    }, 1500)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      {/* Simple Header */}
-      <header className="absolute top-0 left-0 right-0 z-10">
-        <div className="container py-6">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-brand-navy rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">M</span>
-            </div>
-            <span className="font-bold text-xl text-brand-navy">MarketingPlat</span>
-          </Link>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="w-full max-w-md">
-          {/* Progress Steps */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center space-x-3">
-              <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
-                step >= 1 ? "bg-accent-blue text-white" : "bg-gray-200 text-gray-500"
-              )}>
-                1
-              </div>
-              <div className={cn(
-                "w-20 h-1",
-                step >= 2 ? "bg-accent-blue" : "bg-gray-200"
-              )} />
-              <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
-                step >= 2 ? "bg-accent-blue text-white" : "bg-gray-200 text-gray-500"
-              )}>
-                2
-              </div>
-            </div>
-          </div>
-
-          {/* Register Card */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {step === 1 ? '계정 생성' : '학원 정보 입력'}
-              </h1>
-              <p className="text-gray-600">
-                {step === 1 
-                  ? 'MarketingPlat과 함께 시작하세요'
-                  : '마지막 단계입니다'
-                }
-              </p>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
-                <AlertCircle size={16} className="text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-                <span className="text-sm text-red-700">{error}</span>
-              </div>
-            )}
-
-            {step === 1 ? (
-              <form onSubmit={handleNextStep} className="space-y-4">
-                {/* Email Field */}
-                <div>
-                  <label htmlFor="email" className="form-label">
-                    이메일 <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="form-input pl-10"
-                      placeholder="name@example.com"
-                    />
-                  </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-3xl bg-white border-gray-200 shadow-xl">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">회원가입</CardTitle>
+          <CardDescription className="text-center">
+            MarketingPlat 서비스를 이용하기 위해 회원가입을 진행해주세요.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">기본 정보</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-700 font-medium">이메일 (ID)</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
+                    required
+                  />
                 </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-gray-700 font-medium">이름</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="홍길동"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
+                    required
+                  />
+                </div>
+              </div>
 
-                {/* Password Field */}
-                <div>
-                  <label htmlFor="password" className="form-label">
-                    비밀번호 <span className="text-red-500">*</span>
-                  </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-700 font-medium">비밀번호</Label>
                   <div className="relative">
-                    <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
+                    <Input
                       id="password"
-                      name="password"
                       type={showPassword ? 'text' : 'password'}
-                      required
                       value={formData.password}
-                      onChange={handleChange}
-                      className="form-input pl-10 pr-10"
-                      placeholder="••••••••"
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      className="border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
+                      required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-2.5 text-gray-600"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-
-                  {/* Password Requirements */}
-                  <div className="mt-2 space-y-1">
-                    <div className={cn(
-                      "flex items-center text-xs",
-                      passwordValidation.minLength ? "text-green-600" : "text-gray-400"
-                    )}>
-                      <Check size={14} className="mr-1" />
-                      8자 이상
-                    </div>
-                    <div className={cn(
-                      "flex items-center text-xs",
-                      passwordValidation.hasNumber ? "text-green-600" : "text-gray-400"
-                    )}>
-                      <Check size={14} className="mr-1" />
-                      숫자 포함
-                    </div>
-                    <div className={cn(
-                      "flex items-center text-xs",
-                      passwordValidation.hasSpecial ? "text-green-600" : "text-gray-400"
-                    )}>
-                      <Check size={14} className="mr-1" />
-                      특수문자 포함
-                    </div>
-                    <div className={cn(
-                      "flex items-center text-xs",
-                      passwordValidation.hasUppercase ? "text-green-600" : "text-gray-400"
-                    )}>
-                      <Check size={14} className="mr-1" />
-                      대문자 포함
-                    </div>
-                  </div>
                 </div>
-
-                {/* Confirm Password Field */}
-                <div>
-                  <label htmlFor="confirmPassword" className="form-label">
-                    비밀번호 확인 <span className="text-red-500">*</span>
-                  </label>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="passwordConfirm" className="text-gray-700 font-medium">비밀번호 확인</Label>
                   <div className="relative">
-                    <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
+                    <Input
+                      id="passwordConfirm"
+                      type={showPasswordConfirm ? 'text' : 'password'}
+                      value={formData.passwordConfirm}
+                      onChange={(e) => setFormData({...formData, passwordConfirm: e.target.value})}
+                      className="border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
                       required
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      className="form-input pl-10 pr-10"
-                      placeholder="••••••••"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                      className="absolute right-2 top-2.5 text-gray-600"
                     >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Next Button */}
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-lg w-full"
-                >
-                  다음 단계
-                  <ArrowRight size={20} className="ml-2" />
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Account Type */}
-                <div>
-                  <label htmlFor="accountType" className="form-label">
-                    계정 유형 <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="accountType"
-                    name="accountType"
-                    value={formData.accountType}
-                    onChange={handleChange}
-                    className="form-input"
-                  >
-                    <option value="academy">학원</option>
-                    <option value="agency">에이전시</option>
-                    <option value="branch">지사</option>
-                  </select>
+            {/* Phone Number */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">연락처</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-gray-700 font-medium">전화번호</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="01012345678"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="pl-10 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
+                    required
+                  />
                 </div>
+                <p className="text-sm text-gray-500">하이픈(-) 없이 입력해주세요.</p>
+              </div>
+            </div>
 
-                {/* Name Field */}
-                <div>
-                  <label htmlFor="name" className="form-label">
-                    담당자명 <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="form-input pl-10"
-                      placeholder="홍길동"
+            {/* Subject Selection */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">과목 및 소속 선택</h3>
+              
+              {subjects.map(subject => (
+                <div key={subject.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`subject-${subject.id}`}
+                      checked={subjectSelections[subject.id]?.selected || false}
+                      onCheckedChange={() => handleSubjectToggle(subject.id.toString())}
                     />
+                    <Label 
+                      htmlFor={`subject-${subject.id}`}
+                      className="text-base font-medium cursor-pointer"
+                    >
+                      {subject.name}
+                    </Label>
                   </div>
-                </div>
 
-                {/* Phone Field */}
-                <div>
-                  <label htmlFor="phone" className="form-label">
-                    연락처 <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="form-input pl-10"
-                      placeholder="010-1234-5678"
-                    />
-                  </div>
-                </div>
-
-                {/* Academy Name Field */}
-                <div>
-                  <label htmlFor="academyName" className="form-label">
-                    {formData.accountType === 'academy' ? '학원명' : 
-                     formData.accountType === 'agency' ? '회사명' : '지사명'}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      id="academyName"
-                      name="academyName"
-                      type="text"
-                      required
-                      value={formData.academyName}
-                      onChange={handleChange}
-                      className="form-input pl-10"
-                      placeholder={
-                        formData.accountType === 'academy' ? 'OO학원' : 
-                        formData.accountType === 'agency' ? 'OO회사' : 'OO지사'
-                      }
-                    />
-                  </div>
-                </div>
-
-                {/* Terms and Conditions */}
-                <div className="space-y-3 pt-2">
-                  <label className="flex items-start">
-                    <input
-                      type="checkbox"
-                      name="agreeTerms"
-                      checked={formData.agreeTerms}
-                      onChange={handleChange}
-                      className="mt-0.5 mr-2"
-                    />
-                    <span className="text-sm text-gray-600">
-                      <span className="text-red-500">[필수]</span> 이용약관에 동의합니다
-                    </span>
-                  </label>
-                  
-                  <label className="flex items-start">
-                    <input
-                      type="checkbox"
-                      name="agreePrivacy"
-                      checked={formData.agreePrivacy}
-                      onChange={handleChange}
-                      className="mt-0.5 mr-2"
-                    />
-                    <span className="text-sm text-gray-600">
-                      <span className="text-red-500">[필수]</span> 개인정보처리방침에 동의합니다
-                    </span>
-                  </label>
-                  
-                  <label className="flex items-start">
-                    <input
-                      type="checkbox"
-                      name="agreeMarketing"
-                      checked={formData.agreeMarketing}
-                      onChange={handleChange}
-                      className="mt-0.5 mr-2"
-                    />
-                    <span className="text-sm text-gray-600">
-                      [선택] 마케팅 정보 수신에 동의합니다
-                    </span>
-                  </label>
-                </div>
-
-                {/* Submit Buttons */}
-                <div className="space-y-3">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={cn(
-                      "btn btn-primary btn-lg w-full",
-                      loading && "opacity-70 cursor-not-allowed"
-                    )}
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        가입 처리 중...
+                  {subjectSelections[subject.id]?.selected && (
+                    <div className="grid grid-cols-2 gap-4 pl-6">
+                      <div className="space-y-2">
+                        <Label>소속 지사</Label>
+                        <Select
+                          value={subjectSelections[subject.id].branchId}
+                          onValueChange={(value) => handleBranchSelect(subject.id.toString(), value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="지사를 선택하세요" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {branches
+                              .filter(branch => branch.subjectId === subject.id)
+                              .map(branch => (
+                                <SelectItem key={branch.id} value={branch.id.toString()}>
+                                  {branch.name}
+                                </SelectItem>
+                              ))
+                            }
+                          </SelectContent>
+                        </Select>
                       </div>
-                    ) : (
-                      '가입 완료'
-                    )}
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="btn btn-secondary btn-lg w-full"
-                    disabled={loading}
-                  >
-                    이전 단계
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
 
-          {/* Login Link */}
-          <div className="mt-6 text-center">
-            <span className="text-sm text-gray-600">
-              이미 계정이 있으신가요?{' '}
-              <Link href="/login" className="text-accent-blue font-bold hover:underline">
-                로그인
-              </Link>
-            </span>
-          </div>
-        </div>
-      </div>
+                      <div className="space-y-2">
+                        <Label>학원명</Label>
+                        <Select
+                          value={subjectSelections[subject.id].academyId}
+                          onValueChange={(value) => handleAcademySelect(subject.id.toString(), value)}
+                          disabled={!subjectSelections[subject.id].branchId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="학원을 선택하세요" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {academies
+                              .filter(academy => 
+                                academy.branchId === parseInt(subjectSelections[subject.id].branchId)
+                              )
+                              .map(academy => (
+                                <SelectItem key={academy.id} value={academy.id.toString()}>
+                                  {academy.name}
+                                </SelectItem>
+                              ))
+                            }
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full bg-accent-blue hover:bg-secondary-blue text-white font-medium py-6 text-base transition-all duration-200" 
+              disabled={loading}
+            >
+              {loading ? '처리 중...' : '회원가입'}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-gray-600">
+            이미 계정이 있으신가요?{' '}
+            <Link href="/login" className="text-accent-blue hover:text-secondary-blue font-medium transition-colors">
+              로그인
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   )
 }
