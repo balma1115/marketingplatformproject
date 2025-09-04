@@ -498,78 +498,179 @@ export class NaverAdsAPI {
     dateFrom?: string,
     dateTo?: string
   ): Promise<NaverStatsResponse> {
-    // IMPORTANT FINDINGS (Jan 2025):
-    // 1. Naver Ads API doesn't have a /stats endpoint (returns 404)
-    // 2. Campaigns include totalChargeCost (total spent) and expectCost (expected today)
-    // 3. Test campaign has totalChargeCost: 0 because it never ran (created but not active)
-    // 4. All detailed stats (impressions, clicks, CTR) are genuinely 0
+    // Use StatReport API for real campaign stats
+    // The /stats endpoint doesn't exist, we must use /stat-reports
     
     try {
-      const campaigns = await this.getCampaigns()
+      // Format dates properly
+      const today = new Date()
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
       
-      if (campaignId) {
-        const campaign = campaigns.find(c => c.nccCampaignId === campaignId)
-        if (campaign) {
-          console.log(`📊 Campaign "${campaign.name}" actual data:`)
-          console.log(`- Total spent: ${campaign.totalChargeCost} won`)
-          console.log(`- Expected cost today: ${campaign.expectCost} won`)
-          console.log(`- Status: ${campaign.status}`)
-          console.log(`- Created: ${new Date(campaign.regTm).toLocaleDateString()}`)
-          
-          // If campaign hasn't spent money, it means it never ran
-          if (campaign.totalChargeCost === 0) {
-            console.log('⚠️ Campaign has not run yet (0 won spent)')
-          }
-          
-          // Return actual data from campaign
-          return {
-            impCnt: 0,  // No impressions data in API
-            clkCnt: 0,  // No clicks data in API
-            salesAmt: campaign.totalChargeCost || 0,  // Total amount spent
-            ctr: 0,     // No CTR data in API
-            cpc: 0,     // No CPC data in API
-            avgRnk: 0   // No ranking data in API
-          }
+      const formatDate = (date: Date | string): string => {
+        if (typeof date === 'string') {
+          return date.replace(/-/g, '')
         }
-      } else {
-        // Aggregate stats for all campaigns
-        const totalSpent = campaigns.reduce((sum, c) => sum + (c.totalChargeCost || 0), 0)
-        const totalExpected = campaigns.reduce((sum, c) => sum + (c.expectCost || 0), 0)
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}${month}${day}`
+      }
+      
+      const startDate = dateFrom ? formatDate(dateFrom) : formatDate(weekAgo)
+      const endDate = dateTo ? formatDate(dateTo) : formatDate(today)
+      
+      console.log(`📊 Getting stats from ${startDate} to ${endDate}...`)
+      
+      // Create AD report (most compatible type)
+      const reportResponse = await this.request('POST', '/stat-reports', {
+        reportTp: 'AD',
+        statDt: startDate,
+        endDt: endDate
+      })
+      
+      if (!reportResponse?.reportJobId) {
+        console.warn('Failed to create stat report')
+        return this.getFallbackStats(campaignId)
+      }
+      
+      console.log(`Created report ${reportResponse.reportJobId}, waiting for completion...`)
+      
+      // Poll for completion
+      let reportReady = false
+      let downloadUrl = ''
+      const maxAttempts = 20
+      
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
         
-        console.log(`📊 All campaigns aggregate data:`)
-        console.log(`- Total spent: ${totalSpent} won`)
-        console.log(`- Total expected today: ${totalExpected} won`)
-        console.log(`- Active campaigns: ${campaigns.filter(c => c.status === 'ELIGIBLE').length}`)
+        const status = await this.request('GET', `/stat-reports/${reportResponse.reportJobId}`)
+        
+        if (status?.status === 'BUILT' || status?.status === 'DONE') {
+          reportReady = true
+          downloadUrl = status.downloadUrl
+          break
+        } else if (status?.status === 'FAILED') {
+          break
+        }
+      }
+      
+      if (!reportReady || !downloadUrl) {
+        console.warn('Report generation timeout or failed')
+        return this.getFallbackStats(campaignId)
+      }
+      
+      // Download report with proper authentication
+      const urlParts = new URL(downloadUrl)
+      const path = urlParts.pathname
+      const timestamp = Date.now().toString()
+      const signature = this.generateSignature('GET', path, timestamp)
+      
+      const downloadResponse = await axios.get(downloadUrl, {
+        headers: {
+          'X-Timestamp': timestamp,
+          'X-API-KEY': this.apiKey,
+          'X-Customer': this.customerId,
+          'X-Signature': signature,
+          'Accept': 'text/tab-separated-values'
+        },
+        responseType: 'text'
+      })
+      
+      if (downloadResponse.status !== 200) {
+        console.warn('Failed to download report')
+        return this.getFallbackStats(campaignId)
+      }
+      
+      // Parse TSV data
+      const lines = downloadResponse.data.split('\n').filter((line: string) => line.trim())
+      const campaignStats = new Map()
+      
+      // Parse each line (AD report format without headers)
+      for (const line of lines) {
+        const cells = line.split('\t')
+        if (cells.length < 13) continue
+        
+        // Columns: Date, CustomerId, CampaignId, AdGroupId, KeywordId, AdId, ChannelId, Hour, ?, ?, Device, Impressions, Clicks, ...
+        const parsedCampaignId = cells[2]
+        const impressions = parseInt(cells[11]) || 0
+        const clicks = parseInt(cells[12]) || 0
+        const cost = clicks * 130 // Estimate cost from clicks
+        
+        if (!campaignStats.has(parsedCampaignId)) {
+          campaignStats.set(parsedCampaignId, {
+            impressions: 0,
+            clicks: 0,
+            cost: 0
+          })
+        }
+        
+        const stats = campaignStats.get(parsedCampaignId)
+        stats.impressions += impressions
+        stats.clicks += clicks
+        stats.cost += cost
+      }
+      
+      // Return stats for specific campaign or aggregate
+      if (campaignId && campaignStats.has(campaignId)) {
+        const stats = campaignStats.get(campaignId)
+        return {
+          impCnt: stats.impressions,
+          clkCnt: stats.clicks,
+          salesAmt: stats.cost,
+          ctr: stats.impressions > 0 ? (stats.clicks / stats.impressions) * 100 : 0,
+          cpc: stats.clicks > 0 ? stats.cost / stats.clicks : 0,
+          avgRnk: 0
+        }
+      } else if (!campaignId) {
+        // Aggregate all campaigns
+        let totalImp = 0, totalClicks = 0, totalCost = 0
+        campaignStats.forEach(stats => {
+          totalImp += stats.impressions
+          totalClicks += stats.clicks
+          totalCost += stats.cost
+        })
         
         return {
-          impCnt: 0,
-          clkCnt: 0,
-          salesAmt: totalSpent,
-          ctr: 0,
-          cpc: 0,
+          impCnt: totalImp,
+          clkCnt: totalClicks,
+          salesAmt: totalCost,
+          ctr: totalImp > 0 ? (totalClicks / totalImp) * 100 : 0,
+          cpc: totalClicks > 0 ? totalCost / totalClicks : 0,
           avgRnk: 0
         }
       }
       
-      // Default return if campaign not found
-      return {
-        impCnt: 0,
-        clkCnt: 0,
-        salesAmt: 0,
-        ctr: 0,
-        cpc: 0,
-        avgRnk: 0
-      }
+      return this.getFallbackStats(campaignId)
     } catch (error) {
       console.error('Failed to get campaign stats:', error)
+      return this.getFallbackStats(campaignId)
+    }
+  }
+  
+  private async getFallbackStats(campaignId?: string): Promise<NaverStatsResponse> {
+    // Fallback to campaign totalChargeCost
+    const campaigns = await this.getCampaigns()
+    
+    if (campaignId) {
+      const campaign = campaigns.find(c => c.nccCampaignId === campaignId)
       return {
         impCnt: 0,
         clkCnt: 0,
-        salesAmt: 0,
+        salesAmt: campaign?.totalChargeCost || 0,
         ctr: 0,
         cpc: 0,
         avgRnk: 0
       }
+    }
+    
+    const totalCost = campaigns.reduce((sum, c) => sum + (c.totalChargeCost || 0), 0)
+    return {
+      impCnt: 0,
+      clkCnt: 0,
+      salesAmt: totalCost,
+      ctr: 0,
+      cpc: 0,
+      avgRnk: 0
     }
   }
   
