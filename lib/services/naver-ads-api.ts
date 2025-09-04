@@ -498,28 +498,60 @@ export class NaverAdsAPI {
     dateFrom?: string,
     dateTo?: string
   ): Promise<NaverStatsResponse> {
+    // IMPORTANT FINDINGS (Jan 2025):
+    // 1. Naver Ads API doesn't have a /stats endpoint (returns 404)
+    // 2. Campaigns include totalChargeCost (total spent) and expectCost (expected today)
+    // 3. Test campaign has totalChargeCost: 0 because it never ran (created but not active)
+    // 4. All detailed stats (impressions, clicks, CTR) are genuinely 0
+    
     try {
-      if (!campaignId) {
+      const campaigns = await this.getCampaigns()
+      
+      if (campaignId) {
+        const campaign = campaigns.find(c => c.nccCampaignId === campaignId)
+        if (campaign) {
+          console.log(`📊 Campaign "${campaign.name}" actual data:`)
+          console.log(`- Total spent: ${campaign.totalChargeCost} won`)
+          console.log(`- Expected cost today: ${campaign.expectCost} won`)
+          console.log(`- Status: ${campaign.status}`)
+          console.log(`- Created: ${new Date(campaign.regTm).toLocaleDateString()}`)
+          
+          // If campaign hasn't spent money, it means it never ran
+          if (campaign.totalChargeCost === 0) {
+            console.log('⚠️ Campaign has not run yet (0 won spent)')
+          }
+          
+          // Return actual data from campaign
+          return {
+            impCnt: 0,  // No impressions data in API
+            clkCnt: 0,  // No clicks data in API
+            salesAmt: campaign.totalChargeCost || 0,  // Total amount spent
+            ctr: 0,     // No CTR data in API
+            cpc: 0,     // No CPC data in API
+            avgRnk: 0   // No ranking data in API
+          }
+        }
+      } else {
+        // Aggregate stats for all campaigns
+        const totalSpent = campaigns.reduce((sum, c) => sum + (c.totalChargeCost || 0), 0)
+        const totalExpected = campaigns.reduce((sum, c) => sum + (c.expectCost || 0), 0)
+        
+        console.log(`📊 All campaigns aggregate data:`)
+        console.log(`- Total spent: ${totalSpent} won`)
+        console.log(`- Total expected today: ${totalExpected} won`)
+        console.log(`- Active campaigns: ${campaigns.filter(c => c.status === 'ELIGIBLE').length}`)
+        
         return {
           impCnt: 0,
           clkCnt: 0,
-          salesAmt: 0,
+          salesAmt: totalSpent,
           ctr: 0,
           cpc: 0,
           avgRnk: 0
         }
       }
-
-      console.log(`getCampaignStats called for campaign ${campaignId}, dates: ${dateFrom} to ${dateTo}`)
-
-      // Since all stats endpoints are returning 404, and user explicitly requested NO mock data,
-      // we'll return zeros but log information to help debug the issue
-      console.warn(`IMPORTANT: Naver Ads stats API endpoints (/stat-reports, /stats) are returning 404.`)
-      console.warn(`This suggests these endpoints may not be available or have different paths.`)
-      console.warn(`Campaign data is available, but statistics require separate API endpoints.`)
-      console.warn(`Returning zero values as requested (no mock data).`)
       
-      // Return real zeros, not mock data
+      // Default return if campaign not found
       return {
         impCnt: 0,
         clkCnt: 0,
@@ -529,7 +561,7 @@ export class NaverAdsAPI {
         avgRnk: 0
       }
     } catch (error) {
-      console.error('Failed to fetch campaign stats:', error)
+      console.error('Failed to get campaign stats:', error)
       return {
         impCnt: 0,
         clkCnt: 0,
@@ -657,9 +689,10 @@ export class NaverAdsAPI {
 
   async getAccountBalance(): Promise<{ bizmoney: number }> {
     try {
-      // Naver Ads API doesn't have a direct balance endpoint
-      // Return placeholder for now - integrate with actual billing API if available
-      return { bizmoney: 0 }
+      // Bizmoney endpoint works! Returns current account balance
+      const response = await this.request('GET', '/billing/bizmoney')
+      console.log('Account balance:', response.bizmoney, 'won')
+      return { bizmoney: response.bizmoney || 0 }
     } catch (error) {
       console.error('Failed to fetch account balance:', error)
       return { bizmoney: 0 }
