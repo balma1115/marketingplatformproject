@@ -1,53 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NaverAdsAPI, AdGroupsQuery } from '@/lib/services/naver-ads-api'
+import { NaverAdsAPI } from '@/lib/services/naver-ads-api'
 import { prisma } from '@/lib/db'
 
-// GET: 광고그룹 목록 조회 (개선된 파라미터 지원)
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ adgroupId: string }> }
+) {
   try {
+    const params = await props.params
+    const adgroupId = params.adgroupId
+    
+    if (!adgroupId) {
+      return NextResponse.json(
+        { error: 'AdGroup ID is required' },
+        { status: 400 }
+      )
+    }
+
     // Get authenticated user
     const authHeader = request.headers.get('cookie')
     if (!authHeader || !authHeader.includes('token=')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    
-    // 파라미터 파싱
-    const query: AdGroupsQuery = {}
-    
-    // 복수 ID 조회
-    const ids = searchParams.get('ids')
-    if (ids) {
-      query.ids = ids.split(',')
-    }
-    
-    // 캠페인 ID
-    const campaignId = searchParams.get('campaignId') || searchParams.get('nccCampaignId')
-    if (campaignId) {
-      query.nccCampaignId = campaignId
-    }
-    
-    // 라벨 ID
-    const labelId = searchParams.get('nccLabelId')
-    if (labelId) {
-      query.nccLabelId = labelId
-    }
-    
-    // 페이징
-    const recordSize = searchParams.get('recordSize')
-    if (recordSize) {
-      query.recordSize = parseInt(recordSize)
-    }
-    
-    const baseSearchId = searchParams.get('baseSearchId')
-    if (baseSearchId) {
-      query.baseSearchId = baseSearchId
-    }
-    
-    const selector = searchParams.get('selector')
-    if (selector) {
-      query.selector = selector
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
     // Get user from database
@@ -95,171 +71,100 @@ export async function GET(request: NextRequest) {
 
     if (!accessKey || !secretKey || !customerId) {
       return NextResponse.json(
-        { 
-          error: 'API credentials not configured',
-          requiresSetup: true
-        },
+        { error: 'Naver Ads API credentials not configured' },
         { status: 400 }
       )
     }
 
-    const naverAds = new NaverAdsAPI({
+    // Initialize Naver Ads API
+    const naverAdsApi = new NaverAdsAPI({
       accessKey,
       secretKey,
       customerId
     })
 
-    const adGroups = await naverAds.getAdGroups(query)
+    // Get ad extensions for the ad group
+    const extensions = await naverAdsApi.getAdExtensions(adgroupId)
     
-    return NextResponse.json({
-      success: true,
-      data: adGroups
-    })
-  } catch (error) {
-    console.error('Failed to fetch ad groups:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch ad groups' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST: 광고그룹 생성
-export async function POST(request: NextRequest) {
-  try {
-    // Get authenticated user
-    const authHeader = request.headers.get('cookie')
-    if (!authHeader || !authHeader.includes('token=')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get user from database
-    let user = await prisma.user.findFirst({
-      where: {
-        email: 'nokyang@marketingplat.com'
+    // Parse adExtension JSON if needed
+    const parsedExtensions = extensions.map((ext: any) => {
+      let parsedData = {}
+      
+      // adExtension 필드가 JSON 문자열인 경우 파싱
+      if (ext.adExtension) {
+        if (typeof ext.adExtension === 'string') {
+          try {
+            // JSON 파싱 시도
+            parsedData = JSON.parse(ext.adExtension)
+          } catch (e) {
+            // JSON 파싱 실패 시 - PHONE 타입의 경우 직접 전화번호일 수 있음
+            if (ext.type === 'PHONE' || ext.type === 'CALL') {
+              // 전화번호 형식인지 확인
+              const phoneRegex = /^[\d\-\+\(\)\s]+$/
+              if (phoneRegex.test(ext.adExtension)) {
+                parsedData = { phoneNumber: ext.adExtension }
+              } else {
+                parsedData = ext.adExtension
+              }
+            } else {
+              console.error('Failed to parse adExtension string:', e)
+              parsedData = ext.adExtension
+            }
+          }
+        } else if (typeof ext.adExtension === 'object') {
+          parsedData = ext.adExtension
+        }
+      }
+      
+      console.log(`Extension ${ext.nccAdExtensionId}:`, {
+        type: ext.type,
+        status: ext.status,
+        adExtension: parsedData,
+        originalData: ext
+      })
+      
+      return {
+        ...ext,
+        parsedAdExtension: parsedData
       }
     })
     
-    if (!user) {
-      user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { role: 'admin' },
-            { role: 'academy' }
-          ],
-          AND: {
-            OR: [
-              {
-                naverAdsAccessKey: { not: null },
-                naverAdsSecretKey: { not: null },
-                naverAdsCustomerId: { not: null }
-              },
-              {
-                naverAdApiKey: { not: null },
-                naverAdSecret: { not: null },
-                naverAdCustomerId: { not: null }
-              }
-            ]
-          }
-        }
-      })
-    }
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found or no API credentials' },
-        { status: 404 }
-      )
-    }
-
-    const accessKey = user.naverAdsAccessKey || user.naverAdApiKey
-    const secretKey = user.naverAdsSecretKey || user.naverAdSecret
-    const customerId = user.naverAdsCustomerId || user.naverAdCustomerId
-
-    if (!accessKey || !secretKey || !customerId) {
-      return NextResponse.json(
-        { 
-          error: 'API credentials not configured',
-          requiresSetup: true
-        },
-        { status: 400 }
-      )
-    }
-
-    const body = await request.json()
-    
-    console.log('Creating ad group with data:', JSON.stringify(body, null, 2))
-    console.log('Using customer ID:', customerId)
-    
-    // PLACE 타입 캠페인용 광고그룹 데이터 구성
-    const adGroupData: any = {
-      nccCampaignId: body.campaignId,
-      name: body.adGroupName,
-      bidAmt: body.baseBidAmount || 200,
-      dailyBudget: body.dailyBudget || 1000,
-      useDailyBudget: true,
-      useKeywordPlus: false,
-      adgroupType: 'LOCAL_AD'  // PLACE campaigns need this
-    }
-    
-    // PLACE 타입 캠페인의 경우 비즈니스 채널 ID와 Place ID 모두 필요
-    if (body.businessChannelId && body.placeId) {
-      adGroupData.pcChannelId = body.businessChannelId      // Business channel ID
-      adGroupData.mobileChannelId = body.businessChannelId  // Business channel ID
-      adGroupData.pcChannelKey = body.placeId               // Place ID (channelKey)
-      adGroupData.mobileChannelKey = body.placeId           // Place ID (channelKey)
-    }
-    
-    // 컨텐츠 네트워크 입찰가
-    if (body.contentNetworkBidAmount) {
-      adGroupData.contentsNetworkBidAmt = body.contentNetworkBidAmount
-      adGroupData.useCntsNetworkBidAmt = true
-    }
-    
-    // 디바이스별 가중치
-    if (body.pcBidWeight) {
-      adGroupData.pcNetworkBidWeight = body.pcBidWeight
-    }
-    if (body.mobileBidWeight) {
-      adGroupData.mobileNetworkBidWeight = body.mobileBidWeight
-    }
-    
-    console.log('Final ad group data to send:', JSON.stringify(adGroupData, null, 2))
-    
-    const naverAds = new NaverAdsAPI({
-      accessKey,
-      secretKey,
-      customerId
-    })
-
-    const adGroup = await naverAds.createAdGroup(adGroupData)
+    console.log('All Parsed Extensions:', parsedExtensions)
     
     return NextResponse.json({
       success: true,
-      data: adGroup
+      data: parsedExtensions || []
     })
+    
   } catch (error: any) {
-    console.error('Failed to create ad group:', error)
+    console.error('Error fetching ad extensions:', error)
     return NextResponse.json(
       { 
-        error: 'Failed to create ad group',
-        details: error.response?.data || error.message 
+        error: error.message || 'Failed to fetch ad extensions'
       },
       { status: 500 }
     )
   }
 }
 
-// PUT: 광고그룹 수정
-export async function PUT(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  props: { params: Promise<{ adgroupId: string }> }
+) {
   try {
+    const params = await props.params
+    const adgroupId = params.adgroupId
+    const body = await request.json()
+    
     // Get authenticated user
     const authHeader = request.headers.get('cookie')
     if (!authHeader || !authHeader.includes('token=')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    // Get user from database
     let user = await prisma.user.findFirst({
       where: {
         email: 'nokyang@marketingplat.com'
@@ -304,69 +209,55 @@ export async function PUT(request: NextRequest) {
 
     if (!accessKey || !secretKey || !customerId) {
       return NextResponse.json(
-        { 
-          error: 'API credentials not configured',
-          requiresSetup: true
-        },
+        { error: 'Naver Ads API credentials not configured' },
         { status: 400 }
       )
     }
 
-    const body = await request.json()
-    const { adGroupId, nccAdgroupId, ...updateData } = body
-    const id = adGroupId || nccAdgroupId
-    
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Ad group ID is required' },
-        { status: 400 }
-      )
-    }
-    
-    const naverAds = new NaverAdsAPI({
+    const naverAdsApi = new NaverAdsAPI({
       accessKey,
       secretKey,
       customerId
     })
 
-    const result = await naverAds.updateAdGroup(id, updateData)
+    // Create new ad extension
+    const newExtension = await naverAdsApi.createAdExtension({
+      ...body,
+      ownerId: adgroupId
+    })
     
     return NextResponse.json({
       success: true,
-      data: result
+      data: newExtension
     })
+    
   } catch (error: any) {
-    console.error('Failed to update ad group:', error)
+    console.error('Error creating ad extension:', error)
     return NextResponse.json(
       { 
-        error: 'Failed to update ad group',
-        details: error.response?.data || error.message 
+        error: error.message || 'Failed to create ad extension'
       },
       { status: 500 }
     )
   }
 }
 
-// DELETE: 광고그룹 삭제
-export async function DELETE(request: NextRequest) {
+export async function PUT(
+  request: NextRequest,
+  props: { params: Promise<{ adgroupId: string }> }
+) {
   try {
+    const body = await request.json()
+    
     // Get authenticated user
     const authHeader = request.headers.get('cookie')
     if (!authHeader || !authHeader.includes('token=')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const adGroupId = searchParams.get('adGroupId') || searchParams.get('nccAdgroupId')
-    
-    if (!adGroupId) {
       return NextResponse.json(
-        { error: 'Ad group ID is required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
-    // Get user from database
     let user = await prisma.user.findFirst({
       where: {
         email: 'nokyang@marketingplat.com'
@@ -411,32 +302,125 @@ export async function DELETE(request: NextRequest) {
 
     if (!accessKey || !secretKey || !customerId) {
       return NextResponse.json(
-        { 
-          error: 'API credentials not configured',
-          requiresSetup: true
-        },
+        { error: 'Naver Ads API credentials not configured' },
         { status: 400 }
       )
     }
-    
-    const naverAds = new NaverAdsAPI({
+
+    const naverAdsApi = new NaverAdsAPI({
       accessKey,
       secretKey,
       customerId
     })
 
-    const result = await naverAds.deleteAdGroup(adGroupId)
+    // Update ad extension
+    const updatedExtension = await naverAdsApi.updateAdExtension(body.extensionId, body)
     
     return NextResponse.json({
       success: true,
-      data: result
+      data: updatedExtension
     })
+    
   } catch (error: any) {
-    console.error('Failed to delete ad group:', error)
+    console.error('Error updating ad extension:', error)
     return NextResponse.json(
       { 
-        error: 'Failed to delete ad group',
-        details: error.response?.data || error.message 
+        error: error.message || 'Failed to update ad extension'
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  props: { params: Promise<{ adgroupId: string }> }
+) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const extensionId = searchParams.get('extensionId')
+    
+    if (!extensionId) {
+      return NextResponse.json({ error: 'Extension ID is required' }, { status: 400 })
+    }
+    
+    // Get authenticated user
+    const authHeader = request.headers.get('cookie')
+    if (!authHeader || !authHeader.includes('token=')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    let user = await prisma.user.findFirst({
+      where: {
+        email: 'nokyang@marketingplat.com'
+      }
+    })
+    
+    if (!user) {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { role: 'admin' },
+            { role: 'academy' }
+          ],
+          AND: {
+            OR: [
+              {
+                naverAdsAccessKey: { not: null },
+                naverAdsSecretKey: { not: null },
+                naverAdsCustomerId: { not: null }
+              },
+              {
+                naverAdApiKey: { not: null },
+                naverAdSecret: { not: null },
+                naverAdCustomerId: { not: null }
+              }
+            ]
+          }
+        }
+      })
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found or no API credentials' },
+        { status: 404 }
+      )
+    }
+
+    const accessKey = user.naverAdsAccessKey || user.naverAdApiKey
+    const secretKey = user.naverAdsSecretKey || user.naverAdSecret
+    const customerId = user.naverAdsCustomerId || user.naverAdCustomerId
+
+    if (!accessKey || !secretKey || !customerId) {
+      return NextResponse.json(
+        { error: 'Naver Ads API credentials not configured' },
+        { status: 400 }
+      )
+    }
+
+    const naverAdsApi = new NaverAdsAPI({
+      accessKey,
+      secretKey,
+      customerId
+    })
+
+    // Delete ad extension
+    await naverAdsApi.deleteAdExtension(extensionId)
+    
+    return NextResponse.json({
+      success: true,
+      message: '확장소재가 삭제되었습니다.'
+    })
+    
+  } catch (error: any) {
+    console.error('Error deleting ad extension:', error)
+    return NextResponse.json(
+      { 
+        error: error.message || 'Failed to delete ad extension'
       },
       { status: 500 }
     )

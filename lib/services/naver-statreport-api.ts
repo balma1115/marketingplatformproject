@@ -69,9 +69,10 @@ export class NaverStatReportAPI {
   }
 
   /**
-   * Create a new stat report
+   * Create a new stat report (single day only)
+   * StatReport API only accepts single-day reports with statDt parameter
    */
-  async createReport(reportTp: string, startDate: string, endDate: string): Promise<StatReportResponse | null> {
+  async createReport(reportTp: string, targetDate: string): Promise<StatReportResponse | null> {
     const uri = '/stat-reports'
     
     try {
@@ -79,8 +80,7 @@ export class NaverStatReportAPI {
         `${this.baseURL}${uri}`,
         {
           reportTp,
-          statDt: startDate.replace(/-/g, ''),
-          endDt: endDate.replace(/-/g, '')
+          statDt: `${targetDate}T00:00:00.000Z`  // ISO format that works!
         },
         {
           headers: this.getAuthHeaders('POST', uri)
@@ -257,18 +257,19 @@ export class NaverStatReportAPI {
   }
 
   /**
-   * Get campaign stats for a date range
+   * Get campaign stats for a specific date (single day)
+   * Note: For date ranges, you need to create multiple reports and aggregate
    */
-  async getCampaignStats(startDate: string, endDate: string): Promise<CampaignStats[]> {
-    console.log(`📊 Getting campaign stats from ${startDate} to ${endDate}...`)
+  async getCampaignStats(targetDate: string): Promise<CampaignStats[]> {
+    console.log(`📊 Getting campaign stats for ${targetDate}...`)
     
     // Try AD_DETAIL report first (most comprehensive)
-    let report = await this.createReport('AD_DETAIL', startDate, endDate)
+    let report = await this.createReport('AD_DETAIL', targetDate)
     
     // If AD_DETAIL fails, try AD report
     if (!report) {
       console.log('AD_DETAIL failed, trying AD report...')
-      report = await this.createReport('AD', startDate, endDate)
+      report = await this.createReport('AD', targetDate)
     }
     
     if (!report) {
@@ -311,14 +312,13 @@ export class NaverStatReportAPI {
   }
 }
 
-// Export convenience function
+// Export convenience function (single day)
 export async function getNaverAdsCampaignStats(
   apiKey: string,
   secretKey: string,
   customerId: string,
-  startDate: string,
-  endDate: string
+  targetDate: string
 ): Promise<CampaignStats[]> {
   const api = new NaverStatReportAPI(apiKey, secretKey, customerId)
-  return api.getCampaignStats(startDate, endDate)
+  return api.getCampaignStats(targetDate)
 }

@@ -25,7 +25,7 @@ interface BlogProject {
 export default function BlogKeywordManagement() {
   const [keywords, setKeywords] = useState<BlogKeyword[]>([])
   const [blogProject, setBlogProject] = useState<BlogProject | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)  // 초기값을 true로 변경
   const [isTracking, setIsTracking] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -268,8 +268,25 @@ export default function BlogKeywordManagement() {
     link.click()
   }
 
+  // 로딩 중일 때 로딩 화면 표시
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="pt-20 p-6 max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">블로그 정보를 확인하는 중...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // 블로그가 등록되지 않은 경우 등록 화면 표시
-  if (!blogProject && !loading) {
+  if (!blogProject) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />

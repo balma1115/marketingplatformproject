@@ -36,7 +36,7 @@ export default function SmartplaceKeywordManagement() {
   const router = useRouter()
   const [keywords, setKeywords] = useState<SmartplaceKeyword[]>([])
   const [smartplaceProject, setSmartplaceProject] = useState<SmartplaceProject | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)  // 초기값을 true로 변경
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
@@ -423,8 +423,25 @@ export default function SmartplaceKeywordManagement() {
     link.click()
   }
 
+  // 로딩 중일 때 로딩 화면 표시
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="pt-20 p-6 max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
+              <p className="text-gray-600">스마트플레이스 정보를 확인하는 중...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // 스마트플레이스가 등록되지 않은 경우 등록 화면 표시
-  if (!smartplaceProject && !loading) {
+  if (!smartplaceProject) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />

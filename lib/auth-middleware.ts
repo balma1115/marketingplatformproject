@@ -4,21 +4,31 @@ import jwt from 'jsonwebtoken'
 
 export async function verifyAuth(req: NextRequest) {
   try {
-    const token = req.cookies.get('auth-token')?.value
+    // Check cookie first
+    let token = req.cookies.get('auth-token')?.value
+    
+    // If no cookie, check Authorization header
+    if (!token) {
+      const authHeader = req.headers.get('authorization')
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7)
+      }
+    }
     
     if (!token) {
-      return null
+      return { success: false, error: 'No token provided' }
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production') as any
     return {
+      success: true,
       userId: decoded.userId,
       email: decoded.email,
       role: decoded.role
     }
   } catch (error) {
     console.error('Auth verification error:', error)
-    return null
+    return { success: false, error: 'Invalid token' }
   }
 }
 

@@ -3,6 +3,86 @@ import { verifyAuth } from '@/lib/auth-middleware'
 import { NaverAdsAPI } from '@/lib/services/naver-ads-api'
 import { prisma } from '@/lib/db'
 
+// GET: Get campaign details
+export async function GET(
+  req: NextRequest,
+  props: { params: Promise<{ campaignId: string }> }
+) {
+  try {
+    const params = await props.params
+    const { campaignId } = params
+    
+    const auth = await verifyAuth(req)
+    if (!auth.success || !auth.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get user's Naver Ads credentials
+    const user = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: {
+        naverAdsAccessKey: true,
+        naverAdsSecretKey: true,
+        naverAdsCustomerId: true,
+        naverAdApiKey: true,
+        naverAdSecret: true,
+        naverAdCustomerId: true
+      }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: '사용자를 찾을 수 없습니다' }, { status: 404 })
+    }
+
+    // Check both new and old field names for credentials
+    const accessKey = user.naverAdsAccessKey || user.naverAdApiKey
+    const secretKey = user.naverAdsSecretKey || user.naverAdSecret
+    const customerId = user.naverAdsCustomerId || user.naverAdCustomerId
+
+    if (!accessKey || !secretKey || !customerId) {
+      // Return mock data if no API credentials
+      return NextResponse.json({
+        nccCampaignId: campaignId,
+        name: 'Sample Campaign',
+        campaignTp: 'PLACE',
+        status: 'ENABLED',
+        dailyBudget: 10000
+      })
+    }
+
+    try {
+      // Initialize Naver Ads API
+      const naverApi = new NaverAdsAPI({
+        accessKey,
+        secretKey,
+        customerId
+      })
+
+      // Get campaign details from Naver API
+      const campaign = await naverApi.getCampaign(campaignId)
+      
+      return NextResponse.json(campaign)
+    } catch (apiError) {
+      console.error('Naver API error:', apiError)
+      
+      // Return basic campaign info as fallback
+      return NextResponse.json({
+        nccCampaignId: campaignId,
+        name: 'Campaign',
+        campaignTp: 'PLACE',
+        status: 'ENABLED',
+        dailyBudget: 10000
+      })
+    }
+  } catch (error: any) {
+    console.error('Failed to get campaign:', error)
+    return NextResponse.json(
+      { error: '캠페인 정보를 가져오는데 실패했습니다' },
+      { status: 500 }
+    )
+  }
+}
+
 // PATCH: 개별 캠페인 수정
 export async function PATCH(
   request: NextRequest,
@@ -13,7 +93,7 @@ export async function PATCH(
     const { campaignId } = params
     
     const auth = await verifyAuth(request)
-    if (!auth) {
+    if (!auth.success || !auth.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -140,7 +220,7 @@ export async function DELETE(
     const { campaignId } = params
     
     const auth = await verifyAuth(request)
-    if (!auth) {
+    if (!auth.success || !auth.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

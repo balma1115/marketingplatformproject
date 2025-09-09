@@ -50,7 +50,8 @@ export enum AdType {
 
 export interface NaverAdsCredentials {
   customerId: string
-  accessKey: string
+  accessKey?: string
+  apiKey?: string  // Alternative field name for backward compatibility
   secretKey: string
 }
 
@@ -58,11 +59,11 @@ export interface PowerLinkCampaign {
   nccCampaignId?: string
   customerId: number
   name: string
-  campaignTp: CampaignType
+  campaignTp: CampaignType  // Note: API uses 'campaignTp' not 'campaignType'
   deliveryMethod: 'STANDARD' | 'ACCELERATED'
   dailyBudget?: number
   useDailyBudget?: boolean
-  status?: 'ENABLED' | 'PAUSED' | 'DELETED'
+  status?: 'ELIGIBLE' | 'PAUSED' | 'DELETED'  // Fixed: ELIGIBLE is the correct running status
   statusReason?: string
   trackingMode?: 'TRACKING_DISABLED' | 'CONVERSION_TRACKING'
   regTm?: string
@@ -80,10 +81,37 @@ export interface AdGroup {
   contentsNetworkBidAmt?: number
   mobileNetworkBidAmt?: number
   pcNetworkBidAmt?: number
-  status?: 'ENABLED' | 'PAUSED' | 'DELETED'
+  status?: 'ELIGIBLE' | 'PAUSED' | 'DELETED'  // Fixed: ELIGIBLE is the primary running status
   statusReason?: string
+  userLock?: boolean
+  budgetLock?: boolean
+  delFlag?: boolean
+  expectCost?: number
+  migType?: number
   regTm?: string
   editTm?: string
+  targets?: any[]
+  targetSummary?: any
+  pcChannelKey?: string
+  mobileChannelKey?: string
+  adgroupType?: string
+  adRollingType?: string
+}
+
+export interface RestrictedKeyword {
+  keyword: string
+  type?: 'KEYWORD_PLUS_RESTRICT' | 'PHRASE_KEYWORD_RESTRICT' | 'EXACT_KEYWORD_RESTRICT'
+  regTm?: string
+  editTm?: string
+}
+
+export interface AdGroupsQuery {
+  ids?: string[]
+  nccCampaignId?: string
+  nccLabelId?: string
+  baseSearchId?: string
+  recordSize?: number
+  selector?: string
 }
 
 export interface Keyword {
@@ -92,29 +120,42 @@ export interface Keyword {
   keyword: string
   bidAmt?: number
   useGroupBidAmt?: boolean
-  status?: 'ENABLED' | 'PAUSED' | 'DELETED'
+  status?: 'ELIGIBLE' | 'PAUSED' | 'DELETED'  // Fixed: ELIGIBLE instead of ENABLED
   statusReason?: string
   qualityIndex?: number
   regTm?: string
   editTm?: string
+  userLock?: boolean  // Added missing field
+  links?: any  // Added links field for keyword tracking
 }
 
 export interface Ad {
   nccAdId?: string
   nccAdgroupId: string
-  adTp: AdType
-  headline: string
-  description: string
+  adTp?: AdType  // Made optional for flexibility
+  headline?: string  // Made optional as it can be in nested 'ad' object
+  description?: string  // Made optional as it can be in nested 'ad' object
   pc?: {
     final: string
   }
   mobile?: {
     final: string
   }
-  status?: 'ENABLED' | 'PAUSED' | 'DELETED'
+  status?: 'ELIGIBLE' | 'PAUSED' | 'DELETED'  // Fixed: ELIGIBLE instead of ENABLED
   statusReason?: string
   regTm?: string
   editTm?: string
+  userLock?: boolean  // Added missing field
+  ad?: {  // Added nested ad object structure as per API
+    headline: string
+    description: string
+    pc?: {
+      url: string
+    }
+    mobile?: {
+      url: string
+    }
+  }
 }
 
 export interface AdExtension {
@@ -165,20 +206,23 @@ export interface BulkKeywordOperation {
 // ===== Main API Class =====
 
 export class NaverAdsAPI {
-  private apiKey: string
-  private secretKey: string
-  private customerId: string
+  apiKey: string
+  secretKey: string
+  customerId: string
   private axios: AxiosInstance
   private baseURL = 'https://api.searchad.naver.com'
   private maxRetries = 3
   private retryDelay = 1000
 
   constructor(config?: NaverAdsCredentials) {
-    if (!config?.accessKey || !config?.secretKey || !config?.customerId) {
+    // Support both accessKey and apiKey field names for backward compatibility
+    const accessKey = config?.accessKey || config?.apiKey
+    
+    if (!accessKey || !config?.secretKey || !config?.customerId) {
       throw new Error('Naver Ads API 인증 정보가 필요합니다')
     }
     
-    this.apiKey = config.accessKey
+    this.apiKey = accessKey
     this.secretKey = config.secretKey
     this.customerId = config.customerId
     
@@ -194,7 +238,7 @@ export class NaverAdsAPI {
   /**
    * HMAC-SHA256 서명 생성 (네이버 광고 API 인증)
    */
-  private generateSignature(method: string, uri: string, timestamp: string): string {
+  generateSignature(method: string, uri: string, timestamp: string): string {
     // Naver Ads API signature format: timestamp.method.uri
     const message = `${timestamp}.${method.toUpperCase()}.${uri}`
     
@@ -208,7 +252,9 @@ export class NaverAdsAPI {
 
   private getAuthHeaders(method: string, uri: string): Record<string, string> {
     const timestamp = Date.now().toString()
-    const signature = this.generateSignature(method, uri, timestamp)
+    // For signature, we need only the path part without query parameters
+    const pathOnly = uri.split('?')[0]
+    const signature = this.generateSignature(method, pathOnly, timestamp)
 
     return {
       'X-Timestamp': timestamp,
@@ -222,17 +268,20 @@ export class NaverAdsAPI {
   /**
    * API 요청 래퍼 with retry logic
    */
-  private async request(method: string, endpoint: string, data?: any, retryCount = 0): Promise<any> {
-    // stat-reports는 /ncc 없이 사용, 나머지는 /ncc 추가
+  async request(method: string, endpoint: string, data?: any, retryCount = 0): Promise<any> {
+    // stat-reports와 stats는 /ncc 없이 사용, 나머지는 /ncc 추가
     let uri: string
-    if (endpoint.startsWith('/stat-reports') || endpoint.startsWith('/report-download')) {
-      uri = endpoint // No /ncc prefix for stat-reports
+    if (endpoint.startsWith('/stat-reports') || 
+        endpoint.startsWith('/report-download') || 
+        endpoint.startsWith('/stats')) {
+      uri = endpoint // No /ncc prefix for stat-reports and stats
     } else if (endpoint.startsWith('/ncc')) {
       uri = endpoint // Already has /ncc
     } else {
       uri = `/ncc${endpoint}` // Add /ncc prefix
     }
     const fullUrl = `${this.baseURL}${uri}`
+    console.log(`Making ${method} request to: ${fullUrl}`)
     
     try {
       const response = await this.axios({
@@ -307,14 +356,57 @@ export class NaverAdsAPI {
 
   // ===== Ad Group Management =====
 
-  async getAdGroups(campaignId?: string): Promise<AdGroup[]> {
+  async getAdGroups(query?: AdGroupsQuery | string): Promise<AdGroup[]> {
     try {
-      const params = campaignId ? `?nccCampaignId=${campaignId}` : ''
+      let params = ''
+      
+      if (typeof query === 'string') {
+        // Legacy support for campaignId
+        params = `?nccCampaignId=${query}`
+      } else if (query) {
+        const queryParams: string[] = []
+        if (query.ids && query.ids.length > 0) {
+          queryParams.push(`ids=${query.ids.join(',')}`)
+        }
+        if (query.nccCampaignId) {
+          queryParams.push(`nccCampaignId=${query.nccCampaignId}`)
+        }
+        if (query.nccLabelId) {
+          queryParams.push(`nccLabelId=${query.nccLabelId}`)
+        }
+        if (query.baseSearchId) {
+          queryParams.push(`baseSearchId=${query.baseSearchId}`)
+        }
+        if (query.recordSize) {
+          queryParams.push(`recordSize=${query.recordSize}`)
+        }
+        if (query.selector) {
+          queryParams.push(`selector=${query.selector}`)
+        }
+        if (queryParams.length > 0) {
+          params = `?${queryParams.join('&')}`
+        }
+      }
+      
+      console.log('Requesting ad groups with params:', params)
+      console.log('Customer ID:', this.customerId)
       const response = await this.request('GET', `/adgroups${params}`)
+      console.log('Ad groups response:', response)
       return response || []
     } catch (error) {
       console.error('Failed to fetch ad groups:', error)
-      return []
+      throw error
+    }
+  }
+
+  async getAdGroupsByIds(ids: string[]): Promise<AdGroup[]> {
+    try {
+      const params = `?ids=${ids.join(',')}`
+      const response = await this.request('GET', `/adgroups${params}`)
+      return response || []
+    } catch (error) {
+      console.error('Failed to fetch ad groups by IDs:', error)
+      throw error
     }
   }
 
@@ -323,6 +415,9 @@ export class NaverAdsAPI {
   }
 
   async createAdGroup(adGroup: Partial<AdGroup>): Promise<AdGroup> {
+    console.log('Creating ad group with full URL path: /adgroups')
+    console.log('Ad group data:', JSON.stringify(adGroup, null, 2))
+    console.log('Customer ID being used:', this.customerId)
     return this.request('POST', '/adgroups', adGroup)
   }
 
@@ -332,6 +427,50 @@ export class NaverAdsAPI {
 
   async deleteAdGroup(adgroupId: string): Promise<void> {
     return this.request('DELETE', `/adgroups/${adgroupId}`)
+  }
+
+  // ===== Restricted Keywords (Negative Keywords) Management =====
+
+  async getRestrictedKeywords(
+    adgroupId: string, 
+    type?: 'KEYWORD_PLUS_RESTRICT' | 'PHRASE_KEYWORD_RESTRICT' | 'EXACT_KEYWORD_RESTRICT'
+  ): Promise<RestrictedKeyword[]> {
+    try {
+      const params = type ? `?type=${type}` : '?type=KEYWORD_PLUS_RESTRICT'
+      const response = await this.request('GET', `/adgroups/${adgroupId}/restricted-keywords${params}`)
+      return response || []
+    } catch (error) {
+      console.error('Failed to fetch restricted keywords:', error)
+      return []
+    }
+  }
+
+  async createRestrictedKeywords(
+    adgroupId: string, 
+    keywords: RestrictedKeyword[]
+  ): Promise<RestrictedKeyword[]> {
+    try {
+      const response = await this.request('POST', `/adgroups/${adgroupId}/restricted-keywords`, {
+        restrictedKeywords: keywords
+      })
+      return response || []
+    } catch (error) {
+      console.error('Failed to create restricted keywords:', error)
+      throw error
+    }
+  }
+
+  async deleteRestrictedKeywords(
+    adgroupId: string, 
+    keywords: string[]
+  ): Promise<void> {
+    try {
+      const params = `?ids=${keywords.join(',')}`
+      await this.request('DELETE', `/adgroups/${adgroupId}/restricted-keywords${params}`)
+    } catch (error) {
+      console.error('Failed to delete restricted keywords:', error)
+      throw error
+    }
   }
 
   // ===== Keyword Management =====
@@ -355,6 +494,10 @@ export class NaverAdsAPI {
     return this.request('POST', '/keywords', { nccKeywordList: keywords })
   }
 
+  async updateKeyword(keywordId: string, update: Partial<Keyword>): Promise<Keyword> {
+    return this.request('PUT', `/keywords/${keywordId}`, update)
+  }
+
   async updateKeywords(updates: BulkKeywordOperation[]): Promise<Keyword[]> {
     return this.request('PUT', '/keywords', { nccKeywordList: updates })
   }
@@ -370,6 +513,24 @@ export class NaverAdsAPI {
     try {
       const params = adgroupId ? `?nccAdgroupId=${adgroupId}` : ''
       const response = await this.request('GET', `/ads${params}`)
+      
+      // 각 광고의 상세 정보를 가져오기
+      if (response && Array.isArray(response)) {
+        const detailedAds = await Promise.all(
+          response.map(async (ad: any) => {
+            try {
+              // GET /ads/{adId}로 상세 정보 가져오기
+              const detailedAd = await this.request('GET', `/ads/${ad.nccAdId}`)
+              return detailedAd || ad
+            } catch (error) {
+              console.error(`Failed to fetch detailed ad ${ad.nccAdId}:`, error)
+              return ad
+            }
+          })
+        )
+        return detailedAds
+      }
+      
       return response || []
     } catch (error) {
       console.error('Failed to fetch ads:', error)
@@ -427,6 +588,183 @@ export class NaverAdsAPI {
 
   async deleteAdExtension(adExtensionId: string): Promise<void> {
     return this.request('DELETE', `/ad-extensions/${adExtensionId}`)
+  }
+
+  // ===== Statistics and Reports =====
+
+  /**
+   * Get stat reports for campaigns, ad groups, keywords, etc.
+   * Using the correct /stat-reports endpoint as per official documentation
+   */
+  async getStatReports(params: {
+    reportTp: 'CAMPAIGN' | 'ADGROUP' | 'AD' | 'KEYWORD' | 'AD_EXTENSION',
+    dateRange: {
+      since: string,  // YYYYMMDD format (no hyphens)
+      until: string   // YYYYMMDD format (no hyphens)
+    },
+    ids?: string[],
+    timeIncrement?: '1' | '7' | 'month' | 'allDays',  // 1: daily, 7: weekly
+    dataPreset?: string[],  // fields to include
+    breakdown?: 'hh24'  // hourly breakdown
+  }): Promise<any[]> {
+    try {
+      // Split into chunks if there are too many IDs (URL length limit)
+      if (params.ids && params.ids.length > 20) {
+        const chunks: string[][] = []
+        for (let i = 0; i < params.ids.length; i += 20) {
+          chunks.push(params.ids.slice(i, i + 20))
+        }
+        
+        const results = await Promise.all(
+          chunks.map(chunk => 
+            this.getStatReports({ ...params, ids: chunk })
+          )
+        )
+        
+        // Flatten and return all results
+        return results.flat()
+      }
+      
+      // Build request body as per official API documentation
+      const requestBody: any = {
+        reportTp: params.reportTp
+      }
+      
+      // Support both dateRange and timeRange formats
+      if (params.dateRange) {
+        requestBody.dateRange = {
+          since: params.dateRange.since,  // YYYYMMDD format
+          until: params.dateRange.until   // YYYYMMDD format
+        }
+      } else if (params.timeRange) {
+        // Convert timeRange (YYYY-MM-DD) to dateRange (YYYYMMDD) format
+        requestBody.dateRange = {
+          since: params.timeRange.since.replace(/-/g, ''),
+          until: params.timeRange.until.replace(/-/g, '')
+        }
+      } else {
+        throw new Error('Either dateRange or timeRange must be provided')
+      }
+      
+      if (params.ids && params.ids.length > 0) {
+        requestBody.ids = params.ids
+      }
+      
+      if (params.timeIncrement) {
+        requestBody.timeIncrement = params.timeIncrement
+      }
+      
+      if (params.dataPreset) {
+        requestBody.dataPreset = params.dataPreset
+      }
+      
+      if (params.breakdown) {
+        requestBody.breakdown = params.breakdown
+      }
+
+      // Use POST method with /stat-reports endpoint as per documentation
+      const response = await this.request('POST', '/stat-reports', requestBody)
+      
+      // The API returns a reportJobId, we need to fetch the actual data
+      if (response && response.reportJobId) {
+        // Wait a bit for the report to be generated
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Get the actual report data
+        const reportData = await this.request('GET', `/stat-reports/${response.reportJobId}`)
+        
+        // If the report has data, return it
+        if (reportData && reportData.data) {
+          return Array.isArray(reportData.data) ? reportData.data : [reportData.data]
+        }
+      }
+      
+      // Fallback: Try direct GET method (for backward compatibility)
+      const queryParams = new URLSearchParams()
+      queryParams.append('reportTp', params.reportTp)
+      queryParams.append('since', params.dateRange.since)
+      queryParams.append('until', params.dateRange.until)
+      
+      if (params.ids && params.ids.length > 0) {
+        queryParams.append('ids', params.ids.join(','))
+      }
+      
+      const fallbackResponse = await this.request('GET', `/stat-reports?${queryParams.toString()}`)
+      return fallbackResponse || []
+    } catch (error) {
+      console.error('Failed to fetch stat reports:', error)
+      // Try alternative stats endpoint as last resort
+      try {
+        // Determine date values based on available parameters
+        let since, until
+        if (params.dateRange) {
+          since = params.dateRange.since
+          until = params.dateRange.until
+        } else if (params.timeRange) {
+          since = params.timeRange.since.replace(/-/g, '')
+          until = params.timeRange.until.replace(/-/g, '')
+        } else {
+          throw new Error('No date range provided')
+        }
+        
+        const queryParams = new URLSearchParams({
+          reportTp: params.reportTp,
+          since,
+          until
+        })
+        
+        if (params.ids && params.ids.length > 0) {
+          queryParams.append('ids', params.ids.join(','))
+        }
+        
+        const statsResponse = await this.request('GET', `/stats?${queryParams.toString()}`)
+        return statsResponse || []
+      } catch (statsError) {
+        console.error('Stats API also failed:', statsError)
+        return []
+      }
+    }
+  }
+
+  /**
+   * Get stats for ad groups using the /stats endpoint
+   * This method specifically handles ad group stats which work differently from StatReports
+   */
+  async getAdGroupStats(adGroupIds: string[], dateFrom: string, dateTo: string): Promise<any[]> {
+    try {
+      if (!adGroupIds || adGroupIds.length === 0) {
+        return []
+      }
+
+      // Format dates (remove hyphens if present)
+      const formattedDateFrom = dateFrom.replace(/-/g, '')
+      const formattedDateTo = dateTo.replace(/-/g, '')
+      
+      console.log(`[NaverAdsAPI] Getting ad group stats for ${adGroupIds.length} ad groups from ${dateFrom} to ${dateTo}`)
+
+      // Build query parameters
+      const queryParams = new URLSearchParams({
+        ids: adGroupIds.join(','),
+        fields: JSON.stringify(["impCnt", "clkCnt", "salesAmt", "ctr", "cpc", "avgRnk"]),
+        timeRange: JSON.stringify({
+          since: formattedDateFrom,
+          until: formattedDateTo
+        }),
+        datePreset: 'CUSTOM',
+        timeIncrement: 'allDays'
+      })
+
+      const response = await this.request('GET', `/stats?${queryParams.toString()}`)
+      
+      if (response && response.data) {
+        return Array.isArray(response.data) ? response.data : [response.data]
+      }
+      
+      return []
+    } catch (error) {
+      console.error('Failed to fetch ad group stats:', error)
+      return []
+    }
   }
 
   // ===== Campaign Type Specific Methods =====
@@ -500,98 +838,122 @@ export class NaverAdsAPI {
 
   // ===== Reporting & Statistics =====
 
+  // Business Channel (Place) methods
+  async getBusinessChannels(channelTp?: string): Promise<any[]> {
+    try {
+      let uri = '/ncc/channels'
+      if (channelTp) {
+        uri += `?channelTp=${channelTp}`
+      }
+      
+      const result = await this.request('GET', uri)
+      console.log('Business channels raw result:', result)
+      
+      // The API returns the array directly, not wrapped in a data property
+      if (Array.isArray(result)) {
+        return result
+      }
+      
+      // If it's wrapped in data property, use that
+      if (result && result.data && Array.isArray(result.data)) {
+        return result.data
+      }
+      
+      console.warn('Unexpected business channels response format:', result)
+      return []
+    } catch (error) {
+      console.error('Failed to get business channels:', error)
+      return []
+    }
+  }
+
+  async getPurchasablePlaceChannels(): Promise<any[]> {
+    try {
+      const result = await this.request('GET', '/ncc/purchasable-place-channels')
+      console.log('Purchasable place channels raw result:', result)
+      
+      // The API returns the array directly, not wrapped in a data property
+      if (Array.isArray(result)) {
+        return result
+      }
+      
+      // If it's wrapped in data property, use that
+      if (result && result.data && Array.isArray(result.data)) {
+        return result.data
+      }
+      
+      console.warn('Unexpected purchasable channels response format:', result)
+      return []
+    } catch (error) {
+      console.error('Failed to get purchasable place channels:', error)
+      return []
+    }
+  }
+
+  async getBusinessChannel(channelId: string): Promise<any> {
+    try {
+      const result = await this.request('GET', `/ncc/channels/${channelId}`)
+      return result.data
+    } catch (error) {
+      console.error('Failed to get business channel:', error)
+      throw error
+    }
+  }
+
   async getCampaignStats(
     campaignId?: string,
     dateFrom?: string,
     dateTo?: string
   ): Promise<NaverStatsResponse> {
-    // Try Stats API first for accurate salesAmt, fallback to StatReport if needed
+    // Use Stats API for accurate salesAmt data
     
     try {
-      // Format dates properly
+      // Check date range limit (31 days max for StatReport API)
+      if (dateFrom && dateTo) {
+        const start = new Date(dateFrom)
+        const end = new Date(dateTo)
+        const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+        
+        if (daysDiff > 31) {
+          console.log(`Date range ${daysDiff} days exceeds 31 days limit, adjusting to last 31 days`)
+          // Adjust to last 31 days from end date
+          const adjustedStart = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000)
+          dateFrom = adjustedStart.toISOString().split('T')[0]
+        }
+      }
+      
+      // Format dates properly (YYYY-MM-DD format for Stats API)
       const today = new Date()
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
       
-      const formatDate = (date: Date | string): string => {
-        if (typeof date === 'string') {
-          return date.replace(/-/g, '')
-        }
+      const formatDateForStats = (date: Date): string => {
         const year = date.getFullYear()
         const month = String(date.getMonth() + 1).padStart(2, '0')
         const day = String(date.getDate()).padStart(2, '0')
-        return `${year}${month}${day}`
+        return `${year}-${month}-${day}`
       }
       
-      const startDate = dateFrom ? formatDate(dateFrom) : formatDate(weekAgo)
-      const endDate = dateTo ? formatDate(dateTo) : formatDate(today)
+      // Use Stats API endpoint with proper parameters
+      const campaigns = await this.getCampaigns()
       
-      // First, try the /stats endpoint with proper parameters
-      try {
-        const params: any = {
-          fields: JSON.stringify(["impCnt", "clkCnt", "salesAmt", "ctr", "cpc", "avgRnk"])
+      if (campaigns.length === 0) {
+        console.log('No campaigns found')
+        return {
+          impCnt: 0,
+          clkCnt: 0,
+          salesAmt: 0,
+          ctr: 0,
+          cpc: 0,
+          avgRnk: 0
         }
-        
-        if (campaignId) {
-          params.ids = campaignId
-        } else {
-          // Get all campaigns and aggregate
-          const campaigns = await this.getCampaigns()
-          if (campaigns.length > 0) {
-            params.ids = campaigns.map(c => c.nccCampaignId).join(',')
-          }
-        }
-        
-        // Use timeRange for custom dates
-        if (dateFrom && dateTo) {
-          params.timeRange = JSON.stringify({
-            since: dateFrom,
-            until: dateTo
-          })
-        } else {
-          // Default to last 7 days
-          params.datePreset = 'last7days'
-        }
-        
-        const statsResponse = await this.request('GET', '/stats', undefined, params)
-        
-        if (statsResponse && Array.isArray(statsResponse) && statsResponse.length > 0) {
-          // Aggregate stats from all campaigns
-          let totalImp = 0, totalClicks = 0, totalCost = 0
-          
-          statsResponse.forEach(stat => {
-            totalImp += stat.impCnt || 0
-            totalClicks += stat.clkCnt || 0
-            totalCost += stat.salesAmt || 0
-          })
-          
-          console.log(`✅ Stats API returned: ${totalImp} impressions, ${totalClicks} clicks, ₩${totalCost} cost`)
-          
-          return {
-            impCnt: totalImp,
-            clkCnt: totalClicks,
-            salesAmt: totalCost,
-            ctr: totalImp > 0 ? (totalClicks / totalImp) * 100 : 0,
-            cpc: totalClicks > 0 ? totalCost / totalClicks : 0,
-            avgRnk: 0
-          }
-        }
-      } catch (statsError) {
-        console.log('Stats API failed, falling back to StatReport API:', statsError)
       }
       
-      console.log(`📊 Using StatReport API from ${startDate} to ${endDate}...`)
-      
-      // Create AD report (most compatible type)
-      const reportResponse = await this.request('POST', '/stat-reports', {
-        reportTp: 'AD',
-        statDt: startDate,
-        endDt: endDate
-      })
-      
-      if (!reportResponse?.reportJobId) {
-        // Check if it's because there's no data
-        if (reportResponse?.code === 10004) {
-          console.log('No data available for the selected period')
+      // Filter campaigns if specific campaignId is provided
+      let targetCampaigns = campaigns
+      if (campaignId) {
+        targetCampaigns = campaigns.filter(c => c.nccCampaignId === campaignId)
+        if (targetCampaigns.length === 0) {
+          console.log(`Campaign ${campaignId} not found`)
           return {
             impCnt: 0,
             clkCnt: 0,
@@ -601,162 +963,289 @@ export class NaverAdsAPI {
             avgRnk: 0
           }
         }
-        console.warn('Failed to create stat report')
-        return this.getFallbackStats(campaignId)
+        console.log(`Getting stats for specific campaign: ${targetCampaigns[0].name}`)
+      } else {
+        // If no specific campaign ID, get all PowerLink campaigns
+        targetCampaigns = campaigns.filter(c => c.campaignTp === 'WEB_SITE')
+        console.log(`Getting stats for ${targetCampaigns.length} PowerLink campaigns`)
       }
       
-      console.log(`Created report ${reportResponse.reportJobId}, waiting for completion...`)
+      // Get stats for each campaign
+      let totalImp = 0
+      let totalClicks = 0
+      let totalCost = 0
       
-      // Poll for completion
-      let reportReady = false
-      let downloadUrl = ''
-      const maxAttempts = 20
-      let noneCount = 0
-      
-      for (let i = 0; i < maxAttempts; i++) {
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        
-        const status = await this.request('GET', `/stat-reports/${reportResponse.reportJobId}`)
-        
-        console.log(`Report status (attempt ${i + 1}/${maxAttempts}): ${status?.status || 'unknown'}`)
-        
-        if (status?.status === 'BUILT' || status?.status === 'DONE') {
-          reportReady = true
-          downloadUrl = status.downloadUrl
-          break
-        } else if (status?.status === 'FAILED') {
-          console.log('Report generation failed')
-          break
-        } else if (status?.status === 'NONE') {
-          noneCount++
-          // If we get NONE status too many times, it might mean no data
-          if (noneCount > 10) {
-            console.log('Report status remains NONE - likely no data for period')
-            return {
-              impCnt: 0,
-              clkCnt: 0,
-              salesAmt: 0,
-              ctr: 0,
-              cpc: 0,
-              avgRnk: 0
+      for (const campaign of targetCampaigns) {
+        try {
+          const params = new URLSearchParams()
+          params.append('ids', campaign.nccCampaignId!)
+          params.append('fields', '["impCnt","clkCnt","salesAmt","ctr","cpc","avgRnk","ccnt"]')
+          
+          // Use timeRange with dates
+          const timeRange = {
+            since: dateFrom || formatDateForStats(weekAgo),
+            until: dateTo || formatDateForStats(today)
+          }
+          params.append('timeRange', JSON.stringify(timeRange))
+          
+          const uri = `/stats?${params.toString()}`
+          const response = await this.axios.get(
+            `${this.baseURL}${uri}`,
+            {
+              headers: this.getAuthHeaders('GET', `/stats`) // Only the path for signature
+            }
+          )
+          
+          if (response.status === 200 && response.data) {
+            // Stats API returns {data: [...], compTm: ..., cycleBaseTm: ...}
+            const statsArray = response.data.data || response.data
+            const statData = Array.isArray(statsArray) ? statsArray[0] : null
+            if (statData) {
+              totalImp += statData.impCnt || 0
+              totalClicks += statData.clkCnt || 0
+              totalCost += statData.salesAmt || 0
+              
+              console.log(`Campaign ${campaign.name}: ${statData.impCnt} impressions, ${statData.clkCnt} clicks, ₩${statData.salesAmt} cost`)
             }
           }
+        } catch (error: any) {
+          console.log(`Stats API failed for campaign ${campaign.nccCampaignId}:`, error.response?.status, error.message)
         }
       }
       
-      if (!reportReady || !downloadUrl) {
-        console.warn('Report generation timeout or failed')
-        return this.getFallbackStats(campaignId)
+      console.log(`✅ Total Stats: ${totalImp} impressions, ${totalClicks} clicks, ₩${Math.round(totalCost)} cost`)
+      
+      return {
+        impCnt: totalImp,
+        clkCnt: totalClicks,
+        salesAmt: totalCost,
+        ctr: totalImp > 0 ? (totalClicks / totalImp) * 100 : 0,
+        cpc: totalClicks > 0 ? totalCost / totalClicks : 0,
+        avgRnk: 0
       }
+    } catch (error) {
+      console.error('Failed to get stats:', error)
       
-      // Download report with proper authentication
-      const urlParts = new URL(downloadUrl)
-      const path = urlParts.pathname
-      const timestamp = Date.now().toString()
-      const signature = this.generateSignature('GET', path, timestamp)
-      
-      const downloadResponse = await axios.get(downloadUrl, {
-        headers: {
-          'X-Timestamp': timestamp,
-          'X-API-KEY': this.apiKey,
-          'X-Customer': this.customerId,
-          'X-Signature': signature,
-          'Accept': 'text/tab-separated-values'
-        },
-        responseType: 'text'
-      })
-      
-      if (downloadResponse.status !== 200) {
-        console.warn('Failed to download report')
-        return this.getFallbackStats(campaignId)
+      // Fallback to StatReport API if Stats API fails completely
+      try {
+        return await this.getCampaignStatsViaReport(campaignId, dateFrom, dateTo)
+      } catch (reportError) {
+        console.error('StatReport API also failed:', reportError)
+        return {
+          impCnt: 0,
+          clkCnt: 0,
+          salesAmt: 0,
+          ctr: 0,
+          cpc: 0,
+          avgRnk: 0
+        }
       }
+    }
+  }
+  
+  private async getCampaignStatsViaReport(
+    campaignId?: string,
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<NaverStatsResponse> {
+    // Format dates properly for StatReport API (YYYYMMDD)
+    const today = new Date()
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+    
+    const formatDate = (date: Date | string): string => {
+      if (typeof date === 'string') {
+        return date.replace(/-/g, '')
+      }
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}${month}${day}`
+    }
+    
+    const startDate = dateFrom ? formatDate(dateFrom) : formatDate(weekAgo)
+    const endDate = dateTo ? formatDate(dateTo) : formatDate(today)
+    
+    console.log(`📊 Using StatReport API from ${startDate} to ${endDate}...`)
+    
+    // Create AD report (most compatible type)
+    const reportResponse = await this.request('POST', '/stat-reports', {
+      reportTp: 'AD',
+      statDt: startDate,
+      endDt: endDate
+    })
+    
+    if (!reportResponse?.reportJobId) {
+      // Check if it's because there's no data
+      if (reportResponse?.code === 10004) {
+        console.log('No data available for the selected period')
+        return {
+          impCnt: 0,
+          clkCnt: 0,
+          salesAmt: 0,
+          ctr: 0,
+          cpc: 0,
+          avgRnk: 0
+        }
+      }
+      console.warn('Failed to create stat report')
+      throw new Error('Failed to create stat report')
+    }
+    
+    console.log(`Created report ${reportResponse.reportJobId}, waiting for completion...`)
+    
+    // Poll for completion
+    let reportReady = false
+    let downloadUrl = ''
+    const maxAttempts = 20
+    let noneCount = 0
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Parse TSV data
-      const lines = downloadResponse.data.split('\n').filter((line: string) => line.trim())
-      const campaignStats = new Map()
+      const status = await this.request('GET', `/stat-reports/${reportResponse.reportJobId}`)
       
-      // Parse each line (AD report format without headers - CORRECTED)
-      // Based on actual testing, the TSV columns are:
-      // [0] Date (YYYYMMDD)
-      // [1] Customer ID
-      // [2] Campaign ID
-      // [3-6] Various IDs (Ad Group, Keyword, Ad, etc.)
-      // [7-8] Unknown fields
-      // [9] Clicks (actual click count)
-      // [10] Unknown (often single digit)
-      // [11] Cost related (often fractional, needs *1000)
-      // [12] Impressions (actual impression count)
-      // [13] Unknown
+      console.log(`Report status (attempt ${i + 1}/${maxAttempts}): ${status?.status || 'unknown'}`)
       
-      for (const line of lines) {
-        const cells = line.split('\t')
-        if (cells.length < 13) continue
-        
-        const parsedCampaignId = cells[2]
-        // SWAPPED: Impressions is in column 12, Clicks in column 9
-        const impressions = parseInt(cells[12]) || 0
-        const clicks = parseInt(cells[9]) || 0
-        
-        // Cost is in column 11 for AD report
-        // The values are fractional and need to be multiplied by 1000
-        let cost = 0
-        if (cells.length > 11 && cells[11]) {
-          const rawCost = parseFloat(cells[11]) || 0
-          // The cost values in TSV are divided by 1000
-          // e.g., 0.19 actually means 190 won
-          if (rawCost > 0) {
-            cost = Math.round(rawCost * 1000)
+      if (status?.status === 'BUILT' || status?.status === 'DONE') {
+        reportReady = true
+        downloadUrl = status.downloadUrl
+        break
+      } else if (status?.status === 'FAILED') {
+        console.log('Report generation failed')
+        break
+      } else if (status?.status === 'NONE') {
+        noneCount++
+        // If we get NONE status too many times, it might mean no data
+        if (noneCount > 10) {
+          console.log('Report status remains NONE - likely no data for period')
+          return {
+            impCnt: 0,
+            clkCnt: 0,
+            salesAmt: 0,
+            ctr: 0,
+            cpc: 0,
+            avgRnk: 0
           }
         }
-        
-        if (!campaignStats.has(parsedCampaignId)) {
-          campaignStats.set(parsedCampaignId, {
-            impressions: 0,
-            clicks: 0,
-            cost: 0
-          })
+      }
+    }
+    
+    if (!reportReady || !downloadUrl) {
+      console.warn('Report generation timeout or failed')
+      throw new Error('Report generation timeout')
+    }
+    
+    // Download report with proper authentication
+    const urlParts = new URL(downloadUrl)
+    const path = urlParts.pathname
+    const timestamp = Date.now().toString()
+    const signature = this.generateSignature('GET', path, timestamp)
+    
+    const downloadResponse = await axios.get(downloadUrl, {
+      headers: {
+        'X-Timestamp': timestamp,
+        'X-API-KEY': this.apiKey,
+        'X-Customer': this.customerId,
+        'X-Signature': signature,
+        'Accept': 'text/tab-separated-values'
+      },
+      responseType: 'text'
+    })
+    
+    if (downloadResponse.status !== 200) {
+      console.warn('Failed to download report')
+      throw new Error('Failed to download report')
+    }
+    
+    // Parse TSV data
+    const lines = downloadResponse.data.split('\n').filter((line: string) => line.trim())
+    const campaignStats = new Map()
+    
+    // Parse each line (AD report format without headers - CORRECTED)
+    // Based on actual testing, the TSV columns are:
+    // [0] Date (YYYYMMDD)
+    // [1] Customer ID
+    // [2] Campaign ID
+    // [3-6] Various IDs (Ad Group, Keyword, Ad, etc.)
+    // [7-8] Unknown fields
+    // [9] Clicks (actual click count)
+    // [10] Unknown (often single digit)
+    // [11] Cost related (often fractional, needs *1000)
+    // [12] Impressions (actual impression count)
+    // [13] Unknown
+    
+    for (const line of lines) {
+      const cells = line.split('\t')
+      if (cells.length < 13) continue
+      
+      const parsedCampaignId = cells[2]
+      // SWAPPED: Impressions is in column 12, Clicks in column 9
+      const impressions = parseInt(cells[12]) || 0
+      const clicks = parseInt(cells[9]) || 0
+      
+      // Cost is in column 11 for AD report
+      // The values are fractional and need to be multiplied by 1000
+      let cost = 0
+      if (cells.length > 11 && cells[11]) {
+        const rawCost = parseFloat(cells[11]) || 0
+        // The cost values in TSV are divided by 1000
+        // e.g., 0.19 actually means 190 won
+        if (rawCost > 0) {
+          cost = Math.round(rawCost * 1000)
         }
-        
-        const stats = campaignStats.get(parsedCampaignId)
-        stats.impressions += impressions
-        stats.clicks += clicks
-        stats.cost += cost
       }
       
-      // Return stats for specific campaign or aggregate
-      if (campaignId && campaignStats.has(campaignId)) {
-        const stats = campaignStats.get(campaignId)
-        return {
-          impCnt: stats.impressions,
-          clkCnt: stats.clicks,
-          salesAmt: stats.cost,
-          ctr: stats.impressions > 0 ? (stats.clicks / stats.impressions) * 100 : 0,
-          cpc: stats.clicks > 0 ? stats.cost / stats.clicks : 0,
-          avgRnk: 0
-        }
-      } else if (!campaignId) {
-        // Aggregate all campaigns
-        let totalImp = 0, totalClicks = 0, totalCost = 0
-        campaignStats.forEach(stats => {
-          totalImp += stats.impressions
-          totalClicks += stats.clicks
-          totalCost += stats.cost
+      if (!campaignStats.has(parsedCampaignId)) {
+        campaignStats.set(parsedCampaignId, {
+          impressions: 0,
+          clicks: 0,
+          cost: 0
         })
-        
-        return {
-          impCnt: totalImp,
-          clkCnt: totalClicks,
-          salesAmt: totalCost,
-          ctr: totalImp > 0 ? (totalClicks / totalImp) * 100 : 0,
-          cpc: totalClicks > 0 ? totalCost / totalClicks : 0,
-          avgRnk: 0
-        }
       }
       
-      return this.getFallbackStats(campaignId)
-    } catch (error) {
-      console.error('Failed to get campaign stats:', error)
-      return this.getFallbackStats(campaignId)
+      const stats = campaignStats.get(parsedCampaignId)
+      stats.impressions += impressions
+      stats.clicks += clicks
+      stats.cost += cost
+    }
+    
+    // Return stats for specific campaign or aggregate
+    if (campaignId && campaignStats.has(campaignId)) {
+      const stats = campaignStats.get(campaignId)
+      return {
+        impCnt: stats.impressions,
+        clkCnt: stats.clicks,
+        salesAmt: stats.cost,
+        ctr: stats.impressions > 0 ? (stats.clicks / stats.impressions) * 100 : 0,
+        cpc: stats.clicks > 0 ? stats.cost / stats.clicks : 0,
+        avgRnk: 0
+      }
+    } else if (!campaignId) {
+      // Aggregate all campaigns
+      let totalImp = 0, totalClicks = 0, totalCost = 0
+      campaignStats.forEach(stats => {
+        totalImp += stats.impressions
+        totalClicks += stats.clicks
+        totalCost += stats.cost
+      })
+      
+      return {
+        impCnt: totalImp,
+        clkCnt: totalClicks,
+        salesAmt: totalCost,
+        ctr: totalImp > 0 ? (totalClicks / totalImp) * 100 : 0,
+        cpc: totalClicks > 0 ? totalCost / totalClicks : 0,
+        avgRnk: 0
+      }
+    }
+    
+    return {
+      impCnt: 0,
+      clkCnt: 0,
+      salesAmt: 0,
+      ctr: 0,
+      cpc: 0,
+      avgRnk: 0
     }
   }
   
@@ -797,34 +1286,240 @@ export class NaverAdsAPI {
     }
   }
 
-  async getKeywordStats(
-    keywordId: string,
+  // Get stats for multiple keywords using Job-based API (supports date ranges)
+  async getMultipleKeywordStats(
+    keywordIds: string[],
     dateFrom?: string,
     dateTo?: string
-  ): Promise<NaverStatsResponse> {
+  ): Promise<Record<string, NaverStatsResponse>> {
     try {
-      const params = new URLSearchParams({
-        entity: 'KEYWORD',
-        ids: keywordId,
-        dateFrom: dateFrom || this.getYesterday(),
-        dateTo: dateTo || this.getYesterday()
-      })
+      console.log(`Getting stats for ${keywordIds.length} keywords from ${dateFrom} to ${dateTo}`)
       
-      const response = await this.request('GET', `/stats/keyword?${params}`)
-      const data = response?.[0] || {}
-      
-      return {
-        impCnt: data.impCnt || 0,
-        clkCnt: data.clkCnt || 0,
-        salesAmt: data.salesAmt || 0,
-        ctr: data.ctr || 0,
-        cpc: data.cpc || 0,
-        avgRnk: data.avgRnk || 0,
-        ccnt: data.ccnt
+      // Check date range limit (31 days max)
+      if (dateFrom && dateTo) {
+        const start = new Date(dateFrom)
+        const end = new Date(dateTo)
+        const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        
+        if (daysDiff > 31) {
+          console.warn('Date range exceeds 31 days, adjusting to last 31 days')
+          start.setTime(end.getTime() - (30 * 24 * 60 * 60 * 1000))
+          dateFrom = start.toISOString().split('T')[0]
+        }
       }
-    } catch (error) {
-      console.error('Failed to fetch keyword stats:', error)
-      return {
+      
+      // If date range specified, aggregate data from multiple reports
+      if (dateFrom && dateTo) {
+        return await this.aggregateKeywordStatsForDateRange(keywordIds, dateFrom, dateTo)
+      }
+      
+      // Single day logic (for backward compatibility)
+      const targetDate = dateTo || dateFrom || new Date().toISOString().split('T')[0]
+      return await this.getKeywordStatsForSingleDay(keywordIds, targetDate)
+    } catch (error: any) {
+      console.error('Failed to fetch keyword stats:', error.message)
+      // Return empty stats for all keywords
+      const emptyStats: Record<string, NaverStatsResponse> = {}
+      keywordIds.forEach(id => {
+        emptyStats[id] = {
+          impCnt: 0,
+          clkCnt: 0,
+          salesAmt: 0,
+          ctr: 0,
+          cpc: 0,
+          avgRnk: 0
+        }
+      })
+      return emptyStats
+    }
+  }
+
+  // Get keyword stats for a single day
+  private async getKeywordStatsForSingleDay(
+    keywordIds: string[],
+    targetDate: string
+  ): Promise<Record<string, NaverStatsResponse>> {
+    console.log(`Getting keyword stats for single day: ${targetDate}`)
+    
+    let downloadUrl = ''
+    let reportJobId = ''
+    
+    // Check for existing report
+    const existingReports = await this.request('GET', '/stat-reports')
+    
+    if (Array.isArray(existingReports)) {
+      const existingReport = existingReports.find((r: any) => 
+        r.reportTp === 'AD' && 
+        r.status === 'BUILT' && 
+        r.statDt && r.statDt.startsWith(targetDate) &&
+        r.downloadUrl
+      )
+      
+      if (existingReport) {
+        downloadUrl = existingReport.downloadUrl
+        reportJobId = existingReport.reportJobId
+        console.log(`Using existing report for ${targetDate}: ${reportJobId}`)
+      }
+    }
+    
+    // Create new report if needed
+    if (!downloadUrl) {
+        console.log(`Creating new report for ${targetDate}...`)
+        
+        
+        const reportBody = {
+          reportTp: 'AD',  // Use AD type which includes keyword-level data
+          statDt: `${targetDate}T00:00:00.000Z`  // ISO format that works!
+        }
+        
+        console.log('Creating AD stat report (includes keyword data):', reportBody)
+        
+        const reportResponse = await this.request('POST', '/stat-reports', reportBody)
+        
+        if (!reportResponse?.reportJobId) {
+          console.warn('Failed to create keyword stat report')
+          throw new Error('Failed to create keyword stat report')
+        }
+        
+        reportJobId = reportResponse.reportJobId
+        console.log(`Created keyword report ${reportJobId}, waiting for completion...`)
+        
+        // Poll for completion
+        let reportReady = false
+        const maxAttempts = 20
+        
+        for (let i = 0; i < maxAttempts; i++) {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          
+          const status = await this.request('GET', `/stat-reports/${reportJobId}`)
+          
+          console.log(`Keyword report status (attempt ${i + 1}/${maxAttempts}): ${status?.status || 'unknown'}`)
+          
+          if (status?.status === 'BUILT' || status?.status === 'DONE') {
+            reportReady = true
+            downloadUrl = status.downloadUrl
+            break
+          } else if (status?.status === 'FAILED') {
+            console.log('Keyword report generation failed')
+            break
+          }
+        }
+        
+        if (!reportReady || !downloadUrl) {
+          console.warn('Keyword report generation timeout or failed')
+          throw new Error('Keyword report generation timeout')
+        }
+      }
+    
+    // Download and parse the report
+    return await this.downloadAndParseKeywordReport(downloadUrl, keywordIds)
+  }
+
+  // Aggregate keyword stats for a date range
+  private async aggregateKeywordStatsForDateRange(
+    keywordIds: string[],
+    startDate: string,
+    endDate: string
+  ): Promise<Record<string, NaverStatsResponse>> {
+    console.log(`Aggregating keyword stats from ${startDate} to ${endDate}`)
+    
+    // Get all dates in range
+    const dates: string[] = []
+    const current = new Date(startDate)
+    const end = new Date(endDate)
+    
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0])
+      current.setDate(current.getDate() + 1)
+    }
+    
+    console.log(`Processing ${dates.length} days of data`)
+    
+    // Get existing reports
+    const existingReports = await this.request('GET', '/stat-reports')
+    const reportMap = new Map<string, any>()
+    
+    if (Array.isArray(existingReports)) {
+      existingReports.forEach((report: any) => {
+        if (report.reportTp === 'AD' && report.statDt) {
+          const reportDate = report.statDt.split('T')[0]
+          if (dates.includes(reportDate)) {
+            reportMap.set(reportDate, report)
+          }
+        }
+      })
+    }
+    
+    console.log(`Found ${reportMap.size} existing reports out of ${dates.length} needed`)
+    
+    // Create missing reports
+    const missingDates = dates.filter(date => !reportMap.has(date))
+    
+    if (missingDates.length > 0) {
+      console.log(`Creating ${missingDates.length} missing reports...`)
+      
+      for (const date of missingDates) {
+        try {
+          const reportBody = {
+            reportTp: 'AD',
+            statDt: `${date}T00:00:00.000Z`
+          }
+          
+          const reportResponse = await this.request('POST', '/stat-reports', reportBody)
+          
+          if (reportResponse?.reportJobId) {
+            reportMap.set(date, reportResponse)
+            console.log(`Created report for ${date}: ${reportResponse.reportJobId}`)
+          }
+          
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+        } catch (error: any) {
+          console.log(`Failed to create report for ${date}:`, error.message)
+        }
+      }
+    }
+    
+    // Wait for reports to be built
+    console.log('Waiting for reports to be built...')
+    const pendingReports = Array.from(reportMap.entries())
+      .filter(([_, report]) => report.status !== 'BUILT' && report.status !== 'DONE')
+    
+    if (pendingReports.length > 0) {
+      const maxAttempts = 30
+      let attempts = 0
+      
+      while (attempts < maxAttempts && pendingReports.length > 0) {
+        attempts++
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        for (let i = pendingReports.length - 1; i >= 0; i--) {
+          const [date, report] = pendingReports[i]
+          
+          try {
+            const statusResponse = await this.request('GET', `/stat-reports/${report.reportJobId}`)
+            
+            if (statusResponse.status === 'BUILT' || statusResponse.status === 'DONE') {
+              reportMap.set(date, statusResponse)
+              pendingReports.splice(i, 1)
+              console.log(`Report for ${date} is ready`)
+            }
+          } catch (error: any) {
+            console.log(`Error checking report for ${date}:`, error.message)
+          }
+        }
+        
+        if (pendingReports.length > 0) {
+          console.log(`Waiting for ${pendingReports.length} reports...`)
+        }
+      }
+    }
+    
+    // Initialize aggregated stats
+    const aggregatedStats: Record<string, NaverStatsResponse> = {}
+    keywordIds.forEach(id => {
+      aggregatedStats[id] = {
         impCnt: 0,
         clkCnt: 0,
         salesAmt: 0,
@@ -832,6 +1527,171 @@ export class NaverAdsAPI {
         cpc: 0,
         avgRnk: 0
       }
+    })
+    
+    // Download and aggregate all reports
+    console.log('Downloading and aggregating data...')
+    let successfulDownloads = 0
+    
+    for (const [date, report] of reportMap.entries()) {
+      if ((report.status === 'BUILT' || report.status === 'DONE') && report.downloadUrl) {
+        try {
+          const dayStats = await this.downloadAndParseKeywordReport(report.downloadUrl, keywordIds)
+          
+          // Aggregate the daily stats
+          Object.keys(dayStats).forEach(keywordId => {
+            if (aggregatedStats[keywordId]) {
+              aggregatedStats[keywordId].impCnt += dayStats[keywordId].impCnt || 0
+              aggregatedStats[keywordId].clkCnt += dayStats[keywordId].clkCnt || 0
+              aggregatedStats[keywordId].salesAmt += dayStats[keywordId].salesAmt || 0
+            }
+          })
+          
+          successfulDownloads++
+          console.log(`Aggregated data for ${date}`)
+          
+        } catch (error: any) {
+          console.log(`Failed to download data for ${date}:`, error.message)
+        }
+      }
+    }
+    
+    console.log(`Successfully aggregated ${successfulDownloads} days of data`)
+    
+    // Calculate CTR and CPC
+    Object.values(aggregatedStats).forEach(stats => {
+      if (stats.impCnt > 0) {
+        stats.ctr = (stats.clkCnt / stats.impCnt * 100)
+      }
+      if (stats.clkCnt > 0) {
+        stats.cpc = Math.round(stats.salesAmt / stats.clkCnt)
+      }
+    })
+    
+    return aggregatedStats
+  }
+
+  // Download and parse a keyword report
+  private async downloadAndParseKeywordReport(
+    downloadUrl: string,
+    keywordIds: string[]
+  ): Promise<Record<string, NaverStatsResponse>> {
+      // Download report with proper authentication
+      const urlParts = new URL(downloadUrl)
+      const path = urlParts.pathname
+      const timestamp = Date.now().toString()
+      const signature = this.generateSignature('GET', path, timestamp)
+      
+      const downloadResponse = await axios.get(downloadUrl, {
+        headers: {
+          'X-Timestamp': timestamp,
+          'X-API-KEY': this.apiKey || this.accessKey,
+          'X-Customer': this.customerId,
+          'X-Signature': signature,
+          'Accept': 'text/tab-separated-values'
+        },
+        responseType: 'text'
+      })
+      
+      if (downloadResponse.status !== 200) {
+        console.warn('Failed to download keyword report')
+        throw new Error('Failed to download keyword report')
+      }
+      
+      // Parse TSV data
+      const lines = downloadResponse.data.split('\n').filter((line: string) => line.trim())
+      const keywordStats: Record<string, NaverStatsResponse> = {}
+      
+      // Initialize all keywords with zero stats
+      keywordIds.forEach(id => {
+        keywordStats[id] = {
+          impCnt: 0,
+          clkCnt: 0,
+          salesAmt: 0,
+          ctr: 0,
+          cpc: 0,
+          avgRnk: 0
+        }
+      })
+      
+      // Parse each line (AD report format)
+      // AD Report TSV columns based on actual testing:
+      // [0] Date (YYYYMMDD)
+      // [1] Customer ID
+      // [2] Campaign ID
+      // [3] Ad Group ID
+      // [4] Keyword ID (this is what we need!)
+      // [5] Ad ID
+      // [6-8] Other IDs
+      // [9] Average Rank (not clicks!)
+      // [10] Clicks (corrected from [9])
+      // [11] Cost (already in won, no multiplication needed)
+      // [12] Impressions
+      
+      console.log(`Parsing ${lines.length} lines of TSV data for keyword stats...`)
+      
+      for (const line of lines) {
+        const cells = line.split('\t')
+        if (cells.length < 13) continue
+        
+        const keywordId = cells[4] // Keyword ID is in column 4
+        
+        // Skip empty or null keyword IDs
+        if (!keywordId || keywordId === '' || keywordId === 'null' || keywordId === '-') continue
+        
+        // Check if this keyword is one we're looking for
+        if (keywordIds.includes(keywordId)) {
+          const impressions = parseInt(cells[12]) || 0
+          const clicks = parseInt(cells[10]) || 0  // Changed from [9] to [10] - [9] is average rank
+          const cost = parseFloat(cells[11]) || 0  // Cost is already in won, no multiplication needed
+          
+          // Aggregate stats if keyword appears multiple times (different dates)
+          if (!keywordStats[keywordId]) {
+            keywordStats[keywordId] = {
+              impCnt: impressions,
+              clkCnt: clicks,
+              salesAmt: cost,
+              ctr: 0,
+              cpc: 0,
+              avgRnk: 0
+            }
+          } else {
+            // Add to existing stats
+            keywordStats[keywordId].impCnt += impressions
+            keywordStats[keywordId].clkCnt += clicks
+            keywordStats[keywordId].salesAmt += cost
+          }
+        }
+      }
+      
+      // Calculate CTR and CPC for keywords with data
+      Object.keys(keywordStats).forEach(keywordId => {
+        const stats = keywordStats[keywordId]
+        if (stats.impCnt > 0) {
+          stats.ctr = (stats.clkCnt / stats.impCnt * 100)
+        }
+        if (stats.clkCnt > 0) {
+          stats.cpc = Math.round(stats.salesAmt / stats.clkCnt)
+        }
+      })
+      
+      return keywordStats
+  }
+
+  async getKeywordStats(
+    keywordId: string,
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<NaverStatsResponse> {
+    // Use the new multiple keyword stats method for single keyword
+    const stats = await this.getMultipleKeywordStats([keywordId], dateFrom, dateTo)
+    return stats[keywordId] || {
+      impCnt: 0,
+      clkCnt: 0,
+      salesAmt: 0,
+      ctr: 0,
+      cpc: 0,
+      avgRnk: 0
     }
   }
 

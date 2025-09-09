@@ -4,7 +4,7 @@ This file provides comprehensive guidance to Claude Code for the MarketingPlat p
 
 ## 🎯 프로젝트 개요
 
-MarketingPlat은 AI 기반 학원 마케팅 플랫폼으로 Next.js 14 (App Router)를 사용하여 구축됩니다. AWS 배포를 전제로 설계되었습니다.
+MarketingPlat은 AI 기반 학원 마케팅 플랫폼으로 Next.js 15 (App Router)를 사용하여 구축됩니다. AWS 배포를 전제로 설계되었습니다.
 
 ### 핵심 기능
 - **AI 콘텐츠 생성**: Google Gemini API를 활용한 블로그 제목 및 콘텐츠 생성
@@ -49,7 +49,7 @@ MarketingPlat은 AI 기반 학원 마케팅 플랫폼으로 Next.js 14 (App Rout
 ```json
 {
   "dependencies": {
-    "next": "^14.2.0",
+    "next": "^15.0.0",
     "react": "^18.3.0",
     "typescript": "^5.4.0",
     "tailwindcss": "^3.4.0",
@@ -58,6 +58,35 @@ MarketingPlat은 AI 기반 학원 마케팅 플랫폼으로 Next.js 14 (App Rout
     "axios": "^1.7.0",
     "framer-motion": "^11.0.0"
   }
+}
+```
+
+### ⚠️ Next.js 15 중요 변경사항 (절대 변경 금지)
+**Next.js 15부터 동적 라우트의 params가 Promise로 변경되었습니다.**
+**이미 모든 API 라우트가 Next.js 15에 맞게 수정되어 있으므로 절대 변경하지 마세요.**
+
+#### 올바른 사용법 (Next.js 15):
+```typescript
+// ✅ 올바른 방법 - params를 await으로 처리
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
+  const params = await props.params
+  const { id } = params
+  // ...
+}
+```
+
+#### 잘못된 사용법 (이전 버전):
+```typescript
+// ❌ 잘못된 방법 - Next.js 15에서 오류 발생
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params  // Error: params should be awaited
+  // ...
 }
 ```
 
@@ -275,7 +304,23 @@ npm run type-check
 
 # 린트
 npm run lint
+
+# 테스트 실행 (tests 폴더 내 파일)
+npx tsx tests/[test-file-name].ts
 ```
+
+### 테스트 파일 작성 규칙
+- **위치**: 모든 테스트 파일은 `/tests` 폴더에 작성
+- **명명규칙**: `test-*.ts` 또는 `check-*.ts` 형식
+- **실행방법**: `npx tsx tests/파일명.ts`
+- **예시**:
+  ```bash
+  # 데이터 구조 확인
+  npx tsx tests/check-blog-data-structure.ts
+  
+  # 스크래퍼 테스트
+  npx tsx tests/test-real-tracking.ts
+  ```
 
 ### 프로덕션 빌드
 ```bash
@@ -595,6 +640,117 @@ netstat -ano | findstr :3000
 taskkill /PID <PID> /F
 ```
 
+#### Next.js 15 및 Jest Worker 오류 해결 (2025년 1월)
+```bash
+# Jest worker 컴파일 오류 발생 시
+1. .next 캐시 삭제
+rm -rf .next
+
+2. 포트 종료 및 서버 재시작
+npx kill-port 3000
+npm run dev
+```
+
+**Next.js 15 동적 라우트 파라미터 처리**
+```typescript
+// ❌ 잘못된 방법 (Next.js 14)
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id // 직접 접근
+}
+
+// ✅ 올바른 방법 (Next.js 15)
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
+  const params = await props.params // Promise await 필요
+  const id = params.id
+}
+```
+
+**Multiple Package-lock.json 경고 해결**
+```javascript
+// next.config.mjs
+const nextConfig = {
+  // 작업 공간 루트를 명확히 지정
+  outputFileTracingRoot: 'C:/Users/User/Documents/GitHub/marketingplatformproject',
+  
+  // Jest worker 오류 해결을 위한 webpack 설정
+  webpack: (config, { isServer, dev }) => {
+    if (dev) {
+      config.optimization = {
+        splitChunks: false,
+        minimize: false,
+        minimizer: [],
+      }
+      config.parallelism = 1
+    }
+    return config
+  }
+}
+```
+
+## 🔄 네이버 광고 API 연동 (2025년 1월)
+
+### API 자격 증명 필드
+```typescript
+// 사용자에 따라 다른 필드명 사용
+// 1. 새로운 필드 (naverAds* 접두사)
+naverAdsAccessKey
+naverAdsSecretKey
+naverAdsCustomerId
+
+// 2. 기존 필드 (naverAd* 접두사)
+naverAdApiKey
+naverAdSecret
+naverAdCustomerId
+
+// API 사용 시 두 가지 모두 체크
+const accessKey = user.naverAdsAccessKey || user.naverAdApiKey
+const secretKey = user.naverAdsSecretKey || user.naverAdSecret
+const customerId = user.naverAdsCustomerId || user.naverAdCustomerId
+```
+
+### Signature 생성 주의사항
+```typescript
+// HMAC-SHA256 서명 생성 시 쿼리 파라미터 제외
+private getAuthHeaders(method: string, uri: string): Record<string, string> {
+  const timestamp = Date.now().toString()
+  // 서명용 경로에서 쿼리 파라미터 제거
+  const pathOnly = uri.split('?')[0]
+  const signature = this.generateSignature(method, pathOnly, timestamp)
+  // 실제 요청은 전체 URI 사용
+  return {
+    'X-Timestamp': timestamp,
+    'X-API-KEY': this.accessKey,
+    'X-Customer': this.customerId,
+    'X-Signature': signature
+  }
+}
+```
+
+### 통계 계산 로직
+```typescript
+// 합계가 필요한 항목: 노출수, 클릭수, 총비용, 하루예산
+const totals = {
+  impCnt: campaigns.reduce((sum, c) => sum + c.stats.impCnt, 0),
+  clkCnt: campaigns.reduce((sum, c) => sum + c.stats.clkCnt, 0),
+  salesAmt: campaigns.reduce((sum, c) => sum + c.stats.salesAmt, 0),
+  dailyBudget: campaigns.reduce((sum, c) => sum + c.dailyBudget, 0)
+}
+
+// 평균이 필요한 항목: 재계산된 비율
+const averages = {
+  // 전체 클릭률 = 전체 클릭수 / 전체 노출수
+  ctr: totals.impCnt > 0 ? (totals.clkCnt / totals.impCnt * 100) : 0,
+  // 평균 클릭비용 = 총비용 / 전체 클릭수
+  cpc: totals.clkCnt > 0 ? Math.round(totals.salesAmt / totals.clkCnt) : 0
+}
+```
+
 ## 📝 페이지 레이아웃 가이드
 
 ### 모든 페이지 필수 구조
@@ -857,6 +1013,324 @@ Place ID: 1616011574
 - `test-academy-account.js` - 기본 테스트
 - `test-full-tracking.js` - 전체 추적 테스트
 
+## 📂 프로덕션 코드 파일 맵 (2025년 1월 최종 버전)
+
+### 🚀 핵심 기능별 사용 파일
+
+#### 1. 스마트플레이스 순위 추적
+- **메인 스크래퍼**: `lib/services/improved-scraper-v3.ts` ✅ (최종 버전, 100% 정확도)
+- **추적 API**: `app/api/smartplace-keywords/track-all/route.ts`
+- **목록 API**: `app/api/smartplace-keywords/list/route.ts`
+- **키워드 관리 API**: 
+  - `app/api/smartplace-keywords/[keywordId]/route.ts`
+  - `app/api/smartplace-keywords/[keywordId]/toggle/route.ts`
+  - `app/api/smartplace-keywords/register-place/route.ts`
+- **추세 분석 API**: `app/api/smartplace-keywords/[keywordId]/trend/route.ts`
+- **월간 데이터 API**: `app/api/smartplace-keywords/monthly-data/route.ts`
+- **UI 페이지**:
+  - `app/smartplace/keywords/page.tsx` - 메인 대시보드
+  - `app/smartplace/keywords/trend/[keywordId]/page.tsx` - 추세 분석
+  - `app/smartplace/keywords/monthly/page.tsx` - 월간 통계
+- **유틸리티**: `lib/services/playwrightCrawler.ts` - 업체 상세정보 수집
+
+#### 2. 블로그 순위 추적
+- **메인 스크래퍼**: `lib/services/naver-blog-scraper-v2.ts` ✅ (최종 버전)
+- **추적 API**: `app/api/blog-keywords/track-all/route.ts`
+- **목록 API**: `app/api/blog-keywords/list/route.ts`
+- **UI 페이지**: `app/blog/keywords/page.tsx`
+
+#### 3. 인증 및 사용자 관리
+- **인증 미들웨어**: `lib/auth-middleware.ts`
+- **인증 API**:
+  - `app/api/auth/login/route.ts`
+  - `app/api/auth/me/route.ts`
+- **사용자 API**: `app/api/user/route.ts`
+- **설정 API**: `app/api/settings/route.ts`
+- **UI 페이지**:
+  - `app/login/page.tsx`
+  - `app/mypage/page.tsx`
+
+#### 4. 대시보드
+- **관리자**: `app/dashboard/user/page.tsx`
+- **학원**: `app/dashboard/academy/page.tsx`
+- **요금제**: `app/dashboard/plan/page.tsx`
+
+#### 5. 관리 기능
+- **통합 관리**: `app/management/page.tsx`
+- **키워드 관리**: `app/management/keywords/page.tsx`
+
+#### 6. 유틸리티
+- **시간대 처리**: `lib/utils/timezone.ts`
+- **데이터베이스**: `lib/db.ts`
+
+### 🗑️ 정리 대상 파일 (개발 완료 후 삭제)
+
+#### 테스트 파일들
+```
+# 루트 디렉토리의 모든 test-*.ts, test-*.js 파일
+test-*.ts
+test-*.js
+check-*.ts
+check-*.js
+clean-*.js
+seed-*.js
+create-*.ts
+delete-*.ts
+safe-*.ts
+upgrade-*.ts
+
+# 특정 파일 목록
+- check-data.ts
+- check-database.ts
+- check-duplicates.ts
+- clean-database.js
+- clean-null-data.ts
+- create-academy-user.ts
+- create-test-user.ts
+- delete-simulation-data.ts
+- seed-academy-clean.js
+- seed-academy-data.js
+- seed-test-data.js
+- test-academy-account.js
+- test-ad-detection.ts
+- test-blog-reviews.js
+- test-bulwon-top10.ts
+- test-direct-scraping.js
+- test-final-ui.js
+- test-final-v2.ts
+- test-full-tracking.js
+- test-improved-scraper.ts
+- test-kst-data.ts
+- test-mock-tracking.js
+- test-naver-detailed.ts
+- test-naver-search.ts
+- test-pagination.ts
+- test-playwright-scraping.js
+- test-playwright-scraping.ts
+- test-real-smartplace.ts
+- test-real-tracking.ts
+- test-scraper.ts
+- test-smartplace-tracking.ts
+- test-top10-collection.ts
+- test-tracking-system.js
+- test-ui-rendering.js
+- test-v2-scraper.ts
+- test-v3-pagination.ts
+- upgrade-academy-plan.ts
+```
+
+#### 스크린샷 파일
+```
+*.png
+test-*.png
+```
+
+#### 임시 파일
+```
+cookies.txt
+nul
+```
+
+#### 사용하지 않는 스크래퍼 버전들
+```
+lib/services/improved-naver-scraper.ts  # V1 버전
+lib/services/improved-scraper-v2.ts     # V2 버전 (V3가 최종)
+lib/services/real-naver-scraper.ts      # 구버전
+lib/services/stable-naver-scraper.ts    # 구버전
+lib/services/working-naver-scraper.ts   # 구버전
+lib/services/simple-smartplace-scraper.ts # 구버전
+lib/services/naver-smartplace-scraper.ts  # 구버전
+lib/services/mock-scraper.ts            # 목업용 (프로덕션에서 제거)
+lib/services/test-blog-ranking.ts       # 테스트용
+lib/services/naver-ranking-checker.ts   # 구버전
+lib/services/naver-blog-scraper.ts      # V1 버전 (V2가 최종)
+```
+
+#### tests 폴더
+```
+tests/  # 전체 폴더 삭제
+```
+
+#### 문서 폴더 (필요시 보관)
+```
+docs/           # 개발 문서 (보관 또는 삭제)
+References/     # 참고 문서 (보관 또는 삭제)
+MODULE_EXPORTS/ # 모듈 추출 (보관 또는 삭제)
+```
+
+### 📌 중요 참고사항
+
+1. **절대 수정 금지 파일**
+   - `lib/services/improved-scraper-v3.ts` - 100% 정확도 달성, 수정 금지
+   - `lib/services/naver-blog-scraper-v2.ts` - 안정적으로 작동 중
+
+2. **환경 변수 확인**
+   ```bash
+   USE_MOCK_SCRAPER=false  # 프로덕션에서 필수
+   USE_REAL_CRAWLER=true   # 프로덕션에서 필수
+   ```
+
+3. **테스트 계정 정보**
+   ```
+   Email: academy@marketingplat.com
+   Password: academy123
+   Place ID: 1616011574
+   ```
+
+4. **배포 전 체크리스트**
+   - [ ] 모든 테스트 파일 삭제
+   - [ ] 환경 변수 프로덕션 설정
+   - [ ] 목업 스크래퍼 제거
+   - [ ] 불필요한 console.log 제거
+   - [ ] 빌드 테스트 완료
+
+## 📊 네이버 광고 데이터 연동 (2025년 1월 확정)
+
+### 광고 데이터 가져오기 로직
+네이버 광고 데이터는 StatReport API를 통해 실시간으로 가져옵니다.
+
+#### 1. API 구조
+- **파일**: `lib/services/naver-ads-api.ts`
+- **엔드포인트**: `/dashboard/ads`
+- **API Route**: `app/api/ads/stats/route.ts`
+
+#### 2. 데이터 구조
+```typescript
+interface NaverAdsStats {
+  impCnt: number      // 노출수
+  clkCnt: number      // 클릭수
+  salesAmt: number    // 광고비 (비용)
+  ctr: number         // 클릭률 (%)
+  cpc: number         // 평균 클릭비용
+  avgRnk: number      // 평균 순위
+  ccnt?: number       // 전환수
+}
+```
+
+#### 3. 통계 계산 로직
+**합계 항목** (모든 캠페인의 값을 더함):
+- 노출수 (impressions): 전체 캠페인 impCnt 합계
+- 클릭수 (clicks): 전체 캠페인 clkCnt 합계
+- 총비용 (cost): 전체 캠페인 salesAmt 합계
+- 일일예산 (dailyBudget): 전체 캠페인 dailyBudget 합계
+
+**계산된 평균 항목** (합계 기반 재계산):
+- 클릭률 (CTR): (전체 클릭수 ÷ 전체 노출수) × 100
+- 평균 클릭비용 (CPC): 총비용 ÷ 전체 클릭수
+
+#### 4. 실제 작동 확인된 API 연동
+```typescript
+// StatReport API를 통한 실시간 데이터 조회
+const stats = await api.getStatReports({
+  reportTp: 'AD',
+  dateRange: { since: dateFrom, until: dateTo }
+});
+
+// 캠페인별 상세 데이터 매핑
+campaigns.forEach(campaign => {
+  const statReport = statReports.find(report => 
+    report.id === campaign.nccCampaignId
+  );
+  if (statReport) {
+    campaign.stats = {
+      impressions: statReport.impCnt,
+      clicks: statReport.clkCnt,
+      cost: statReport.salesAmt,
+      ctr: statReport.ctr,
+      cpc: statReport.cpc
+    };
+  }
+});
+```
+
+#### 5. 통계 집계 구현
+- **위치**: `/dashboard/ads` 페이지 하단
+- **형식**: 별도의 "통계" 섹션으로 표시
+- **업데이트**: 페이지 로드 시 자동 계산
+
+### 중요 참고사항
+- 네이버 광고 API는 실제 광고주 계정의 유효한 API 키가 필요
+- 테스트 키나 목업 데이터 사용 금지
+- StatReport API는 최대 31일간의 데이터만 조회 가능
+
+## 📊 네이버 광고 키워드 데이터 솔루션 (2025년 9월 완성)
+
+### TSV 리포트와 캠페인 데이터 차이점
+네이버 광고 API는 두 가지 방식으로 데이터를 제공합니다:
+
+#### 1. TSV 리포트 (AD Report 형식)
+```typescript
+// TSV 컬럼 구조 (실제 테스트로 확인)
+// [0] Date (YYYYMMDD)
+// [1] Customer ID
+// [2] Campaign ID
+// [3] Ad Group ID
+// [4] Keyword ID ← 키워드별 데이터 추출 핵심
+// [5] Ad ID
+// [9] Average Rank (평균 순위)
+// [10] Clicks (클릭수)
+// [11] Cost (비용 - 원 단위)
+// [12] Impressions (노출수)
+```
+
+#### 2. 캠페인 API 직접 조회
+- `/campaigns` 엔드포인트는 캠페인 정보만 반환
+- 통계 데이터는 별도로 Stats API나 StatReport API를 통해 조회 필요
+
+### 키워드 통계 구현 방법
+```typescript
+// lib/services/naver-ads-api.ts
+async getMultipleKeywordStats(
+  keywordIds: string[],
+  dateFrom?: string,
+  dateTo?: string
+): Promise<Record<string, NaverStatsResponse>>
+
+// 1. 날짜별 리포트 생성
+const reportResponse = await this.request('POST', '/stat-reports', {
+  reportTp: 'AD',
+  statDt: `${date}T00:00:00.000Z`
+})
+
+// 2. TSV 다운로드 및 파싱
+const lines = downloadResponse.data.split('\n')
+for (const line of lines) {
+  const cells = line.split('\t')
+  const keywordId = cells[4] // 키워드 ID는 컬럼 4
+  const impressions = parseInt(cells[12])
+  const clicks = parseInt(cells[10])
+  const cost = parseFloat(cells[11])
+}
+```
+
+### API 엔드포인트
+- **GET /api/ads/keywords/stats**: 간단한 키워드 통계 조회
+- **POST /api/ads/keywords/stats**: 상세한 키워드 통계와 요약 정보
+
+### ✅ 데이터 교차 검증 완료 (2025년 9월)
+2025년 8월 데이터를 대상으로 Stats API와 TSV 리포트 간 교차 검증 완료:
+
+#### 검증 결과 요약
+| 기간 | 날짜 범위 | 노출수 | 클릭수 | 비용(원) | 상태 |
+|------|----------|--------|--------|----------|------|
+| 1일 | 2025-08-01 | 3 | 0 | 0 | ✅ 일치 |
+| 1주 | 2025-08-01 ~ 08-07 | 94 | 1 | 77 | ✅ 일치 |
+| 2주 | 2025-08-01 ~ 08-14 | 174 | 2 | 220 | ✅ 일치 |
+| 1달 | 2025-08-01 ~ 08-31 | 526 | 9 | 1518 | ✅ 일치 |
+
+#### 검증 스크립트
+- `test-simple-validation.ts`: 간단한 기간별 검증
+- `test-august-validation.ts`: 8월 전체 데이터 검증
+- `test-data-cross-validation.ts`: 포괄적 교차 검증
+- `test-keyword-stats.ts`: 키워드 통계 API 테스트
+
+### 데이터 검증 시 주의사항
+1. **날짜 범위 제한**: StatReport API는 최대 31일
+2. **리포트 생성 시간**: 비동기 처리로 2-3초 대기 필요
+3. **키워드 ID 매칭**: TSV 컬럼 4번에서 정확히 추출
+4. **비용 계산**: TSV의 비용 데이터는 이미 원 단위
+5. **데이터 일관성**: Stats API와 TSV 리포트 데이터는 100% 일치함을 확인
+
 ## 📚 참고 문서
 
 - [Next.js 14 Documentation](https://nextjs.org/docs)
@@ -864,15 +1338,18 @@ Place ID: 1616011574
 - [AWS Best Practices](https://aws.amazon.com/architecture/well-architected/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Playwright Documentation](https://playwright.dev/docs/intro)
+- [Naver Ads API Documentation](https://developers.searchad.naver.com)
 
 ---
 
 **문서 작성일**: 2025년 1월
-**마지막 업데이트**: 2025년 1월 - ImprovedNaverScraperV2 구현 완료 (100% 정확도 달성)
-  - Queue 방식 동시 처리 (3개 키워드)
-  - 210개 결과 로딩
-  - 정확한 이름 매칭만 허용
-  - 싱글톤 브라우저 관리
+**마지막 업데이트**: 2025년 9월 5일 - Next.js 15 및 광고 관리 기능 완성
+  - Next.js 15 동적 라우트 파라미터 처리 방법 추가 (Promise 기반)
+  - Jest worker 컴파일 오류 해결 방법 문서화
+  - Multiple package-lock.json 경고 해결
+  - 네이버 광고 API 서명 생성 주의사항 추가
+  - 광고그룹 상세 페이지 구현 (캠페인 타입별 탭 구성)
+  - nokyang 사용자 우선 인증 로직 구현
 **작성자**: Claude Code AI Assistant
 
 이 가이드를 따라 MarketingPlat을 AWS에 배포 가능한 프로덕션 레벨 애플리케이션으로 개발하시기 바랍니다.

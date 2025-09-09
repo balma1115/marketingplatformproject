@@ -14,7 +14,8 @@ import {
   MapPin,
   FileText,
   Settings,
-  CreditCard
+  CreditCard,
+  BarChart3
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -29,8 +30,8 @@ export default function Header() {
     router.push('/login')
   }
 
-  const menuItems = [
-    { href: '/dashboard', label: '대시보드', icon: Home },
+  // 공통 메뉴 아이템 (일반 사용자용)
+  const commonMenuItems = [
     { 
       label: '진단', 
       icon: FileSearch,
@@ -46,7 +47,8 @@ export default function Header() {
       children: [
         { href: '/management/keywords', label: '중점키워드 관리' },
         { href: '/blog/keywords', label: '블로그키워드 관리' },
-        { href: '/smartplace/keywords', label: '스마트플레이스 키워드관리' }
+        { href: '/smartplace/keywords', label: '스마트플레이스 키워드관리' },
+        { href: '/dashboard/ads', label: '광고 현황' }
       ]
     },
     {
@@ -67,7 +69,7 @@ export default function Header() {
       ]
     },
     {
-      label: '기타',
+      label: '인스타',
       icon: FileText,
       children: [
         { href: '/other/instagram', label: '인스타그램 생성' },
@@ -75,6 +77,17 @@ export default function Header() {
       ]
     }
   ]
+
+  // 학원/지사용 메뉴 - 대시보드만 추가
+  let menuItems = [...commonMenuItems]
+  
+  if (user && (user.role === 'academy' || user.role === 'agency')) {
+    // 학원/지사는 대시보드 메뉴를 맨 앞에 추가
+    menuItems = [
+      { href: '/dashboard', label: '대시보드', icon: Home },
+      ...commonMenuItems
+    ]
+  }
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">

@@ -7,6 +7,7 @@ import CampaignCreateModal from '@/components/ads/CampaignCreateModal'
 import CampaignEditModal from '@/components/ads/CampaignEditModal'
 import { fetchWithCache, fetchStatsWithCache, CacheKeys } from '@/lib/utils/cache-manager'
 import cacheManager from '@/lib/utils/cache-manager'
+import WarningModal from '@/components/ui/WarningModal'
 import { 
   Calendar,
   ChevronDown,
@@ -44,6 +45,36 @@ interface Campaign {
   useDailyBudget: boolean
   deliveryMethod: string
   stats: CampaignStats
+}
+
+interface BreakdownData {
+  keywords: {
+    impressions: number
+    clicks: number
+    cost: number
+    ctr: number
+    cpc: number
+    percentage: number
+  }
+  expanded: {
+    impressions: number
+    clicks: number
+    cost: number
+    ctr: number
+    cpc: number
+    percentage: number
+  }
+  period?: string
+  date?: string
+  daysProcessed?: number
+}
+
+interface DashboardData {
+  success: boolean
+  data: {
+    campaigns: Campaign[]
+    breakdown?: BreakdownData
+  }
 }
 
 interface AdGroup {
@@ -98,6 +129,25 @@ interface DashboardData {
     from: string | null
     to: string | null
   }
+  breakdown?: {
+    keywords: {
+      impressions: number
+      clicks: number
+      cost: number
+      ctr: number
+      cpc: number
+      percentage: number
+    }
+    expanded: {
+      impressions: number
+      clicks: number
+      cost: number
+      ctr: number
+      cpc: number
+      percentage: number
+    }
+    date: string
+  }
 }
 
 export default function AdsDashboard() {
@@ -106,6 +156,8 @@ export default function AdsDashboard() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null)
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [breakdownData, setBreakdownData] = useState<BreakdownData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
@@ -119,11 +171,23 @@ export default function AdsDashboard() {
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set())
   const [deletingCampaigns, setDeletingCampaigns] = useState(false)
   
-  // Date range state - default to last 7 days
+  // Date range state - default to last 30 days (2025-08-10 ~ 2025-09-08)
   const [dateRange, setDateRange] = useState({
-    from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    to: new Date().toISOString().split('T')[0]
+    from: '2025-08-10',
+    to: '2025-09-08'
   })
+  
+  // Available data range (90 days: 2025-06-11 ~ 2025-09-08)
+  const availableDateRange = {
+    min: '2025-06-11',
+    max: '2025-09-08'
+  }
+  
+  // Warning modal state
+  const [warningModal, setWarningModal] = useState<{
+    isOpen: boolean
+    message: string
+  }>({ isOpen: false, message: '' })
 
   useEffect(() => {
     checkAuthAndFetchData()
@@ -136,6 +200,46 @@ export default function AdsDashboard() {
     checkAuthAndFetchData()
     setTimeout(() => setForceRefresh(false), 1000)
   }, [])
+  
+  // Date change handler with validation
+  const handleDateChange = (type: 'from' | 'to', value: string) => {
+    const fromDate = type === 'from' ? new Date(value) : new Date(dateRange.from)
+    const toDate = type === 'to' ? new Date(value) : new Date(dateRange.to)
+    
+    // Check database date range
+    if (value < availableDateRange.min || value > availableDateRange.max) {
+      setWarningModal({
+        isOpen: true,
+        message: `선택 가능한 날짜 범위는 ${availableDateRange.min} ~ ${availableDateRange.max} 입니다.\n현재 데이터베이스에는 약 90일간의 데이터가 존재합니다.`
+      })
+      return
+    }
+    
+    // Check if start date is after end date
+    if (fromDate > toDate) {
+      setWarningModal({
+        isOpen: true,
+        message: '시작 날짜는 종료 날짜보다 이전이어야 합니다.'
+      })
+      return
+    }
+    
+    // Check if date range exceeds 90 days
+    const daysDiff = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24))
+    if (daysDiff > 90) {
+      setWarningModal({
+        isOpen: true,
+        message: '날짜 범위는 최대 90일까지만 선택 가능합니다.'
+      })
+      return
+    }
+    
+    // Update date range if valid
+    setDateRange(prev => ({
+      ...prev,
+      [type]: value
+    }))
+  }
 
   const checkAuthAndFetchData = async () => {
     try {
@@ -180,6 +284,25 @@ export default function AdsDashboard() {
       }
 
       setCampaigns(data.data?.campaigns || [])
+      setDashboardData(data)
+      
+      // Also fetch processed data if available
+      try {
+        const processedResponse = await fetch(`/api/ads/processed-data?dateFrom=${dateRange.from}&dateTo=${dateRange.to}`)
+        if (processedResponse.ok) {
+          const processedData = await processedResponse.json()
+          if (processedData.success && processedData.data) {
+            setBreakdownData({
+              keywords: processedData.data.totals.keywords,
+              expanded: processedData.data.totals.expanded,
+              period: `${processedData.data.dateRange.from} ~ ${processedData.data.dateRange.to}`,
+              daysProcessed: processedData.data.days
+            })
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch processed data:', error)
+      }
     } catch (err: any) {
       console.error('Error fetching dashboard:', err)
       setError(err.message || '광고 데이터를 불러오는데 실패했습니다.')
@@ -268,15 +391,13 @@ export default function AdsDashboard() {
   }
 
   const handleCampaignClick = async (campaign: Campaign) => {
-    if (selectedCampaign?.nccCampaignId === campaign.nccCampaignId) {
-      // If clicking the same campaign, collapse it
-      setSelectedCampaign(null)
-      setAdGroups([])
-    } else {
-      // Load new campaign's ad groups
-      setSelectedCampaign(campaign)
-      await loadAdGroups(campaign.nccCampaignId)
-    }
+    // Navigate to campaign detail page with date range as query params
+    const queryParams = new URLSearchParams({
+      dateFrom: dateRange.from,
+      dateTo: dateRange.to
+    }).toString()
+    
+    router.push(`/dashboard/ads/campaigns/${campaign.nccCampaignId}?${queryParams}`)
   }
 
   const handleEditCampaign = (campaign: Campaign) => {
@@ -466,14 +587,18 @@ export default function AdsDashboard() {
                   <input
                     type="date"
                     value={dateRange.from}
-                    onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                    onChange={(e) => handleDateChange('from', e.target.value)}
+                    min={availableDateRange.min}
+                    max={availableDateRange.max}
                     className="px-3 py-1.5 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <span className="text-gray-600">~</span>
                   <input
                     type="date"
                     value={dateRange.to}
-                    onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                    onChange={(e) => handleDateChange('to', e.target.value)}
+                    min={availableDateRange.min}
+                    max={availableDateRange.max}
                     className="px-3 py-1.5 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -739,6 +864,187 @@ export default function AdsDashboard() {
                 </div>
               </div>
             </div>
+            
+            {/* 파워링크 성과 분석 섹션 */}
+            {dashboardData?.breakdown && (
+              <div className="bg-white rounded-lg shadow p-6 mt-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">
+                  🎯 파워링크 성과 분석
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  기간: {dashboardData.breakdown.period || dashboardData.breakdown.date}
+                  {dashboardData.breakdown.daysProcessed && ` (${dashboardData.breakdown.daysProcessed}일간)`}
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* 키워드 성과 */}
+                  <div className="border rounded-lg p-4 bg-blue-50">
+                    <h3 className="font-semibold text-blue-900 mb-3">📌 키워드 성과</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">노출수</span>
+                        <span className="font-medium">{dashboardData.breakdown.keywords.impressions.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭수</span>
+                        <span className="font-medium">{dashboardData.breakdown.keywords.clicks}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭률 (CTR)</span>
+                        <span className="font-medium">{dashboardData.breakdown.keywords.ctr.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">비용</span>
+                        <span className="font-medium">₩{dashboardData.breakdown.keywords.cost.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">평균 클릭비용</span>
+                        <span className="font-medium">₩{dashboardData.breakdown.keywords.cpc.toFixed(0)}</span>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold text-blue-900">전체 대비 비율</span>
+                          <span className="text-lg font-bold text-blue-900">{dashboardData.breakdown.keywords.percentage.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 확장검색 성과 */}
+                  <div className="border rounded-lg p-4 bg-green-50">
+                    <h3 className="font-semibold text-green-900 mb-3">🔍 확장검색 성과</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">노출수</span>
+                        <span className="font-medium">{dashboardData.breakdown.expanded.impressions.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭수</span>
+                        <span className="font-medium">{dashboardData.breakdown.expanded.clicks}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭률 (CTR)</span>
+                        <span className="font-medium text-green-700">{dashboardData.breakdown.expanded.ctr.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">비용</span>
+                        <span className="font-medium">₩{dashboardData.breakdown.expanded.cost.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">평균 클릭비용</span>
+                        <span className="font-medium">₩{dashboardData.breakdown.expanded.cpc.toFixed(0)}</span>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-green-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold text-green-900">전체 대비 비율</span>
+                          <span className="text-lg font-bold text-green-900">{dashboardData.breakdown.expanded.percentage.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 성과 비교 인사이트 */}
+                <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <h4 className="font-semibold text-yellow-900 mb-2">💡 인사이트</h4>
+                  <ul className="text-sm space-y-1 text-gray-700">
+                    {dashboardData.breakdown.expanded.ctr > dashboardData.breakdown.keywords.ctr && (
+                      <li>• 확장검색의 CTR이 키워드보다 <span className="font-semibold text-green-700">
+                        {((dashboardData.breakdown.expanded.ctr / dashboardData.breakdown.keywords.ctr - 1) * 100).toFixed(0)}% 더 높습니다
+                      </span></li>
+                    )}
+                    <li>• 전체 노출의 {dashboardData.breakdown.keywords.percentage.toFixed(1)}%가 키워드, {dashboardData.breakdown.expanded.percentage.toFixed(1)}%가 확장검색입니다</li>
+                    {dashboardData.breakdown.expanded.impressions > 0 && dashboardData.breakdown.expanded.clicks === 0 && (
+                      <li>• 확장검색에서 클릭이 발생하지 않았습니다. 키워드 최적화가 필요할 수 있습니다</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            )}
+            
+            {/* 키워드 vs 확장검색 분석 섹션 */}
+            {breakdownData && (
+              <div className="bg-white rounded-lg shadow p-6 mt-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">🔍 키워드 vs 확장검색 분석</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  파워링크 광고의 키워드 매칭과 확장검색 결과 성과 비교 ({breakdownData.date} 기준)
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* 키워드 매칭 결과 */}
+                  <div className="border rounded-lg p-4 bg-blue-50">
+                    <h3 className="text-md font-semibold text-blue-900 mb-3">
+                      🎯 키워드 매칭 ({breakdownData.keywords.percentage.toFixed(1)}%)
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">노출수:</span>
+                        <span className="font-medium">{breakdownData.keywords.impressions.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭수:</span>
+                        <span className="font-medium">{breakdownData.keywords.clicks.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭률:</span>
+                        <span className="font-medium text-blue-600">{breakdownData.keywords.ctr.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">평균 CPC:</span>
+                        <span className="font-medium">₩{Math.round(breakdownData.keywords.cpc).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-sm text-gray-600">총 비용:</span>
+                        <span className="font-medium text-blue-600">₩{Math.round(breakdownData.keywords.cost).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 확장검색 결과 */}
+                  <div className="border rounded-lg p-4 bg-green-50">
+                    <h3 className="text-md font-semibold text-green-900 mb-3">
+                      🔄 확장검색 ({breakdownData.expanded.percentage.toFixed(1)}%)
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">노출수:</span>
+                        <span className="font-medium">{breakdownData.expanded.impressions.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭수:</span>
+                        <span className="font-medium">{breakdownData.expanded.clicks.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">클릭률:</span>
+                        <span className="font-medium text-green-600">{breakdownData.expanded.ctr.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">평균 CPC:</span>
+                        <span className="font-medium">₩{Math.round(breakdownData.expanded.cpc).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-sm text-gray-600">총 비용:</span>
+                        <span className="font-medium text-green-600">₩{Math.round(breakdownData.expanded.cost).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 인사이트 */}
+                <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                  <p className="text-sm text-gray-700">
+                    💡 <strong>인사이트:</strong> 
+                    {breakdownData.expanded.ctr > breakdownData.keywords.ctr ? (
+                      <span> 확장검색이 키워드 매칭보다 {((breakdownData.expanded.ctr / breakdownData.keywords.ctr - 1) * 100).toFixed(0)}% 높은 클릭률을 보이고 있습니다. 
+                      더 넓은 검색어에서 좋은 성과를 내고 있습니다.</span>
+                    ) : (
+                      <span> 키워드 매칭이 확장검색보다 {((breakdownData.keywords.ctr / breakdownData.expanded.ctr - 1) * 100).toFixed(0)}% 높은 클릭률을 보이고 있습니다. 
+                      타겟 키워드가 효과적으로 작동하고 있습니다.</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           /* Ad Groups View */
@@ -751,14 +1057,18 @@ export default function AdsDashboard() {
                   <input
                     type="date"
                     value={dateRange.from}
-                    onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                    onChange={(e) => handleDateChange('from', e.target.value)}
+                    min={availableDateRange.min}
+                    max={availableDateRange.max}
                     className="px-3 py-1.5 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <span className="text-gray-600">~</span>
                   <input
                     type="date"
                     value={dateRange.to}
-                    onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                    onChange={(e) => handleDateChange('to', e.target.value)}
+                    min={availableDateRange.min}
+                    max={availableDateRange.max}
                     className="px-3 py-1.5 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -796,8 +1106,12 @@ export default function AdsDashboard() {
               <h2 className="text-lg font-semibold text-gray-900">광고그룹 목록</h2>
               <button
                 onClick={() => {
-                  // TODO: 광고그룹 추가 모달 또는 페이지로 이동
-                  alert('광고그룹 추가 기능은 준비 중입니다.')
+                  // Navigate to ad group creation page
+                  if (selectedCampaign) {
+                    router.push(`/dashboard/ads/campaigns/${selectedCampaign.nccCampaignId}/create-adgroup`)
+                  } else {
+                    alert('캠페인을 먼저 선택해주세요.')
+                  }
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
@@ -1027,6 +1341,13 @@ export default function AdsDashboard() {
           handleRefresh() // Refresh the campaign list after edit
         }}
         campaign={editingCampaign}
+      />
+      
+      {/* Warning Modal */}
+      <WarningModal
+        isOpen={warningModal.isOpen}
+        onClose={() => setWarningModal({ isOpen: false, message: '' })}
+        message={warningModal.message}
       />
     </div>
   )

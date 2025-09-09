@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { campaignId: string } }
+  props: { params: Promise<{ campaignId: string }> }
 ) {
   try {
     // 인증 확인
@@ -14,6 +14,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Next.js 15 requires awaiting params
+    const params = await props.params
     const { campaignId } = params
     const { enabled } = await request.json()
 

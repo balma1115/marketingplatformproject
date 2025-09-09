@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth-middleware'
 import { NaverAdsAPI } from '@/lib/services/naver-ads-api'
+import { NaverAdsDataProcessor } from '@/lib/services/naver-ads-data-processor'
 import { prisma } from '@/lib/db'
+import axios from 'axios'
+import crypto from 'crypto'
 
 export async function GET(request: NextRequest) {
   try {
     // 인증 확인
     const auth = await verifyAuth(request)
-    if (!auth) {
+    if (!auth || !auth.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -22,7 +25,10 @@ export async function GET(request: NextRequest) {
       select: {
         naverAdApiKey: true,
         naverAdSecret: true,
-        naverAdCustomerId: true
+        naverAdCustomerId: true,
+        naverAdsAccessKey: true,
+        naverAdsSecretKey: true,
+        naverAdsCustomerId: true
       }
     })
 
@@ -97,6 +103,134 @@ export async function GET(request: NextRequest) {
       })
     )
 
+    // Get breakdown data for PowerLink campaigns
+    let breakdownData = null
+    try {
+      const powerLinkCampaigns = campaignsWithStats.filter(c => c.campaignTp === 'WEB_SITE')
+      
+      if (powerLinkCampaigns.length > 0 && dateFrom && dateTo) {
+        const processor = new NaverAdsDataProcessor()
+        
+        // Use pre-downloaded data if available (for August 2025)
+        const fs = await import('fs')
+        const path = await import('path')
+        
+        // Check if we're requesting August 2025 data
+        if (dateFrom.startsWith('2025-08') && dateTo.startsWith('2025-08')) {
+          const dataDir = path.join(process.cwd(), 'august-2025-final')
+          
+          if (fs.existsSync(dataDir)) {
+            // Process all August data from local files
+            const dataMap = await processor.processDirectory(dataDir)
+            const monthlySummary = processor.generateMonthlySummary(dataMap)
+            
+            const totalImpressions = monthlySummary.totals.all.impressions
+            
+            breakdownData = {
+              keywords: {
+                impressions: monthlySummary.totals.keywords.impressions,
+                clicks: monthlySummary.totals.keywords.clicks,
+                cost: monthlySummary.totals.keywords.cost,
+                ctr: monthlySummary.totals.keywords.ctr,
+                cpc: monthlySummary.totals.keywords.cpc,
+                percentage: totalImpressions > 0 ? (monthlySummary.totals.keywords.impressions / totalImpressions * 100) : 0
+              },
+              expanded: {
+                impressions: monthlySummary.totals.expanded.impressions,
+                clicks: monthlySummary.totals.expanded.clicks,
+                cost: monthlySummary.totals.expanded.cost,
+                ctr: monthlySummary.totals.expanded.ctr,
+                cpc: monthlySummary.totals.expanded.cpc,
+                percentage: totalImpressions > 0 ? (monthlySummary.totals.expanded.impressions / totalImpressions * 100) : 0
+              },
+              period: monthlySummary.period,
+              daysProcessed: monthlySummary.days
+            }
+          }
+        }
+        
+        // If no pre-downloaded data, get fresh data for a single day
+        if (!breakdownData) {
+          const targetDate = dateTo || new Date().toISOString().split('T')[0]
+          
+          // Try to download and process StatReport for the end date
+          const reportResponse = await naverAds.request('POST', '/stat-reports', {
+            reportTp: 'AD',
+            statDt: `${targetDate}T00:00:00.000Z`
+          })
+          
+          if (reportResponse?.reportJobId) {
+            // Wait for report to be ready
+            let downloadUrl = ''
+            const maxAttempts = 10
+            
+            for (let i = 0; i < maxAttempts; i++) {
+              await new Promise(resolve => setTimeout(resolve, 2000))
+              
+              const status = await naverAds.request('GET', `/stat-reports/${reportResponse.reportJobId}`)
+              
+              if (status?.status === 'BUILT' || status?.status === 'DONE') {
+                downloadUrl = status.downloadUrl
+                break
+              }
+            }
+            
+            if (downloadUrl) {
+              // Download the report
+              const urlParts = new URL(downloadUrl)
+              const urlPath = urlParts.pathname
+              const timestamp = Date.now().toString()
+              const secretKey = user.naverAdSecret
+              const message = `${timestamp}.GET.${urlPath}`
+              const signature = crypto.createHmac('sha256', secretKey).update(message, 'utf-8').digest('base64')
+              
+              const downloadResponse = await axios.get(downloadUrl, {
+                headers: {
+                  'X-Timestamp': timestamp,
+                  'X-API-KEY': user.naverAdApiKey,
+                  'X-Customer': user.naverAdCustomerId,
+                  'X-Signature': signature
+                },
+                responseType: 'text'
+              })
+              
+              // Process the TSV data
+              const processedData = processor.processTSVContent(downloadResponse.data)
+              
+              // Calculate breakdown percentages
+              const keywordImpressions = processedData.totals.keywords.impressions
+              const expandedImpressions = processedData.totals.expanded.impressions
+              const totalImpressions = processedData.totals.all.impressions
+              
+              breakdownData = {
+                keywords: {
+                  impressions: keywordImpressions,
+                  clicks: processedData.totals.keywords.clicks,
+                  cost: processedData.totals.keywords.cost,
+                  ctr: processedData.totals.keywords.ctr,
+                  cpc: processedData.totals.keywords.cpc,
+                  percentage: totalImpressions > 0 ? (keywordImpressions / totalImpressions * 100) : 0
+                },
+                expanded: {
+                  impressions: expandedImpressions,
+                  clicks: processedData.totals.expanded.clicks,
+                  cost: processedData.totals.expanded.cost,
+                  ctr: processedData.totals.expanded.ctr,
+                  cpc: processedData.totals.expanded.cpc,
+                  percentage: totalImpressions > 0 ? (expandedImpressions / totalImpressions * 100) : 0
+                },
+                period: targetDate,
+                daysProcessed: 1
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to get breakdown data:', error)
+      // Continue without breakdown data
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -104,7 +238,8 @@ export async function GET(request: NextRequest) {
         dateRange: {
           from: dateFrom,
           to: dateTo
-        }
+        },
+        breakdown: breakdownData
       }
     })
   } catch (error) {
