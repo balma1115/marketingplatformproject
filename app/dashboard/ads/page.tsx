@@ -171,16 +171,28 @@ export default function AdsDashboard() {
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<Set<string>>(new Set())
   const [deletingCampaigns, setDeletingCampaigns] = useState(false)
   
-  // Date range state - default to last 30 days (2025-08-10 ~ 2025-09-08)
+  // Date range state - default to last 30 days (어제부터 30일 전까지)
+  const getYesterday = () => {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    return yesterday.toISOString().split('T')[0]
+  }
+  
+  const getDateFrom = (daysAgo: number) => {
+    const date = new Date()
+    date.setDate(date.getDate() - daysAgo)
+    return date.toISOString().split('T')[0]
+  }
+  
   const [dateRange, setDateRange] = useState({
-    from: '2025-08-10',
-    to: '2025-09-08'
+    from: getDateFrom(30), // 30일 전
+    to: getYesterday() // 어제
   })
   
-  // Available data range (90 days: 2025-06-11 ~ 2025-09-08)
+  // Available data range (90 days from yesterday)
   const availableDateRange = {
-    min: '2025-06-11',
-    max: '2025-09-08'
+    min: getDateFrom(90), // 90일 전
+    max: getYesterday() // 어제
   }
   
   // Warning modal state

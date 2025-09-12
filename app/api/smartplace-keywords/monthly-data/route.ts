@@ -1,65 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth } from '@/lib/auth-middleware'
-import { getKSTDate, getKSTDateString } from '@/lib/utils/timezone'
 
 export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
+      // userId를 숫자로 변환 (문자열로 전달될 수 있음)
+      const numericUserId = typeof userId === 'string' ? parseInt(userId) : userId;
+      
+      console.log('[Monthly Data API] User ID:', userId, 'Type:', typeof userId, 'Numeric:', numericUserId);
+      
       // 사용자의 스마트플레이스 프로젝트 찾기
-      const project = await prisma.trackingProject.findFirst({
+      const project = await prisma.smartPlace.findFirst({
         where: {
-          userId: userId
+          userId: numericUserId
         }
       })
       
       if (!project) {
+        console.log('[Monthly Data API] No SmartPlace found for user:', numericUserId);
         return NextResponse.json({ error: '스마트플레이스를 먼저 등록해주세요.' }, { status: 404 })
       }
       
+      console.log('[Monthly Data API] Found SmartPlace:', project.id, project.placeName);
+      
       // 활성 키워드 조회
-      const keywords = await prisma.trackingKeyword.findMany({
+      const keywords = await prisma.smartPlaceKeyword.findMany({
         where: {
-          projectId: project.id,
+          smartPlaceId: project.id,
           isActive: true
         }
       })
       
-      // 최근 30일 순위 데이터 조회 (null 제외) - 한국 시간 기준
-      const kstNow = getKSTDate()
-      const thirtyDaysAgo = new Date(kstNow)
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      console.log('[Monthly Data API] Keywords found:', keywords.length);
       
-      console.log(`Monthly Data - KST Now: ${getKSTDateString(kstNow)}`)
-      console.log(`Monthly Data - 30 days ago: ${getKSTDateString(thirtyDaysAgo)}`)
+      if (keywords.length === 0) {
+        return NextResponse.json({ 
+          project: {
+            placeName: project.placeName,
+            placeId: project.placeId,
+            lastUpdated: project.createdAt
+          },
+          monthlyData: [],
+          summary: {
+            totalDays: 0,
+            totalKeywords: 0,
+            totalDataPoints: 0
+          }
+        })
+      }
       
-      const rankings = await prisma.trackingRanking.findMany({
+      // 모든 순위 데이터 조회 (날짜 제한 없이)
+      const rankings = await prisma.smartPlaceRanking.findMany({
         where: {
           keywordId: {
             in: keywords.map(k => k.id)
-          },
-          checkDate: {
-            gte: thirtyDaysAgo
-          },
-          OR: [
-            { organicRank: { not: null } },
-            { adRank: { not: null } }
-          ]
-        },
-        include: {
-          keyword: true
-        },
-        orderBy: {
-          checkDate: 'desc'
-        }
-      })
-      
-      // Get snapshots for the same period
-      const snapshots = await prisma.trackingSnapshot.findMany({
-        where: {
-          projectId: project.id,
-          checkDate: {
-            gte: thirtyDaysAgo
           }
         },
         orderBy: {
@@ -67,14 +62,10 @@ export async function GET(req: NextRequest) {
         }
       })
       
-      // Create snapshot map by date
-      const snapshotMap = new Map<string, any>()
-      snapshots.forEach(snapshot => {
-        const dateStr = new Date(snapshot.checkDate).toISOString().split('T')[0]
-        if (!snapshotMap.has(dateStr) || snapshot.createdAt > snapshotMap.get(dateStr).createdAt) {
-          snapshotMap.set(dateStr, snapshot)
-        }
-      })
+      console.log('[Monthly Data API] Rankings found:', rankings.length);
+      
+      // 키워드 정보 매핑
+      const keywordMap = new Map(keywords.map(k => [k.id, k.keyword]))
       
       // 날짜별로 그룹화하고 중복 제거 (같은 날짜-키워드 조합에서 최신 것만 유지)
       const dailyDataMap = new Map<string, any>()
@@ -90,7 +81,7 @@ export async function GET(req: NextRequest) {
             ranking.createdAt > dailyDataMap.get(key).createdAt) {
           dailyDataMap.set(key, {
             date: dateStr,
-            keyword: ranking.keyword.keyword,
+            keyword: keywordMap.get(ranking.keywordId) || 'Unknown',
             keywordId: ranking.keywordId,
             organicRank: ranking.organicRank,
             adRank: ranking.adRank,
@@ -102,34 +93,43 @@ export async function GET(req: NextRequest) {
       
       // 날짜별로 데이터 정리
       const dates = Array.from(dateSet).sort((a, b) => b.localeCompare(a))
+      console.log('[Monthly Data API] Unique dates found:', dates.length);
+      
       const monthlyData = dates.map(date => {
         const dayData = Array.from(dailyDataMap.values())
           .filter(d => d.date === date)
-          .map(d => ({
-            keyword: d.keyword,
-            keywordId: d.keywordId,
-            organicRank: d.organicRank,
-            adRank: d.adRank,
-            topTenPlaces: d.topTenPlaces ? JSON.parse(d.topTenPlaces) : null
-          }))
-        
-        // Get snapshot for this date
-        const snapshot = snapshotMap.get(date)
+          .map(d => {
+            // Handle malformed topTenPlaces data
+            let topTenPlaces = null;
+            if (d.topTenPlaces) {
+              try {
+                // Check if it's the malformed "[object Object]" format
+                if (typeof d.topTenPlaces === 'string' && d.topTenPlaces.includes('[object Object]')) {
+                  // Data is corrupted, set to null
+                  topTenPlaces = null;
+                } else if (d.topTenPlaces.length > 0) {
+                  // Try to parse valid JSON
+                  topTenPlaces = JSON.parse(d.topTenPlaces);
+                }
+              } catch (e) {
+                // If parsing fails, set to null
+                topTenPlaces = null;
+              }
+            }
+            
+            return {
+              keyword: d.keyword,
+              keywordId: d.keywordId,
+              organicRank: d.organicRank,
+              adRank: d.adRank,
+              topTenPlaces
+            };
+          })
         
         return {
           date,
           rankings: dayData,
-          snapshot: snapshot ? {
-            placeName: snapshot.placeName,
-            category: snapshot.category,
-            directions: snapshot.directions,
-            introduction: snapshot.introduction,
-            representativeKeywords: snapshot.representativeKeywords ? 
-              JSON.parse(snapshot.representativeKeywords) : [],
-            businessHours: snapshot.businessHours,
-            phone: snapshot.phone,
-            address: snapshot.address
-          } : null,
+          snapshot: null, // SmartPlace는 snapshot이 없음
           summary: {
             averageOrganic: dayData.filter(d => d.organicRank).reduce((sum, d) => sum + d.organicRank, 0) / 
                            dayData.filter(d => d.organicRank).length || null,
@@ -140,42 +140,33 @@ export async function GET(req: NextRequest) {
         }
       })
       
-      // 최신 스냅샷 정보
-      const latestSnapshot = await prisma.trackingSnapshot.findFirst({
-        where: {
-          projectId: project.id
-        },
-        orderBy: {
-          checkDate: 'desc'
-        }
-      })
-      
-      return NextResponse.json({ 
+      const responseData = {
         project: {
           placeName: project.placeName,
           placeId: project.placeId,
-          lastUpdated: project.lastUpdated
+          lastUpdated: project.createdAt
         },
-        placeInfo: latestSnapshot ? {
-          placeName: latestSnapshot.placeName,
-          category: latestSnapshot.category,
-          directions: latestSnapshot.directions,
-          introduction: latestSnapshot.introduction,
-          representativeKeywords: latestSnapshot.representativeKeywords ? 
-            JSON.parse(latestSnapshot.representativeKeywords) : [],
-          businessHours: latestSnapshot.businessHours,
-          phone: latestSnapshot.phone,
-          address: latestSnapshot.address
-        } : null,
+        placeInfo: {
+          placeName: project.placeName,
+          category: project.category,
+          phone: project.phone,
+          address: project.address,
+          rating: project.rating,
+          reviewCount: project.reviewCount
+        },
         monthlyData,
         summary: {
           totalDays: dates.length,
           totalKeywords: keywords.length,
           totalDataPoints: dailyDataMap.size
         }
-      })
+      };
+      
+      console.log('[Monthly Data API] Sending response with', monthlyData.length, 'days of data');
+      
+      return NextResponse.json(responseData)
     } catch (error) {
-      console.error('Failed to fetch monthly data:', error)
+      console.error('[Monthly Data API] Error:', error)
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
   })

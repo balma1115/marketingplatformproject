@@ -259,7 +259,13 @@ export class ImprovedNaverScraperV3 {
     keyword: string,
     targetPlace: { placeId: string; placeName: string }
   ): Promise<SmartPlaceRankingResult> {
+    const startTime = Date.now()
+    console.log(`[${new Date().toISOString()}] Queuing keyword: "${keyword}"`)
+    
     return this.queue.add(async () => {
+      const queueStartTime = Date.now()
+      console.log(`[${new Date().toISOString()}] Starting tracking for: "${keyword}" (waited ${queueStartTime - startTime}ms in queue)`)
+      
       const browser = await this.browserManager.getBrowser()
       const context = await browser.newContext({
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -268,7 +274,7 @@ export class ImprovedNaverScraperV3 {
       const page = await context.newPage()
 
       try {
-        console.log(`Searching for: "${keyword}", Target: "${targetPlace.placeName}"`)
+        console.log(`[${new Date().toISOString()}] Browser ready for: "${keyword}", Target: "${targetPlace.placeName}"`)
         
         const searchUrl = `https://map.naver.com/p/search/${encodeURIComponent(keyword)}`
         await page.goto(searchUrl, { 
@@ -352,14 +358,18 @@ export class ImprovedNaverScraperV3 {
         const targetNormalized = this.normalizeName(targetPlace.placeName)
         console.log(`Looking for: "${targetNormalized}" (from "${targetPlace.placeName}")`)
         
+        // 먼저 오가닉 결과만 필터링하여 상위 10개 수집
+        let organicRankCounter = 0
+        
         for (const result of allResults) {
-          // Top 10 수집 (순수하게 상위 10개만)
-          if (topTenPlaces.length < 10) {
+          // 오가닉 결과만으로 Top 10 수집
+          if (!result.isAd && topTenPlaces.length < 10) {
+            organicRankCounter++
             topTenPlaces.push({
-              rank: result.position,
+              rank: organicRankCounter,  // 오가닉 순위로 표시
               placeName: result.placeName,
               placeId: result.placeId,
-              isAd: result.isAd
+              isAd: false
             })
           }
           
@@ -385,7 +395,8 @@ export class ImprovedNaverScraperV3 {
           }
         }
         
-        console.log(`Final Result - Organic: ${targetOrganicRank}, Ad: ${targetAdRank}, Found: ${found}`)
+        const trackingTime = Date.now() - queueStartTime
+        console.log(`[${new Date().toISOString()}] Completed "${keyword}" - Organic: ${targetOrganicRank}, Ad: ${targetAdRank}, Found: ${found} (took ${trackingTime}ms)`)
         
         return {
           organicRank: targetOrganicRank,
@@ -397,12 +408,13 @@ export class ImprovedNaverScraperV3 {
         }
         
       } catch (error) {
-        console.error('Tracking error:', error)
+        console.error(`[${new Date().toISOString()}] Error tracking "${keyword}":`, error)
         throw error
         
       } finally {
         await page.close()
         await context.close()
+        console.log(`[${new Date().toISOString()}] Closed browser context for: "${keyword}"`)
       }
     })
   }
@@ -413,15 +425,22 @@ export class ImprovedNaverScraperV3 {
     targetPlace: { placeId: string; placeName: string }
   ): Promise<Map<string, SmartPlaceRankingResult>> {
     const results = new Map<string, SmartPlaceRankingResult>()
+    const startTime = Date.now()
+    
+    console.log(`[${new Date().toISOString()}] Starting batch tracking for ${keywords.length} keywords`)
+    console.log(`[${new Date().toISOString()}] Queue concurrency: ${this.queue.concurrency}`)
+    console.log(`[${new Date().toISOString()}] Current queue size: ${this.queue.size}, pending: ${this.queue.pending}`)
     
     // 모든 키워드를 큐에 추가
-    const promises = keywords.map(({ keyword, keywordId }) => 
-      this.trackRanking(keyword, targetPlace)
+    const promises = keywords.map(({ keyword, keywordId }, index) => {
+      console.log(`[${new Date().toISOString()}] Adding keyword ${index + 1}/${keywords.length}: "${keyword}" to queue`)
+      return this.trackRanking(keyword, targetPlace)
         .then(result => {
+          console.log(`[${new Date().toISOString()}] ✓ Completed keyword ${index + 1}/${keywords.length}: "${keyword}"`)
           results.set(keywordId || keyword, result)
         })
         .catch(error => {
-          console.error(`Failed to track "${keyword}":`, error)
+          console.error(`[${new Date().toISOString()}] ✗ Failed keyword ${index + 1}/${keywords.length}: "${keyword}":`, error)
           results.set(keywordId || keyword, {
             organicRank: null,
             adRank: null,
@@ -429,9 +448,13 @@ export class ImprovedNaverScraperV3 {
             timestamp: new Date()
           })
         })
-    )
+    })
     
     await Promise.all(promises)
+    
+    const totalTime = Date.now() - startTime
+    console.log(`[${new Date().toISOString()}] Batch tracking completed: ${keywords.length} keywords in ${totalTime}ms (avg: ${Math.round(totalTime / keywords.length)}ms per keyword)`)
+    
     return results
   }
 
