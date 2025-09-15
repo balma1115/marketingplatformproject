@@ -4,6 +4,11 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryProvider } from '@/lib/providers/query-provider'
 import './globals.css'
 
+// 스케줄러 초기화 (서버 사이드에서만 실행)
+if (typeof window === 'undefined') {
+  import('@/lib/scheduler-init')
+}
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {

@@ -1,0 +1,239 @@
+service: marketingplat-tracking
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-northeast-2
+  stage: ${opt:stage, 'development'}
+  timeout: 120 # 2 minutes
+  memorySize: 2048 # For Chromium
+  environment:
+    DATABASE_URL: ${env:DATABASE_URL}
+    NODE_ENV: ${self:provider.stage}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+
+  # VPC Configuration for RDS access
+  vpc:
+    securityGroupIds:
+      - ${env:LAMBDA_SECURITY_GROUP_ID}
+    subnetIds:
+      - ${env:LAMBDA_SUBNET_ID_1}
+      - ${env:LAMBDA_SUBNET_ID_2}
+
+  # IAM Role permissions
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sqs:*
+            - cloudwatch:PutMetricData
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
+          Resource: '*'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+functions:
+  smartplaceTracker:
+    handler: smartplace-tracker/index.handler
+    description: Track SmartPlace rankings on Naver Map
+    reservedConcurrentExecutions: 50 # Limit concurrent executions
+    layers:
+      - !Ref ChromiumLambdaLayer
+      - !Ref PrismaLambdaLayer
+    events:
+      - sqs:
+          arn: !GetAtt SmartPlaceTrackingQueue.Arn
+          batchSize: 1
+          maximumBatchingWindowInSeconds: 0
+
+  blogTracker:
+    handler: blog-tracker/index.handler
+    description: Track Blog rankings on Naver Search
+    reservedConcurrentExecutions: 30 # Limit concurrent executions
+    layers:
+      - !Ref ChromiumLambdaLayer
+      - !Ref PrismaLambdaLayer
+    events:
+      - sqs:
+          arn: !GetAtt BlogTrackingQueue.Arn
+          batchSize: 1
+          maximumBatchingWindowInSeconds: 0
+
+  # Scheduled trigger for daily tracking (optional)
+  scheduledTrigger:
+    handler: scheduled-trigger/index.handler
+    description: Trigger daily tracking at midnight KST
+    events:
+      - schedule:
+          rate: cron(0 15 * * ? *) # UTC 15:00 = KST 00:00 (midnight)
+          enabled: ${self:custom.scheduleEnabled.${self:provider.stage}}
+
+layers:
+  chromium:
+    path: layers/chromium-layer.zip
+    name: ${self:service}-chromium-${self:provider.stage}
+    description: Chromium binary for Lambda
+    compatibleRuntimes:
+      - nodejs18.x
+    retain: false
+
+  prisma:
+    path: layers/prisma-layer.zip
+    name: ${self:service}-prisma-${self:provider.stage}
+    description: Prisma ORM client
+    compatibleRuntimes:
+      - nodejs18.x
+    retain: false
+
+resources:
+  Resources:
+    # Lambda Layers
+    ChromiumLambdaLayer:
+      Type: AWS::Lambda::LayerVersion
+      Properties:
+        LayerName: ${self:service}-chromium-${self:provider.stage}
+        Content:
+          S3Bucket: !Ref ServerlessDeploymentBucket
+          S3Key: layers/chromium-layer.zip
+        CompatibleRuntimes:
+          - nodejs18.x
+
+    PrismaLambdaLayer:
+      Type: AWS::Lambda::LayerVersion
+      Properties:
+        LayerName: ${self:service}-prisma-${self:provider.stage}
+        Content:
+          S3Bucket: !Ref ServerlessDeploymentBucket
+          S3Key: layers/prisma-layer.zip
+        CompatibleRuntimes:
+          - nodejs18.x
+
+    # SQS Queues
+    SmartPlaceTrackingQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-smartplace-queue-${self:provider.stage}
+        VisibilityTimeout: 300 # 5 minutes (longer than Lambda timeout)
+        MessageRetentionPeriod: 1209600 # 14 days
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt SmartPlaceDeadLetterQueue.Arn
+          maxReceiveCount: 3
+
+    SmartPlaceDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-smartplace-dlq-${self:provider.stage}
+        MessageRetentionPeriod: 1209600 # 14 days
+
+    BlogTrackingQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-blog-queue-${self:provider.stage}
+        VisibilityTimeout: 300 # 5 minutes
+        MessageRetentionPeriod: 1209600 # 14 days
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt BlogDeadLetterQueue.Arn
+          maxReceiveCount: 3
+
+    BlogDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-blog-dlq-${self:provider.stage}
+        MessageRetentionPeriod: 1209600 # 14 days
+
+    # CloudWatch Alarms
+    SmartPlaceErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-smartplace-errors-${self:provider.stage}
+        AlarmDescription: Alert when SmartPlace tracking errors exceed threshold
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 5
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-${self:provider.stage}-smartplaceTracker
+
+    BlogErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-blog-errors-${self:provider.stage}
+        AlarmDescription: Alert when Blog tracking errors exceed threshold
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 5
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-${self:provider.stage}-blogTracker
+
+    DLQAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-dlq-messages-${self:provider.stage}
+        AlarmDescription: Alert when messages are sent to DLQ
+        MetricName: ApproximateNumberOfMessagesVisible
+        Namespace: AWS/SQS
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: QueueName
+            Value: ${self:service}-smartplace-dlq-${self:provider.stage}
+
+  Outputs:
+    SmartPlaceQueueUrl:
+      Description: URL of the SmartPlace tracking SQS queue
+      Value: !Ref SmartPlaceTrackingQueue
+      Export:
+        Name: ${self:service}-smartplace-queue-url-${self:provider.stage}
+
+    BlogQueueUrl:
+      Description: URL of the Blog tracking SQS queue
+      Value: !Ref BlogTrackingQueue
+      Export:
+        Name: ${self:service}-blog-queue-url-${self:provider.stage}
+
+    SmartPlaceQueueArn:
+      Description: ARN of the SmartPlace tracking SQS queue
+      Value: !GetAtt SmartPlaceTrackingQueue.Arn
+      Export:
+        Name: ${self:service}-smartplace-queue-arn-${self:provider.stage}
+
+    BlogQueueArn:
+      Description: ARN of the Blog tracking SQS queue
+      Value: !GetAtt BlogTrackingQueue.Arn
+      Export:
+        Name: ${self:service}-blog-queue-arn-${self:provider.stage}
+
+custom:
+  scheduleEnabled:
+    development: false
+    staging: false
+    production: true
+
+  serverless-offline:
+    httpPort: 4000
+    lambdaPort: 4002

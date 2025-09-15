@@ -17,9 +17,9 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
-    // 조건 설정
+    // 조건 설정 - 모든 일반 사용자 포함 (admin, agency 제외)
     let whereCondition: any = {
-      role: { in: ['academy', 'branch'] }
+      role: { in: ['user', 'academy', 'branch'] }
     };
 
     // 대행사는 자신에게 할당된 계정만 조회
@@ -33,6 +33,14 @@ export async function GET(req: NextRequest) {
         where: whereCondition,
         include: {
           smartPlace: {
+            include: {
+              keywords: {
+                where: { isActive: true },
+                select: { id: true }
+              }
+            }
+          },
+          blogTrackingProjects: {
             include: {
               keywords: {
                 where: { isActive: true },
@@ -74,20 +82,55 @@ export async function GET(req: NextRequest) {
           smartplaceLastUpdate = latestSmartplace?.checkDate;
         }
 
-        // Blog 최신 추적 시간
+        // Blog 최신 추적 시간 (BlogTrackingProject 또는 BlogProject 확인)
         let blogLastUpdate = null;
-        const blogProject = user.blogProjects[0];
-        if (blogProject) {
-          const latestBlog = await prisma.blogRanking.findFirst({
-            where: {
-              keyword: {
-                userId: user.id
-              }
-            },
-            orderBy: { checkDate: 'desc' },
-            select: { checkDate: true }
+        // 키워드가 있는 프로젝트를 우선 선택
+        const blogTrackingProject = user.blogTrackingProjects.find(p => p.keywords.length > 0) || user.blogTrackingProjects[0];
+        const blogProject = user.blogProjects.find(p => p.keywords.length > 0) || user.blogProjects[0];
+        const actualBlogProject = blogTrackingProject || blogProject;
+        
+        if (actualBlogProject) {
+          // BlogTrackingProject는 BlogTrackingResult 테이블 사용
+          if (blogTrackingProject) {
+            const latestBlog = await prisma.blogTrackingResult.findFirst({
+              where: {
+                keyword: {
+                  projectId: blogTrackingProject.id
+                }
+              },
+              orderBy: { trackingDate: 'desc' },
+              select: { trackingDate: true }
+            });
+            blogLastUpdate = latestBlog?.trackingDate || blogTrackingProject.lastTrackedAt;
+          } 
+          // BlogProject는 BlogRanking 테이블 사용
+          else if (blogProject) {
+            const latestBlog = await prisma.blogRanking.findFirst({
+              where: {
+                keyword: {
+                  projectId: blogProject.id
+                }
+              },
+              orderBy: { checkDate: 'desc' },
+              select: { checkDate: true }
+            });
+            blogLastUpdate = latestBlog?.checkDate || blogProject.lastUpdated;
+          }
+        }
+
+        // 광고 계정 정보 및 최신 업데이트 시간
+        let adsLastUpdate = null;
+        const hasAdAccount = !!(user.naverAdsCustomerId);
+        const hasAdCredentials = !!(user.naverAdsAccessKey && user.naverAdsSecretKey);
+        
+        if (hasAdAccount && hasAdCredentials) {
+          // NaverAdsData에서 최신 업데이트 시간 조회
+          const latestAdsData = await prisma.naverAdsData.findFirst({
+            where: { userId: user.id },
+            orderBy: { lastUpdated: 'desc' },
+            select: { lastUpdated: true }
           });
-          blogLastUpdate = latestBlog?.checkDate;
+          adsLastUpdate = latestAdsData?.lastUpdated;
         }
 
         return {
@@ -103,11 +146,17 @@ export async function GET(req: NextRequest) {
             lastUpdate: smartplaceLastUpdate
           },
           blog: {
-            registered: user.blogProjects.length > 0,
-            blogName: blogProject?.blogName,
-            blogUrl: blogProject?.blogUrl,
-            activeKeywords: blogProject?.keywords.length || 0,
+            registered: user.blogTrackingProjects.length > 0 || user.blogProjects.length > 0,
+            blogName: actualBlogProject?.blogName,
+            blogUrl: actualBlogProject?.blogUrl,
+            activeKeywords: actualBlogProject?.keywords.length || 0,
             lastUpdate: blogLastUpdate
+          },
+          ads: {
+            registered: hasAdAccount,
+            customerId: user.naverAdsCustomerId,
+            hasCredentials: hasAdCredentials,
+            lastUpdate: adsLastUpdate
           }
         };
       })
@@ -164,12 +213,13 @@ export async function POST(req: NextRequest) {
     // Get all active users to track (admin과 agency 제외)
     const users = await prisma.user.findMany({
       where: {
-        role: { in: ['academy', 'branch'] },
+        role: { in: ['user', 'academy', 'branch'] },
         isActive: true
       },
       include: {
         smartPlace: true,
-        blogProjects: true
+        blogProjects: true,
+        blogTrackingProjects: true
       }
     });
 
@@ -182,7 +232,9 @@ export async function POST(req: NextRequest) {
         jobsCount++;
         hasService = true;
       }
-      if (user.blogProjects && user.blogProjects.length > 0) {
+      // BlogProjects 또는 BlogTrackingProjects 확인
+      if ((user.blogProjects && user.blogProjects.length > 0) ||
+          (user.blogTrackingProjects && user.blogTrackingProjects.length > 0)) {
         jobsCount++;
         hasService = true;
       }
@@ -191,12 +243,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Start tracking in background (don't await)
-    trackAllUsers().then(result => {
-      console.log(`[Background Tracking] Completed with ${result.results.length} results`);
-    }).catch(error => {
-      console.error('[Background Tracking] Error:', error);
-    });
+    // Start tracking in background with a delay to ensure SSE listeners are ready
+    setTimeout(() => {
+      trackAllUsers().then(result => {
+        console.log(`[Background Tracking] Completed with ${result.results.length} results`);
+      }).catch(error => {
+        console.error('[Background Tracking] Error:', error);
+      });
+    }, 1500); // 1.5초 대기 - SSE 연결이 확립될 시간 제공
 
     // Return immediately
     return NextResponse.json({
