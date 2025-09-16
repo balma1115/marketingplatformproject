@@ -1,0 +1,171 @@
+{
+  "date": "2025-08-01",
+  "customerId": "2982259",
+  "keywords": {
+    "nkw-a001-01-000006938876438": {
+      "keywordId": "nkw-a001-01-000006938876438",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 1,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 1,
+        "P": 0
+      },
+      "avgRank": 1,
+      "ctr": 0,
+      "cpc": 0
+    },
+    "nkw-a001-01-000006938876442": {
+      "keywordId": "nkw-a001-01-000006938876442",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 1,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 1,
+        "P": 0
+      },
+      "avgRank": 1,
+      "ctr": 0,
+      "cpc": 0
+    },
+    "nkw-a001-01-000006938876540": {
+      "keywordId": "nkw-a001-01-000006938876540",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 4,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 0,
+        "P": 4
+      },
+      "avgRank": 1,
+      "ctr": 0,
+      "cpc": 0
+    }
+  },
+  "extendedSearchResults": {
+    "grp-a001-06-000000039961935": {
+      "adgroupId": "grp-a001-06-000000039961935",
+      "campaignId": "cmp-a001-06-000000007657011",
+      "impressions": 375,
+      "clicks": 2,
+      "cost": 110,
+      "devices": {
+        "M": 375,
+        "P": 0
+      },
+      "ctr": 0.5333333333333333,
+      "cpc": 55
+    },
+    "grp-a001-06-000000039962052": {
+      "adgroupId": "grp-a001-06-000000039962052",
+      "campaignId": "cmp-a001-06-000000007657032",
+      "impressions": 357,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 357,
+        "P": 0
+      },
+      "ctr": 0,
+      "cpc": 0
+    },
+    "grp-a001-06-000000048644419": {
+      "adgroupId": "grp-a001-06-000000048644419",
+      "campaignId": "cmp-a001-06-000000009160550",
+      "impressions": 387,
+      "clicks": 1,
+      "cost": 182,
+      "devices": {
+        "M": 313,
+        "P": 74
+      },
+      "ctr": 0.2583979328165375,
+      "cpc": 182
+    }
+  },
+  "campaigns": {
+    "cmp-a001-01-000000009160501": {
+      "impressions": 6,
+      "clicks": 0,
+      "cost": 0
+    },
+    "cmp-a001-06-000000007657011": {
+      "impressions": 375,
+      "clicks": 2,
+      "cost": 110
+    },
+    "cmp-a001-06-000000007657032": {
+      "impressions": 357,
+      "clicks": 0,
+      "cost": 0
+    },
+    "cmp-a001-06-000000009160550": {
+      "impressions": 387,
+      "clicks": 1,
+      "cost": 182
+    }
+  },
+  "adgroups": {
+    "grp-a001-01-000000048644254": {
+      "impressions": 6,
+      "clicks": 0,
+      "cost": 0
+    },
+    "grp-a001-06-000000039961935": {
+      "impressions": 375,
+      "clicks": 2,
+      "cost": 110
+    },
+    "grp-a001-06-000000039962052": {
+      "impressions": 357,
+      "clicks": 0,
+      "cost": 0
+    },
+    "grp-a001-06-000000048644419": {
+      "impressions": 387,
+      "clicks": 1,
+      "cost": 182
+    }
+  },
+  "rawData": [
+    {
+      "keywordId": "nkw-a001-01-000006938876438",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 1,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 1,
+      "device": "M",
+      "date": "2025-08-01"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876442",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 1,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 1,
+      "device": "M",
+      "date": "2025-08-01"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876540",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 4,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 1,
+      "device": "P",
+      "date": "2025-08-01"
+    }
+  ]
+}

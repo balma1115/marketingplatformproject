@@ -4,6 +4,9 @@ import { withAuth } from '@/lib/auth-middleware'
 import { ImprovedNaverScraperV3 } from '@/lib/services/improved-scraper-v3'
 import { PlaywrightCrawlerService } from '@/lib/services/playwrightCrawler'
 import { getKSTDate, getKSTToday, getKSTDateString } from '@/lib/utils/timezone'
+import { trackingManager } from '@/lib/services/tracking-manager'
+import { trackingEventManager } from '@/lib/services/event-manager'
+import { env, debugLog } from '@/lib/utils/environment'
 
 // SSE 응답을 위한 헬퍼 함수
 function createSSEStream() {
@@ -38,6 +41,24 @@ function createSSEStream() {
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     console.log('Starting SSE tracking for user:', userId)
+    
+    // 사용자 정보 조회
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: { name: true, email: true }
+    })
+    
+    // TrackingManager에 작업 등록
+    const jobId = trackingManager.addJob({
+      userId: userId,
+      userName: user?.name || 'Unknown',
+      userEmail: user?.email || '',
+      type: 'smartplace',
+      status: 'queued',
+      startedAt: new Date(),
+      progress: { current: 0, total: 0 }
+    })
+    
     // SSE 스트림 생성
     const { stream, send, close } = createSSEStream()
     
@@ -45,33 +66,48 @@ export async function POST(req: NextRequest) {
     const processTracking = async () => {
       try {
         console.log('Process tracking started')
+        
+        // 작업 상태를 running으로 업데이트
+        trackingManager.updateJob(jobId, { status: 'running' })
+        
         // 사용자의 스마트플레이스 프로젝트 찾기
-        const place = await prisma.trackingProject.findFirst({
+        const place = await prisma.smartPlace.findUnique({
           where: {
-            userId: userId
+            userId: parseInt(userId)
           }
         })
 
         if (!place) {
           send({ type: 'error', message: '먼저 스마트플레이스를 등록해주세요.' })
+          trackingManager.updateJob(jobId, {
+            status: 'failed',
+            error: { message: '스마트플레이스 미등록', timestamp: new Date() }
+          })
           close()
           return
         }
 
         // 활성화된 키워드만 가져오기
-        const keywords = await prisma.trackingKeyword.findMany({
+        const keywords = await prisma.smartPlaceKeyword.findMany({
           where: {
-            projectId: place.id,
+            smartPlaceId: place.id,
             isActive: true
           }
         })
 
         if (keywords.length === 0) {
           send({ type: 'error', message: '추적할 키워드가 없습니다.' })
+          trackingManager.updateJob(jobId, {
+            status: 'failed',
+            error: { message: '추적할 키워드 없음', timestamp: new Date() }
+          })
           close()
           return
         }
 
+        // 작업 진행률 초기화
+        trackingManager.updateProgress(jobId, 0, keywords.length, '추적 엔진 초기화 중...')
+        
         send({ 
           type: 'progress', 
           status: 'preparing',
@@ -80,11 +116,11 @@ export async function POST(req: NextRequest) {
           keyword: '추적 엔진 초기화 중...' 
         })
 
-      // 추적 세션 생성
+      // 추적 세션 생성 (TrackingSession 테이블은 그대로 사용)
       const session = await prisma.trackingSession.create({
         data: {
-          userId: userId,
-          projectId: place.id,
+          userId: parseInt(userId),
+          projectId: null, // SmartPlace는 projectId가 없으므로 null
           totalKeywords: keywords.length,
           completedKeywords: 0,
           status: 'in_progress'
@@ -107,20 +143,14 @@ export async function POST(req: NextRequest) {
         // PlaywrightCrawlerService는 placeId를 직접 받습니다
         placeDetail = await playwrightCrawler.getPlaceDetails(place.placeId)
         
-        // 스냅샷 저장 (KST 시간 사용)
-        await prisma.trackingSnapshot.create({
+        // SmartPlace 업데이트 (스냅샷 대신)
+        await prisma.smartPlace.update({
+          where: { id: place.id },
           data: {
-            sessionId: session.id,
-            projectId: place.id,
-            checkDate: checkDate, // KST 시간 사용
-            placeName: placeDetail.name || place.placeName,
-            category: placeDetail.category || null,
-            directions: placeDetail.directions || null,
-            introduction: placeDetail.introduction || null,
-            representativeKeywords: placeDetail.representativeKeywords ? JSON.stringify(placeDetail.representativeKeywords) : null,
-            businessHours: placeDetail.businessHours || null,
-            phone: placeDetail.phone || null,
-            address: placeDetail.address || null
+            lastUpdated: checkDate,
+            address: placeDetail.address || place.address,
+            phone: placeDetail.phone || place.phone,
+            category: placeDetail.category || place.category
           }
         })
         console.log(`Snapshot saved with KST date: ${getKSTDateString(checkDate)}`)
@@ -141,7 +171,7 @@ export async function POST(req: NextRequest) {
       // 오늘 날짜의 기존 추적 데이터 삭제
       console.log(`Deleting existing tracking data for today...`)
       for (const keyword of keywords) {
-        await prisma.trackingRanking.deleteMany({
+        await prisma.smartPlaceRanking.deleteMany({
           where: {
             keywordId: keyword.id,
             checkDate: {
@@ -186,19 +216,22 @@ export async function POST(req: NextRequest) {
           if (result) {
             try {
               // 순위 결과 저장 (모든 결과를 저장해야 마지막 추적 날짜가 표시됨)
-              await prisma.trackingRanking.create({
+              await prisma.smartPlaceRanking.create({
                 data: {
                   keywordId: keyword.id,
-                  sessionId: session.id,
                   organicRank: result.organicRank,
                   adRank: result.adRank,
                   checkDate: checkDate,
+                  totalResults: result.topTenPlaces?.length || 0,
                   topTenPlaces: result.topTenPlaces ? JSON.stringify(result.topTenPlaces) : null
                 }
               })
               
               console.log(`Saved ranking for ${keyword.keyword}: organic=${result.organicRank}, ad=${result.adRank}`)
               successCount++
+              
+              // TrackingManager 진행률 업데이트
+              trackingManager.updateProgress(jobId, processedCount, keywords.length, keyword.keyword)
               
               send({ 
                 type: 'progress', 
@@ -222,13 +255,13 @@ export async function POST(req: NextRequest) {
           } else {
             // 실패해도 null 값으로 저장해야 마지막 추적 날짜가 표시됨
             try {
-              await prisma.trackingRanking.create({
+              await prisma.smartPlaceRanking.create({
                 data: {
                   keywordId: keyword.id,
-                  sessionId: session.id,
                   organicRank: null,
                   adRank: null,
                   checkDate: checkDate,
+                  totalResults: 0,
                   topTenPlaces: null
                 }
               })
@@ -276,13 +309,13 @@ export async function POST(req: NextRequest) {
               placeName: place.placeName
             })
             
-            await prisma.trackingRanking.create({
+            await prisma.smartPlaceRanking.create({
               data: {
                 keywordId: keyword.id,
-                sessionId: session.id,
                 organicRank: rankings.organicRank,
                 adRank: rankings.adRank,
                 checkDate: checkDate,
+                totalResults: rankings.topTenPlaces?.length || 0,
                 topTenPlaces: rankings.topTenPlaces ? JSON.stringify(rankings.topTenPlaces) : null
               }
             })
@@ -333,7 +366,7 @@ export async function POST(req: NextRequest) {
         })
 
         // 마지막 업데이트 시간 갱신
-        await prisma.trackingProject.update({
+        await prisma.smartPlace.update({
           where: {
             id: place.id
           },
@@ -342,6 +375,21 @@ export async function POST(req: NextRequest) {
           }
         })
 
+        // 작업 완료 처리
+        trackingManager.updateJob(jobId, {
+          status: 'completed',
+          completedAt: new Date(),
+          results: {
+            successCount,
+            failedCount: failCount,
+            details: [{
+              sessionId: session.id,
+              totalKeywords: keywords.length,
+              checkDate
+            }]
+          }
+        })
+        
         // 완료 메시지 전송
         send({
           type: 'complete',
@@ -360,6 +408,18 @@ export async function POST(req: NextRequest) {
         close()
       } catch (error) {
         console.error('Failed to track smartplace keywords:', error)
+        
+        // 작업 실패 처리
+        trackingManager.updateJob(jobId, {
+          status: 'failed',
+          completedAt: new Date(),
+          error: {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date()
+          }
+        })
+        
         send({ 
           type: 'error', 
           message: '추적 중 오류가 발생했습니다.',

@@ -5,8 +5,8 @@ import { withAuth } from '@/lib/auth-middleware'
 export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
-      // 사용자의 블로그 프로젝트 조회 (1개만)
-      const blog = await prisma.blogProject.findFirst({
+      // BlogTrackingProject에서 사용자의 블로그 프로젝트 조회 (1개만)
+      const blog = await prisma.blogTrackingProject.findFirst({
         where: {
           userId: parseInt(userId)
         },
@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
       // 데이터 포맷팅
       const formattedBlog = {
         id: blog.id,
-        blogName: blog.blogName || blog.name,
-        blogUrl: blog.blogUrl || blog.targetBlogUrl,
+        blogName: blog.blogName,
+        blogUrl: blog.blogUrl,
         keywordCount: blog._count.keywords
       }
 

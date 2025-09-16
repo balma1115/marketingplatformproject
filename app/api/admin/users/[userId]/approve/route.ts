@@ -4,9 +4,10 @@ import { verifyAuth } from '@/lib/auth-middleware'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  props: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const params = await props.params
     const user = await verifyAuth(request)
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

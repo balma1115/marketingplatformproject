@@ -201,20 +201,22 @@ export default function AdminBlogPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {userInfo.blog.blogName}
+                {userInfo.blog?.blogName || '블로그 미등록'}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
                 {userInfo.name} ({userInfo.email})
               </p>
-              <a
-                href={userInfo.blog.blogUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-flex items-center"
-              >
-                {userInfo.blog.blogUrl}
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </a>
+              {userInfo.blog?.blogUrl && (
+                <a
+                  href={userInfo.blog.blogUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-flex items-center"
+                >
+                  {userInfo.blog.blogUrl}
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </a>
+              )}
             </div>
             
             <div className="flex space-x-2">
@@ -238,13 +240,23 @@ export default function AdminBlogPage() {
           </div>
         </div>
 
+        {/* 블로그 미등록 안내 */}
+        {!userInfo.blog && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <p className="text-yellow-800">
+              ⚠️ 이 사용자는 아직 블로그를 등록하지 않았습니다.
+            </p>
+          </div>
+        )}
+
         {/* 액션 바 */}
         <div className="bg-white rounded-lg shadow mb-6 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={!userInfo.blog}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4 inline mr-2" />
                 키워드 추가
@@ -252,8 +264,8 @@ export default function AdminBlogPage() {
               
               <button
                 onClick={handleTracking}
-                disabled={tracking || keywords.filter(k => k.isActive).length === 0}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+                disabled={!userInfo.blog || tracking || keywords.filter(k => k.isActive).length === 0}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 <RefreshCw className={`w-4 h-4 inline mr-2 ${tracking ? 'animate-spin' : ''}`} />
                 {tracking ? '추적중...' : '추적 실행'}

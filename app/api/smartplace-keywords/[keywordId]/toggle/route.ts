@@ -4,7 +4,7 @@ import { verifyToken } from '@/lib/auth'
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { keywordId: string } }
+  { params }: { params: Promise<{ keywordId: string }> }
 ) {
   try {
     // 인증 확인
@@ -19,36 +19,39 @@ export async function PUT(
     }
 
     const userId = decoded.userId
-    const keywordId = parseInt(params.keywordId)
+    const { keywordId: keywordIdStr } = await params // await params
+    const keywordId = parseInt(keywordIdStr)
     const { isActive } = await req.json()
 
     if (isNaN(keywordId)) {
       return NextResponse.json({ error: 'Invalid keyword ID' }, { status: 400 })
     }
 
-    // 키워드 확인
-    const keyword = await prisma.trackingKeyword.findFirst({
+    // 키워드 확인 - SmartPlaceKeyword 사용
+    const keyword = await prisma.smartPlaceKeyword.findFirst({
       where: {
         id: keywordId,
-        project: {
-          userId: userId
-        }
+        userId: parseInt(userId)
       }
     })
 
     if (!keyword) {
-      return NextResponse.json({ error: 'Keyword not found' }, { status: 404 })
+      return NextResponse.json({ error: '키워드를 찾을 수 없습니다.' }, { status: 404 })
     }
 
     // 키워드 상태 업데이트
-    const updated = await prisma.trackingKeyword.update({
-      where: { id: keywordId },
-      data: { isActive }
+    const updatedKeyword = await prisma.smartPlaceKeyword.update({
+      where: {
+        id: keywordId
+      },
+      data: {
+        isActive: isActive
+      }
     })
 
-    return NextResponse.json({ success: true, keyword: updated })
+    return NextResponse.json({ success: true, keyword: updatedKeyword })
   } catch (error) {
-    console.error('Failed to toggle smartplace keyword:', error)
+    console.error('Failed to toggle keyword:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

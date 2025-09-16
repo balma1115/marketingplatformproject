@@ -59,11 +59,20 @@ export default function Header() {
       ]
     },
     {
+      label: '분석',
+      href: '/analysis',
+      subItems: [
+        { label: '키워드 분석', href: '/keyword-analysis' },
+        { label: '경쟁사 분석', href: '/analysis/competitor' },
+        { label: '트렌드 분석', href: '/analysis/trends' }
+      ]
+    },
+    {
       label: '관리',
       href: '/management',
       subItems: [
         { label: '중점키워드 관리', href: '/management/keywords' },
-        { label: '광고 상태', href: '/management/ads-status' }
+        { label: '광고 상태', href: '/dashboard/ads' }
       ]
     },
     {
@@ -71,8 +80,7 @@ export default function Header() {
       href: '/blog',
       subItems: [
         { label: '블로그 원고생성', href: '/blog/content' },
-        { label: '블로그 키워드 관리', href: '/blog/keywords' },
-        { label: '키워드 분석', href: '/blog/analysis' }
+        { label: '블로그 키워드 관리', href: '/blog/keywords' }
       ]
     },
     {
@@ -265,7 +273,7 @@ function NavDropdown({ item }: { item: MenuItem }) {
       </Link>
 
       {item.subItems && isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg dropdown-shadow animate-slide-down">
+        <div className="absolute top-full left-0 w-48 bg-white border border-gray-200 rounded-lg dropdown-shadow animate-slide-down">
           {item.subItems.map((subItem) => (
             <Link
               key={subItem.href}

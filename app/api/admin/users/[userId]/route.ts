@@ -5,9 +5,10 @@ import { verifyAuth } from '@/lib/auth-middleware'
 // Update user
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  props: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const params = await props.params
     const user = await verifyAuth(request)
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -34,9 +35,10 @@ export async function PATCH(
 // Delete user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  props: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const params = await props.params
     const user = await verifyAuth(request)
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

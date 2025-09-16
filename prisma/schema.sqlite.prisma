@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-sqlite"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                   Int                    @id @default(autoincrement())
+  email                String                 @unique
+  password             String
+  name                 String?
+  role                 String                 @default("USER")
+  businessName         String?
+  businessType         String?
+  phone                String?
+  isActive             Boolean                @default(true)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  blogProjects         BlogTrackingProject[]
+  smartPlace           SmartPlace[]
+  smartPlaceKeywords   SmartPlaceKeyword[]
+  naverAdsCampaigns    NaverAdsCampaign[]
+  keywordAnalyses      KeywordAnalysis[]
+  trackingQueues       TrackingQueue[]
+}
+
+model BlogTrackingProject {
+  id        Int                    @id @default(autoincrement())
+  userId    Int
+  blogUrl   String
+  blogName  String
+  blogId    String?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  user      User                   @relation(fields: [userId], references: [id])
+  keywords  BlogTrackingKeyword[]
+
+  @@unique([userId, blogUrl])
+}
+
+model BlogTrackingKeyword {
+  id          Int                    @id @default(autoincrement())
+  projectId   Int
+  keyword     String
+  isActive    Boolean                @default(true)
+  addedDate   DateTime               @default(now())
+  lastChecked DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  project     BlogTrackingProject    @relation(fields: [projectId], references: [id])
+  results     BlogTrackingResult[]
+
+  @@unique([projectId, keyword])
+}
+
+model BlogTrackingResult {
+  id               Int                 @id @default(autoincrement())
+  keywordId        Int
+  trackingDate     DateTime            @default(now())
+  mainTabExposed   Boolean             @default(false)
+  mainTabRank      Int?
+  blogTabRank      Int?
+  viewTabRank      Int?
+  adRank           Int?
+  found            Boolean             @default(false)
+  url              String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  keyword          BlogTrackingKeyword @relation(fields: [keywordId], references: [id])
+
+  @@index([keywordId, trackingDate])
+}
+
+model SmartPlace {
+  id           Int                    @id @default(autoincrement())
+  userId       Int
+  placeId      String                 @unique
+  placeName    String
+  address      String?
+  phone        String?
+  rating       Float?
+  reviewCount  Int?
+  category     String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  user         User                   @relation(fields: [userId], references: [id])
+  keywords     SmartPlaceKeyword[]
+}
+
+model SmartPlaceKeyword {
+  id          Int                  @id @default(autoincrement())
+  userId      Int
+  smartPlaceId Int
+  keyword     String
+  isActive    Boolean              @default(true)
+  lastChecked DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  user        User                 @relation(fields: [userId], references: [id])
+  smartPlace  SmartPlace           @relation(fields: [smartPlaceId], references: [id])
+  rankings    SmartPlaceRanking[]
+
+  @@unique([smartPlaceId, keyword])
+}
+
+model SmartPlaceRanking {
+  id           Int                @id @default(autoincrement())
+  keywordId    Int
+  checkDate    DateTime           @default(now())
+  organicRank  Int?
+  adRank       Int?
+  topTenPlaces String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  keyword      SmartPlaceKeyword  @relation(fields: [keywordId], references: [id])
+
+  @@index([keywordId, checkDate])
+}
+
+model NaverAdsCampaign {
+  id             Int               @id @default(autoincrement())
+  userId         Int
+  nccCampaignId  String            @unique
+  name           String
+  campaignType   String
+  dailyBudget    Int?
+  status         String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  user           User              @relation(fields: [userId], references: [id])
+  adGroups       NaverAdsAdGroup[]
+  stats          NaverAdsStat[]
+}
+
+model NaverAdsAdGroup {
+  id            Int               @id @default(autoincrement())
+  campaignId    Int
+  nccAdGroupId  String            @unique
+  name          String
+  adGroupType   String
+  status        String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  campaign      NaverAdsCampaign  @relation(fields: [campaignId], references: [id])
+  keywords      NaverAdsKeyword[]
+  stats         NaverAdsStat[]
+}
+
+model NaverAdsKeyword {
+  id            Int              @id @default(autoincrement())
+  adGroupId     Int
+  nccKeywordId  String           @unique
+  keyword       String
+  bidAmt        Int
+  status        String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  adGroup       NaverAdsAdGroup  @relation(fields: [adGroupId], references: [id])
+  stats         NaverAdsStat[]
+}
+
+model NaverAdsStat {
+  id          Int               @id @default(autoincrement())
+  campaignId  Int?
+  adGroupId   Int?
+  keywordId   Int?
+  statDate    DateTime
+  impCnt      Int               @default(0)
+  clkCnt      Int               @default(0)
+  salesAmt    Float             @default(0)
+  cpc         Float             @default(0)
+  ctr         Float             @default(0)
+  ccnt        Int               @default(0)
+  crto        Float             @default(0)
+  convAmt     Float             @default(0)
+  ror         Float             @default(0)
+  cpConv      Float             @default(0)
+  viewCnt     Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  campaign    NaverAdsCampaign? @relation(fields: [campaignId], references: [id])
+  adGroup     NaverAdsAdGroup?  @relation(fields: [adGroupId], references: [id])
+  keyword     NaverAdsKeyword?  @relation(fields: [keywordId], references: [id])
+
+  @@unique([campaignId, adGroupId, keywordId, statDate])
+  @@index([statDate])
+}
+
+model KeywordAnalysis {
+  id              Int                   @id @default(autoincrement())
+  userId          Int
+  keyword         String
+  monthlyPcQcCnt  Int?
+  monthlyMobileQcCnt Int?
+  totalQcCnt      Int?
+  compIdx         String?
+  avgDepth        Float?
+  bidCost         Int?
+  analysisDate    DateTime              @default(now())
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  user            User                  @relation(fields: [userId], references: [id])
+  searchResults   KeywordSearchResult[]
+
+  @@unique([userId, keyword])
+  @@index([analysisDate])
+}
+
+model KeywordSearchResult {
+  id             Int              @id @default(autoincrement())
+  analysisId     Int
+  rank           Int
+  title          String
+  description    String?
+  url            String
+  favicon        String?
+  isAd           Boolean          @default(false)
+  searchDate     DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  analysis       KeywordAnalysis  @relation(fields: [analysisId], references: [id])
+
+  @@index([analysisId, searchDate])
+}
+
+model TrackingQueue {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  type        String
+  keywords    String
+  status      String    @default("PENDING")
+  totalCount  Int       @default(0)
+  processedCount Int    @default(0)
+  errorMessage String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+  @@index([createdAt])
+}

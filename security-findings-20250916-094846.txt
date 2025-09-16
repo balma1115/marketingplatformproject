@@ -1,0 +1,24 @@
+보안 스캔 결과 - Tue, Sep 16, 2025  9:48:46 AM
+=================================
+
+API 키 패턴 검색:
+./.env.local:GEMINI_API_KEY="AIzaSyDKlt6UMB2ha4ZISbOYjxU-qR8EUBwME_0"
+./.env.local.sqlite.backup:GEMINI_API_KEY="AIzaSyDKlt6UMB2ha4ZISbOYjxU-qR8EUBwME_0"
+./.env.postgresql:GEMINI_API_KEY="AIzaSyDKlt6UMB2ha4ZISbOYjxU-qR8EUBwME_0"
+./.env.production:GEMINI_API_KEY="AIzaSyDKlt6UMB2ha4ZISbOYjxU-qR8EUBwME_0"
+./scripts/secure-cleanup.sh:grep -r "AIza\|ya29\|GOCSPX\|AKIA\|aws_access\|aws_secret" . \
+
+하드코딩된 비밀번호:
+./lib/db.ts:        password: 'admin123',
+./lib/db.ts:          password: 'academy123',
+./lib/mockData.ts:    password: 'admin123',
+./lib/mockData.ts:    password: 'academy123',
+./MODULE_EXPORTS/database-schema.sql:-- 기본 관리자 계정 생성 (비밀번호: admin123 - bcrypt 해시)
+./prisma/seed.ts:      password: await bcrypt.hash('admin123', 10),
+./prisma/seed.ts:      password: await bcrypt.hash('academy123', 10),
+./scripts/secure-cleanup.sh:grep -r "admin123\|test1234\|academy123\|nokyang123" . \
+./test-login.ts:    const password = 'admin123'
+./update-passwords.sql:-- admin@marketingplat.com / admin123
+./update-passwords.sql:-- academy@marketingplat.com / academy123
+./update-passwords.sql:-- nokyang@marketingplat.com / nokyang123 (already updated)
+./update-passwords.sql:-- user@test.com / test1234

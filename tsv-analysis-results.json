@@ -1,0 +1,256 @@
+{
+  "datePattern": "NEXT_DAY",
+  "dateOffByOne": 27,
+  "dateMatches": 4,
+  "monthlyTotals": {
+    "impressions": 27355,
+    "clicks": 34,
+    "costWithoutVAT": 6449,
+    "costWithVAT": 7093.900000000001
+  },
+  "dailyBreakdown": [
+    {
+      "date": "2025-08-02",
+      "impressions": 1248,
+      "clicks": 1,
+      "cost": 209,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 2
+    },
+    {
+      "date": "2025-08-03",
+      "impressions": 648,
+      "clicks": 0,
+      "cost": 142,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 1
+    },
+    {
+      "date": "2025-08-05",
+      "impressions": 889,
+      "clicks": 1,
+      "cost": 388,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 6
+    },
+    {
+      "date": "2025-08-06",
+      "impressions": 1042,
+      "clicks": 1,
+      "cost": 216.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 5
+    },
+    {
+      "date": "2025-08-07",
+      "impressions": 928,
+      "clicks": 1,
+      "cost": 181.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 7
+    },
+    {
+      "date": "2025-08-08",
+      "impressions": 889,
+      "clicks": 0,
+      "cost": 174.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 4
+    },
+    {
+      "date": "2025-08-09",
+      "impressions": 1145,
+      "clicks": 0,
+      "cost": 125,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 3
+    },
+    {
+      "date": "2025-08-10",
+      "impressions": 1037,
+      "clicks": 0,
+      "cost": 136.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 4
+    },
+    {
+      "date": "2025-08-11",
+      "impressions": 828,
+      "clicks": 1,
+      "cost": 283.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 5
+    },
+    {
+      "date": "2025-08-12",
+      "impressions": 1046,
+      "clicks": 4,
+      "cost": 232,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 6
+    },
+    {
+      "date": "2025-08-13",
+      "impressions": 989,
+      "clicks": 0,
+      "cost": 198.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 2
+    },
+    {
+      "date": "2025-08-14",
+      "impressions": 856,
+      "clicks": 3,
+      "cost": 380,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 2
+    },
+    {
+      "date": "2025-08-15",
+      "impressions": 906,
+      "clicks": 0,
+      "cost": 140.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 2
+    },
+    {
+      "date": "2025-08-16",
+      "impressions": 995,
+      "clicks": 2,
+      "cost": 506,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 2
+    },
+    {
+      "date": "2025-08-17",
+      "impressions": 1010,
+      "clicks": 1,
+      "cost": 131,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 4
+    },
+    {
+      "date": "2025-08-18",
+      "impressions": 880,
+      "clicks": 2,
+      "cost": 317.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 3
+    },
+    {
+      "date": "2025-08-19",
+      "impressions": 933,
+      "clicks": 1,
+      "cost": 196.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 3
+    },
+    {
+      "date": "2025-08-20",
+      "impressions": 1114,
+      "clicks": 1,
+      "cost": 277,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 6
+    },
+    {
+      "date": "2025-08-21",
+      "impressions": 1162,
+      "clicks": 0,
+      "cost": 167.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 6
+    },
+    {
+      "date": "2025-08-22",
+      "impressions": 1294,
+      "clicks": 1,
+      "cost": 159,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 2
+    },
+    {
+      "date": "2025-08-23",
+      "impressions": 1380,
+      "clicks": 2,
+      "cost": 146.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 3
+    },
+    {
+      "date": "2025-08-24",
+      "impressions": 1267,
+      "clicks": 1,
+      "cost": 291,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 3
+    },
+    {
+      "date": "2025-08-25",
+      "impressions": 1016,
+      "clicks": 2,
+      "cost": 267,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 5
+    },
+    {
+      "date": "2025-08-26",
+      "impressions": 934,
+      "clicks": 0,
+      "cost": 216.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 4
+    },
+    {
+      "date": "2025-08-28",
+      "impressions": 939,
+      "clicks": 3,
+      "cost": 240.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 5
+    },
+    {
+      "date": "2025-08-29",
+      "impressions": 963,
+      "clicks": 2,
+      "cost": 313,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 3
+    },
+    {
+      "date": "2025-08-31",
+      "impressions": 1017,
+      "clicks": 4,
+      "cost": 412.5,
+      "campaigns": 4,
+      "adGroups": 4,
+      "keywords": 6
+    }
+  ]
+}

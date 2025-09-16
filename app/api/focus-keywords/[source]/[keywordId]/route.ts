@@ -4,9 +4,10 @@ import { verifyToken } from '@/lib/auth'
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { source: string, keywordId: string } }
+  props: { params: Promise<{ source: string, keywordId: string }> }
 ) {
   try {
+    const params = await props.params
     // 인증 확인
     const token = req.cookies.get('token')?.value
     if (!token) {

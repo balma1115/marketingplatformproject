@@ -31,12 +31,7 @@ export async function GET(req: NextRequest) {
         },
         include: {
           rankings: {
-            where: {
-              OR: [
-                { organicRank: { not: null } },
-                { adRank: { not: null } }
-              ]
-            },
+            // 모든 추적 기록을 가져옴 (null 값 포함)
             orderBy: {
               checkDate: 'desc'
             },
@@ -61,22 +56,15 @@ export async function GET(req: NextRequest) {
         let totalResults = 0
         let lastTracked = null
         
-        // 최신 순위가 오늘 것인지 확인 (한국 시간 기준)
+        // 최신 순위 데이터가 있으면 표시 (날짜 제한 없이)
         if (lastRanking && lastRanking.checkDate) {
-          const checkDate = new Date(lastRanking.checkDate)
+          organicRank = lastRanking.organicRank
+          adRank = lastRanking.adRank
+          totalResults = lastRanking.totalResults || 0
+          lastTracked = lastRanking.checkDate
           
-          // 한국 시간 기준으로 오늘 날짜인지 확인
-          if (isSameKSTDay(checkDate, today)) {
-            organicRank = lastRanking.organicRank
-            adRank = lastRanking.adRank
-            totalResults = lastRanking.totalResults || 0
-            lastTracked = lastRanking.checkDate
-            console.log(`Keyword ${k.keyword}: Today's data found - Organic: ${organicRank}, Ad: ${adRank}`)
-          } else {
-            // 오늘이 아니면 마지막 추적 날짜만 표시
-            lastTracked = lastRanking.checkDate
-            console.log(`Keyword ${k.keyword}: Not today's data (${getKSTDateString(checkDate)})`)
-          }
+          const checkDate = new Date(lastRanking.checkDate)
+          console.log(`Keyword ${k.keyword}: Data from ${getKSTDateString(checkDate)} - Organic: ${organicRank}, Ad: ${adRank}`)
         }
         
         return {
@@ -86,7 +74,8 @@ export async function GET(req: NextRequest) {
           organicRank: organicRank,
           adRank: adRank,
           totalResults: totalResults,
-          lastChecked: lastTracked,
+          lastTracked: lastTracked,  // lastChecked -> lastTracked로 변경
+          lastChecked: lastTracked,  // 하위 호환성을 위해 유지
           createdAt: k.createdAt
         }
       })

@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { findUserByEmail, validatePassword } from '@/lib/db'
 import { generateToken, setAuthCookie } from '@/lib/auth'
 
+// Development mode flag
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
+
+    // Only log in development mode
+    if (isDevelopment) {
+      console.log('Login attempt for:', email)
+    }
 
     if (!email || !password) {
       return NextResponse.json(
@@ -15,7 +23,12 @@ export async function POST(request: NextRequest) {
 
     const user = await findUserByEmail(email)
 
+    if (isDevelopment) {
+      console.log('User found:', !!user)
+    }
+
     if (!user) {
+      // Avoid revealing whether user exists
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
@@ -25,6 +38,7 @@ export async function POST(request: NextRequest) {
     const isValidPassword = await validatePassword(password, user.password)
 
     if (!isValidPassword) {
+      // Same error message to prevent user enumeration
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
@@ -52,7 +66,12 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Login error:', error)
+    // Only log errors in development
+    if (isDevelopment) {
+      console.error('Login error:', error)
+    }
+
+    // Don't expose error details in production
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

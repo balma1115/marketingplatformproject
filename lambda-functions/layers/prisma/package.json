@@ -1,0 +1,11 @@
+{
+  "name": "prisma-layer",
+  "version": "1.0.0",
+  "description": "Prisma layer for Lambda functions",
+  "dependencies": {
+    "@prisma/client": "^6.15.0"
+  },
+  "scripts": {
+    "postinstall": "prisma generate"
+  }
+}

@@ -231,7 +231,8 @@ export async function DELETE(req: NextRequest) {
 }
 
 // POST: 학원 일괄 등록 (CSV 업로드)
-export async function POST_BULK(req: NextRequest) {
+// Internal function for bulk operations (not exported as HTTP method)
+async function postBulk(req: NextRequest) {
   try {
     const auth = await verifyAuth(req)
     if (!auth || auth.role !== 'admin') {

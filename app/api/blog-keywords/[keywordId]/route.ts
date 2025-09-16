@@ -4,11 +4,14 @@ import { verifyToken } from '@/lib/auth'
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { keywordId: string } }
+  props: { params: Promise<{ keywordId: string }> }
 ) {
   try {
+    // Next.js 15에서 params는 Promise이므로 await 필요
+    const params = await props.params
+    
     // 인증 확인
-    const token = req.cookies.get('token')?.value
+    const token = req.cookies.get('auth-token')?.value || req.cookies.get('token')?.value
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

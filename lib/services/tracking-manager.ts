@@ -1,4 +1,6 @@
 // 추적 작업 관리 시스템
+import { trackingEventManager } from './event-manager';
+
 export interface TrackingJob {
   id: string
   userId: string
@@ -66,6 +68,25 @@ class TrackingManager {
       userId: job.userId
     }, job.userId)
     
+    // SSE 이벤트 발생
+    console.log('[TrackingManager] Emitting job_update event:', { jobId: id, action: 'added' })
+    trackingEventManager.emitJobUpdate({
+      job: {
+        id: fullJob.id,
+        userId: fullJob.userId,
+        userName: fullJob.userName,
+        userEmail: fullJob.userEmail,
+        type: fullJob.type,
+        status: fullJob.status,
+        startedAt: fullJob.startedAt?.toISOString(),
+        completedAt: fullJob.completedAt?.toISOString(),
+        progress: fullJob.progress,
+        results: fullJob.results,
+        error: fullJob.error
+      },
+      action: 'added'
+    })
+    
     return id
   }
   
@@ -116,6 +137,25 @@ class TrackingManager {
           error: updates.error
         }, job.userId)
       }
+      
+      // SSE 이벤트 발생
+      console.log('[TrackingManager] Emitting job_update event:', { jobId: id, action: 'updated', status: job.status })
+      trackingEventManager.emitJobUpdate({
+        job: {
+          id: job.id,
+          userId: job.userId,
+          userName: job.userName,
+          userEmail: job.userEmail,
+          type: job.type,
+          status: job.status,
+          startedAt: job.startedAt?.toISOString(),
+          completedAt: job.completedAt?.toISOString(),
+          progress: job.progress,
+          results: job.results,
+          error: job.error
+        },
+        action: 'updated'
+      })
     }
   }
 
@@ -124,6 +164,24 @@ class TrackingManager {
     const job = this.jobs.get(id)
     if (job) {
       job.progress = { current, total, currentKeyword }
+      
+      // SSE 이벤트 발생 (진행률 업데이트)
+      trackingEventManager.emitJobUpdate({
+        job: {
+          id: job.id,
+          userId: job.userId,
+          userName: job.userName,
+          userEmail: job.userEmail,
+          type: job.type,
+          status: job.status,
+          startedAt: job.startedAt?.toISOString(),
+          completedAt: job.completedAt?.toISOString(),
+          progress: job.progress,
+          results: job.results,
+          error: job.error
+        },
+        action: 'progress'
+      })
     }
   }
 
@@ -173,6 +231,9 @@ class TrackingManager {
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(0, this.maxLogs)
     }
+    
+    // SSE 로그 이벤트 발생
+    trackingEventManager.emitLogUpdate(level, message, details)
     
     // 콘솔에도 출력 (개발 환경)
     if (process.env.NODE_ENV === 'development') {

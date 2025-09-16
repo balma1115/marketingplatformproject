@@ -4,9 +4,12 @@ import { verifyToken } from '@/lib/auth'
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { keywordId: string } }
+  props: { params: Promise<{ keywordId: string }> }
 ) {
   try {
+    // Next.js 15에서 params는 Promise
+    const params = await props.params
+    
     // 인증 확인
     const token = req.cookies.get('auth-token')?.value || req.cookies.get('token')?.value
     if (!token) {
@@ -19,19 +22,13 @@ export async function DELETE(
     }
 
     const userId = decoded.userId
-    const keywordId = parseInt(params.keywordId)
+    const keywordId = params.keywordId
 
-    if (isNaN(keywordId)) {
-      return NextResponse.json({ error: 'Invalid keyword ID' }, { status: 400 })
-    }
-
-    // 키워드 확인
-    const keyword = await prisma.trackingKeyword.findFirst({
+    // 키워드 확인 (SmartPlaceKeyword 테이블 사용)
+    const keyword = await prisma.smartPlaceKeyword.findFirst({
       where: {
         id: keywordId,
-        project: {
-          userId: userId
-        }
+        userId: userId
       }
     })
 
@@ -40,7 +37,7 @@ export async function DELETE(
     }
 
     // 키워드 삭제 (관련 순위도 함께 삭제됨 - cascade 설정)
-    await prisma.trackingKeyword.delete({
+    await prisma.smartPlaceKeyword.delete({
       where: { id: keywordId }
     })
 

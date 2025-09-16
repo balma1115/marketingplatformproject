@@ -1,5 +1,112 @@
+# Dependencies
 node_modules
-# Keep environment variables out of version control
-.env
+.pnp
+.pnp.js
 
+# Testing
+coverage
+.nyc_output
+
+# Next.js
+.next
+out
+dist
+build
+
+# Production
+build
+dist
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Variables - CRITICAL SECURITY
+.env
+.env.local
+.env.production
+.env.production.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/dev.db
+prisma/dev.db-journal
+
+# Logs
+logs
+*.log
+
+# Generated files
 /lib/generated/prisma
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# AWS
+*.pem
+*.key
+.aws
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Sensitive data
+cookies.txt
+credentials.json
+secrets.json
+SECURE-CREDENTIALS.md
+secrets-access-policy.json
+
+# Security - Environment Files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Security - Credentials
+*credentials*
+*secrets*
+SECURE-*
+cookies.txt
+
+# Security - Backups
+*.backup
+*.bak
+*.old
+
+# Security - Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/dev.db
+prisma/dev.db-journal
+
+# Security - Logs
+*.log
+logs/

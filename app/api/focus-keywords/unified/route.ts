@@ -30,23 +30,26 @@ export async function GET(req: NextRequest) {
         }
       }) : []
 
-      // 블로그 프로젝트 조회
-      const blogProject = await prisma.blogProject.findFirst({
+      // 블로그 프로젝트들 조회 (복수)
+      const blogProjects = await prisma.blogTrackingProject.findMany({
         where: {
           userId: userIdNum
         }
       })
 
-      // 블로그 키워드 조회
-      const blogKeywords = blogProject ? await prisma.blogKeyword.findMany({
+      // 모든 블로그 프로젝트의 키워드 조회
+      const blogKeywords = blogProjects.length > 0 ? await prisma.blogTrackingKeyword.findMany({
         where: {
-          projectId: blogProject.id,
+          projectId: {
+            in: blogProjects.map(p => p.id)
+          },
           isActive: true
         },
         include: {
-          rankings: {
+          project: true,
+          results: {
             orderBy: {
-              checkDate: 'desc'
+              trackingDate: 'desc'
             },
             take: 1
           }
@@ -79,13 +82,13 @@ export async function GET(req: NextRequest) {
         const existing = keywordMap.get(bk.keyword)
         const blogData = {
           id: bk.id,
-          projectName: blogProject?.blogName || '',
-          projectId: blogProject?.id.toString() || '',
+          projectName: bk.project.blogName || '',
+          projectId: bk.project.id.toString() || '',
           addedDate: bk.createdAt,
-          mainTabExposed: bk.rankings[0]?.mainTabExposed || false,
-          mainTabRank: null,  // Not tracked in new structure
-          blogTabRank: bk.rankings[0]?.rank || null,
-          lastTracked: bk.rankings[0]?.checkDate || null
+          mainTabExposed: bk.results[0]?.mainTabExposed || false,
+          mainTabRank: bk.results[0]?.mainTabRank || null,
+          blogTabRank: bk.results[0]?.blogTabRank || null,
+          lastTracked: bk.results[0]?.trackingDate || null
         }
 
         if (existing) {

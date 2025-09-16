@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search, RefreshCw, TrendingUp, Globe, Hash, Calendar, ChevronLeft, ChevronRight, Play, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { ko } from 'date-fns/locale'
-import TrackingMonitor from './components/TrackingMonitor'
+import TrackingMonitorPolling from './components/TrackingMonitorPolling'
 
 interface TrackingUser {
   id: string
@@ -24,6 +24,12 @@ interface TrackingUser {
     blogName?: string
     blogUrl?: string
     activeKeywords: number
+    lastUpdate?: string
+  }
+  ads: {
+    registered: boolean
+    customerId?: string
+    hasCredentials: boolean
     lastUpdate?: string
   }
 }
@@ -69,6 +75,7 @@ export default function AdminTrackingDashboard() {
   const [trackingInProgress, setTrackingInProgress] = useState<string | null>(null)
   const [trackingStatuses, setTrackingStatuses] = useState<TrackingStatus[]>([])
   const [showTrackingPanel, setShowTrackingPanel] = useState(true)
+  const [lastDataHash, setLastDataHash] = useState<string>('')
 
   // 데이터 로드 (캐싱 적용)
   const fetchTrackingData = async () => {
@@ -86,10 +93,20 @@ export default function AdminTrackingDashboard() {
       }
       
       const data = await response.json()
-      setUsers(data.users)
-      setTotalPages(data.pagination.totalPages)
-      setQueueStatus(data.queueStatus)
-      setSchedulerStatus(data.schedulerStatus)
+      
+      // 데이터 해시 비교하여 변경사항이 있을 때만 업데이트
+      const newDataHash = JSON.stringify({
+        users: data.users,
+        queueStatus: data.queueStatus
+      })
+      
+      if (newDataHash !== lastDataHash) {
+        setUsers(data.users)
+        setTotalPages(data.pagination.totalPages)
+        setQueueStatus(data.queueStatus)
+        setSchedulerStatus(data.schedulerStatus)
+        setLastDataHash(newDataHash)
+      }
     } catch (error) {
       console.error('Error fetching tracking data:', error)
     } finally {
@@ -116,21 +133,10 @@ export default function AdminTrackingDashboard() {
     fetchTrackingData()
   }, [currentPage])
 
-  // 추적 상태를 주기적으로 업데이트 (실행 중인 작업이 있을 때만)
+  // 초기 로드 시에만 추적 상태 가져오기 (SSE로 대체됨)
   useEffect(() => {
     fetchTrackingStatuses()
-    
-    // 실행 중인 작업이 있는지 확인
-    const hasActiveJobs = trackingStatuses.some(
-      status => status.status === 'running' || status.status === 'queued'
-    )
-    
-    // 실행 중인 작업이 있을 때만 자주 업데이트, 없으면 느리게
-    const intervalTime = hasActiveJobs ? 2000 : 10000 // 실행 중: 2초, 유휴: 10초
-    const interval = setInterval(fetchTrackingStatuses, intervalTime)
-    
-    return () => clearInterval(interval)
-  }, [trackingStatuses])
+  }, [])
 
   // 전체 추적 실행
   const handleRunAllTracking = async () => {
@@ -147,8 +153,9 @@ export default function AdminTrackingDashboard() {
       const data = await response.json()
       alert(`${data.jobsCount}개의 추적 작업이 큐에 추가되었습니다.`)
       
-      // 데이터 새로고침
-      fetchTrackingData()
+      // 데이터 즉시 새로고침
+      await fetchTrackingData()
+      await fetchTrackingStatuses()
     } catch (error) {
       console.error('Error starting tracking:', error)
       alert('추적 시작에 실패했습니다.')
@@ -158,7 +165,7 @@ export default function AdminTrackingDashboard() {
   }
 
   // 개별 추적 실행
-  const handleIndividualTracking = async (userId: string, type: 'smartplace' | 'blog' | 'both') => {
+  const handleIndividualTracking = async (userId: string, type: 'smartplace' | 'blog' | 'ads' | 'all') => {
     setTrackingInProgress(userId)
     try {
       const response = await fetch(`/api/admin/tracking/${userId}`, {
@@ -172,8 +179,9 @@ export default function AdminTrackingDashboard() {
       const data = await response.json()
       alert(`추적 작업이 큐에 추가되었습니다.`)
       
-      // 데이터 새로고침
-      setTimeout(() => fetchTrackingData(), 2000)
+      // 데이터 즉시 새로고침
+      await fetchTrackingData()
+      await fetchTrackingStatuses()
     } catch (error) {
       console.error('Error starting individual tracking:', error)
       alert('추적 시작에 실패했습니다.')
@@ -196,14 +204,28 @@ export default function AdminTrackingDashboard() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">순위 추적 관리</h1>
-          <p className="text-sm text-gray-600 mt-2">모든 계정의 순위 추적을 관리합니다</p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">순위 추적 관리</h1>
+            <p className="text-sm text-gray-600 mt-2">모든 계정의 순위 추적을 관리합니다</p>
+          </div>
+          <button
+            onClick={() => {
+              fetchTrackingData()
+              fetchTrackingStatuses()
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            새로고침
+          </button>
         </div>
 
         {/* 추적 모니터링 시스템 */}
         <div className="mb-6">
-          <TrackingMonitor />
+          <TrackingMonitorPolling />
         </div>
 
         {/* 실시간 추적 상태 패널 (기존 코드 유지, 숨김) */}
@@ -346,7 +368,24 @@ export default function AdminTrackingDashboard() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-400">추후 구현</span>
+                    {user.ads.registered ? (
+                      user.ads.hasCredentials ? (
+                        <div className="text-sm">
+                          <div className="font-medium text-blue-600">
+                            ID: {user.ads.customerId}
+                          </div>
+                          {user.ads.lastUpdate && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {formatDate(user.ads.lastUpdate)}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-yellow-600">API키 미등록</span>
+                      )
+                    ) : (
+                      <span className="text-sm text-gray-400">계정 없음</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-xs">
@@ -366,7 +405,7 @@ export default function AdminTrackingDashboard() {
                   </td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => handleIndividualTracking(user.id, 'both')}
+                      onClick={() => handleIndividualTracking(user.id, 'all')}
                       disabled={trackingInProgress === user.id}
                       className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
                     >

@@ -1,0 +1,29 @@
+{
+  "name": "marketingplat-lambda-functions",
+  "version": "1.0.0",
+  "description": "Lambda functions for MarketingPlat ranking tracking",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "serverless deploy --stage production",
+    "deploy:dev": "serverless deploy --stage development",
+    "package": "serverless package",
+    "test": "jest",
+    "build:layers": "npm run build:chromium-layer && npm run build:prisma-layer",
+    "build:chromium-layer": "cd layers/chromium && npm install && cd ../..",
+    "build:prisma-layer": "cd layers/prisma && npm install && npx prisma generate && cd ../.."
+  },
+  "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "@sparticuz/chromium": "^119.0.2",
+    "aws-sdk": "^2.1539.0",
+    "puppeteer-core": "^21.6.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.131",
+    "@types/node": "^20.10.5",
+    "serverless": "^3.38.0",
+    "serverless-plugin-typescript": "^2.1.5",
+    "serverless-offline": "^13.3.0",
+    "typescript": "^5.3.3"
+  }
+}

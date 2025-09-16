@@ -1,1 +1,469 @@
-{"version":3,"caseSensitive":false,"basePath":"","rewrites":{"beforeFiles":[],"afterFiles":[],"fallback":[]},"redirects":[{"source":"/:path+/","destination":"/:path+","permanent":true,"internal":true,"regex":"^(?:\\/((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*))\\/$"}],"headers":[]}
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/admin/tracking/[userId]",
+      "regex": "^/api/admin/tracking/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPuserId": "nxtPuserId"
+      },
+      "namedRegex": "^/api/admin/tracking/(?<nxtPuserId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/users/[userId]",
+      "regex": "^/api/admin/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPuserId": "nxtPuserId"
+      },
+      "namedRegex": "^/api/admin/users/(?<nxtPuserId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/users/[userId]/approve",
+      "regex": "^/api/admin/users/([^/]+?)/approve(?:/)?$",
+      "routeKeys": {
+        "nxtPuserId": "nxtPuserId"
+      },
+      "namedRegex": "^/api/admin/users/(?<nxtPuserId>[^/]+?)/approve(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]",
+      "regex": "^/api/ads/adgroups/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/ad-extensions",
+      "regex": "^/api/ads/adgroups/([^/]+?)/ad\\-extensions(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/ad\\-extensions(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/ads",
+      "regex": "^/api/ads/adgroups/([^/]+?)/ads(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/ads(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/extended-search",
+      "regex": "^/api/ads/adgroups/([^/]+?)/extended\\-search(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/extended\\-search(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/extensions",
+      "regex": "^/api/ads/adgroups/([^/]+?)/extensions(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/extensions(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/keywords",
+      "regex": "^/api/ads/adgroups/([^/]+?)/keywords(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/keywords(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/negative-keywords",
+      "regex": "^/api/ads/adgroups/([^/]+?)/negative\\-keywords(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/negative\\-keywords(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/products",
+      "regex": "^/api/ads/adgroups/([^/]+?)/products(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/products(?:/)?$"
+    },
+    {
+      "page": "/api/ads/adgroups/[adgroupId]/restricted-keywords",
+      "regex": "^/api/ads/adgroups/([^/]+?)/restricted\\-keywords(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/api/ads/adgroups/(?<nxtPadgroupId>[^/]+?)/restricted\\-keywords(?:/)?$"
+    },
+    {
+      "page": "/api/ads/campaigns/[campaignId]",
+      "regex": "^/api/ads/campaigns/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPcampaignId": "nxtPcampaignId"
+      },
+      "namedRegex": "^/api/ads/campaigns/(?<nxtPcampaignId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/ads/campaigns/[campaignId]/adgroups",
+      "regex": "^/api/ads/campaigns/([^/]+?)/adgroups(?:/)?$",
+      "routeKeys": {
+        "nxtPcampaignId": "nxtPcampaignId"
+      },
+      "namedRegex": "^/api/ads/campaigns/(?<nxtPcampaignId>[^/]+?)/adgroups(?:/)?$"
+    },
+    {
+      "page": "/api/ads/campaigns/[campaignId]/toggle",
+      "regex": "^/api/ads/campaigns/([^/]+?)/toggle(?:/)?$",
+      "routeKeys": {
+        "nxtPcampaignId": "nxtPcampaignId"
+      },
+      "namedRegex": "^/api/ads/campaigns/(?<nxtPcampaignId>[^/]+?)/toggle(?:/)?$"
+    },
+    {
+      "page": "/api/ads/keywords/[keywordId]/toggle",
+      "regex": "^/api/ads/keywords/([^/]+?)/toggle(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/ads/keywords/(?<nxtPkeywordId>[^/]+?)/toggle(?:/)?$"
+    },
+    {
+      "page": "/api/blog-keywords/[keywordId]",
+      "regex": "^/api/blog\\-keywords/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/blog\\-keywords/(?<nxtPkeywordId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/blog-keywords/[keywordId]/toggle",
+      "regex": "^/api/blog\\-keywords/([^/]+?)/toggle(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/blog\\-keywords/(?<nxtPkeywordId>[^/]+?)/toggle(?:/)?$"
+    },
+    {
+      "page": "/api/blog-keywords/[keywordId]/trend",
+      "regex": "^/api/blog\\-keywords/([^/]+?)/trend(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/blog\\-keywords/(?<nxtPkeywordId>[^/]+?)/trend(?:/)?$"
+    },
+    {
+      "page": "/api/focus-keywords/[source]/[keywordId]",
+      "regex": "^/api/focus\\-keywords/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPsource": "nxtPsource",
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/focus\\-keywords/(?<nxtPsource>[^/]+?)/(?<nxtPkeywordId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/smartplace/info/[placeId]",
+      "regex": "^/api/smartplace/info/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPplaceId": "nxtPplaceId"
+      },
+      "namedRegex": "^/api/smartplace/info/(?<nxtPplaceId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/smartplace-keywords/[keywordId]",
+      "regex": "^/api/smartplace\\-keywords/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/smartplace\\-keywords/(?<nxtPkeywordId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/smartplace-keywords/[keywordId]/toggle",
+      "regex": "^/api/smartplace\\-keywords/([^/]+?)/toggle(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/smartplace\\-keywords/(?<nxtPkeywordId>[^/]+?)/toggle(?:/)?$"
+    },
+    {
+      "page": "/api/smartplace-keywords/[keywordId]/trend",
+      "regex": "^/api/smartplace\\-keywords/([^/]+?)/trend(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/api/smartplace\\-keywords/(?<nxtPkeywordId>[^/]+?)/trend(?:/)?$"
+    },
+    {
+      "page": "/blog/keywords/trend/[keywordId]",
+      "regex": "^/blog/keywords/trend/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/blog/keywords/trend/(?<nxtPkeywordId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/dashboard/admin/tracking/[userId]/blog",
+      "regex": "^/dashboard/admin/tracking/([^/]+?)/blog(?:/)?$",
+      "routeKeys": {
+        "nxtPuserId": "nxtPuserId"
+      },
+      "namedRegex": "^/dashboard/admin/tracking/(?<nxtPuserId>[^/]+?)/blog(?:/)?$"
+    },
+    {
+      "page": "/dashboard/admin/tracking/[userId]/smartplace",
+      "regex": "^/dashboard/admin/tracking/([^/]+?)/smartplace(?:/)?$",
+      "routeKeys": {
+        "nxtPuserId": "nxtPuserId"
+      },
+      "namedRegex": "^/dashboard/admin/tracking/(?<nxtPuserId>[^/]+?)/smartplace(?:/)?$"
+    },
+    {
+      "page": "/dashboard/ads/adgroups/[adgroupId]",
+      "regex": "^/dashboard/ads/adgroups/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPadgroupId": "nxtPadgroupId"
+      },
+      "namedRegex": "^/dashboard/ads/adgroups/(?<nxtPadgroupId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/dashboard/ads/campaigns/[campaignId]",
+      "regex": "^/dashboard/ads/campaigns/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPcampaignId": "nxtPcampaignId"
+      },
+      "namedRegex": "^/dashboard/ads/campaigns/(?<nxtPcampaignId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/dashboard/ads/campaigns/[campaignId]/create-adgroup",
+      "regex": "^/dashboard/ads/campaigns/([^/]+?)/create\\-adgroup(?:/)?$",
+      "routeKeys": {
+        "nxtPcampaignId": "nxtPcampaignId"
+      },
+      "namedRegex": "^/dashboard/ads/campaigns/(?<nxtPcampaignId>[^/]+?)/create\\-adgroup(?:/)?$"
+    },
+    {
+      "page": "/dashboard/agency/tracking/[userId]/blog",
+      "regex": "^/dashboard/agency/tracking/([^/]+?)/blog(?:/)?$",
+      "routeKeys": {
+        "nxtPuserId": "nxtPuserId"
+      },
+      "namedRegex": "^/dashboard/agency/tracking/(?<nxtPuserId>[^/]+?)/blog(?:/)?$"
+    },
+    {
+      "page": "/dashboard/agency/tracking/[userId]/smartplace",
+      "regex": "^/dashboard/agency/tracking/([^/]+?)/smartplace(?:/)?$",
+      "routeKeys": {
+        "nxtPuserId": "nxtPuserId"
+      },
+      "namedRegex": "^/dashboard/agency/tracking/(?<nxtPuserId>[^/]+?)/smartplace(?:/)?$"
+    },
+    {
+      "page": "/smartplace/keywords/trend/[keywordId]",
+      "regex": "^/smartplace/keywords/trend/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPkeywordId": "nxtPkeywordId"
+      },
+      "namedRegex": "^/smartplace/keywords/trend/(?<nxtPkeywordId>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/blog/keywords",
+      "regex": "^/blog/keywords(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/blog/keywords(?:/)?$"
+    },
+    {
+      "page": "/blog/keywords/monthly",
+      "regex": "^/blog/keywords/monthly(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/blog/keywords/monthly(?:/)?$"
+    },
+    {
+      "page": "/dashboard/academy",
+      "regex": "^/dashboard/academy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/academy(?:/)?$"
+    },
+    {
+      "page": "/dashboard/admin",
+      "regex": "^/dashboard/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/admin(?:/)?$"
+    },
+    {
+      "page": "/dashboard/admin/organization",
+      "regex": "^/dashboard/admin/organization(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/admin/organization(?:/)?$"
+    },
+    {
+      "page": "/dashboard/admin/tracking",
+      "regex": "^/dashboard/admin/tracking(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/admin/tracking(?:/)?$"
+    },
+    {
+      "page": "/dashboard/admin/users",
+      "regex": "^/dashboard/admin/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/admin/users(?:/)?$"
+    },
+    {
+      "page": "/dashboard/ads",
+      "regex": "^/dashboard/ads(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/ads(?:/)?$"
+    },
+    {
+      "page": "/dashboard/agency",
+      "regex": "^/dashboard/agency(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/agency(?:/)?$"
+    },
+    {
+      "page": "/dashboard/agency/tracking",
+      "regex": "^/dashboard/agency/tracking(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/agency/tracking(?:/)?$"
+    },
+    {
+      "page": "/dashboard/branch",
+      "regex": "^/dashboard/branch(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/branch(?:/)?$"
+    },
+    {
+      "page": "/dashboard/plan",
+      "regex": "^/dashboard/plan(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/plan(?:/)?$"
+    },
+    {
+      "page": "/dashboard/user",
+      "regex": "^/dashboard/user(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/user(?:/)?$"
+    },
+    {
+      "page": "/diagnosis",
+      "regex": "^/diagnosis(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/diagnosis(?:/)?$"
+    },
+    {
+      "page": "/diagnosis/smartplace",
+      "regex": "^/diagnosis/smartplace(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/diagnosis/smartplace(?:/)?$"
+    },
+    {
+      "page": "/icon.svg",
+      "regex": "^/icon\\.svg(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.svg(?:/)?$"
+    },
+    {
+      "page": "/keyword-analysis",
+      "regex": "^/keyword\\-analysis(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/keyword\\-analysis(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/management",
+      "regex": "^/management(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/management(?:/)?$"
+    },
+    {
+      "page": "/management/keywords",
+      "regex": "^/management/keywords(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/management/keywords(?:/)?$"
+    },
+    {
+      "page": "/mypage",
+      "regex": "^/mypage(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/mypage(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/smartplace/keywords",
+      "regex": "^/smartplace/keywords(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/smartplace/keywords(?:/)?$"
+    },
+    {
+      "page": "/smartplace/keywords/monthly",
+      "regex": "^/smartplace/keywords/monthly(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/smartplace/keywords/monthly(?:/)?$"
+    },
+    {
+      "page": "/test-sse",
+      "regex": "^/test\\-sse(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/test\\-sse(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

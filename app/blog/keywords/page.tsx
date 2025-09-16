@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import { Plus, Trash2, Search, Calendar, TrendingUp, AlertCircle, RefreshCw, Download, Eye, EyeOff, Globe, CheckCircle, Play } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Header from '@/components/layout/Header'
@@ -21,6 +21,75 @@ interface BlogProject {
   blogUrl: string
   keywordCount: number
 }
+
+// Memoized keyword row component for better performance
+const BlogKeywordRow = memo(({ 
+  keyword, 
+  onToggleActive, 
+  onRemove,
+  getRankClass 
+}: {
+  keyword: BlogKeyword
+  onToggleActive: (id: number) => void
+  onRemove: (id: number) => void
+  getRankClass: (rank: number | null) => string
+}) => {
+  return (
+    <tr className={!keyword.isActive ? 'opacity-50' : ''}>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center">
+          <button
+            onClick={() => onToggleActive(keyword.id)}
+            className="mr-2"
+          >
+            {keyword.isActive ? (
+              <Eye size={16} className="text-green-600" />
+            ) : (
+              <EyeOff size={16} className="text-gray-400" />
+            )}
+          </button>
+          <strong>{keyword.keyword}</strong>
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-center">
+        {keyword.mainTabExposed ? (
+          <CheckCircle size={18} className="text-green-500 inline" />
+        ) : (
+          <span className="text-gray-400">-</span>
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={getRankClass(keyword.blogTabRank)}>
+          {keyword.blogTabRank ? `${keyword.blogTabRank}위` : '-'}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {keyword.lastTracked ? 
+          new Date(keyword.lastTracked).toLocaleDateString() : 
+          '-'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <button 
+          className="text-red-600 hover:text-red-900"
+          onClick={() => onRemove(keyword.id)}
+        >
+          <Trash2 size={18} />
+        </button>
+      </td>
+    </tr>
+  )
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memo
+  return (
+    prevProps.keyword.id === nextProps.keyword.id &&
+    prevProps.keyword.isActive === nextProps.keyword.isActive &&
+    prevProps.keyword.mainTabExposed === nextProps.keyword.mainTabExposed &&
+    prevProps.keyword.blogTabRank === nextProps.keyword.blogTabRank &&
+    prevProps.keyword.lastTracked === nextProps.keyword.lastTracked
+  )
+})
+
+BlogKeywordRow.displayName = 'BlogKeywordRow'
 
 export default function BlogKeywordManagement() {
   const [keywords, setKeywords] = useState<BlogKeyword[]>([])
@@ -50,7 +119,7 @@ export default function BlogKeywordManagement() {
         const data = await response.json()
         if (data.blog) {
           setBlogProject(data.blog)
-          fetchKeywords()
+          await fetchKeywords()  // await 추가
         }
       }
     } catch (error) {
@@ -103,7 +172,7 @@ export default function BlogKeywordManagement() {
         setBlogProject(data.blog)
         setShowRegisterModal(false)
         setNewBlog({ name: '', url: '' })
-        fetchKeywords()
+        await fetchKeywords()  // await 추가
       } else {
         const data = await response.json()
         setError(data.error || '블로그 등록에 실패했습니다.')
@@ -167,7 +236,8 @@ export default function BlogKeywordManagement() {
     }
   }
 
-  const handleToggleKeyword = async (keywordId: number, isActive: boolean) => {
+  // Use useCallback to memoize event handlers
+  const handleToggleKeyword = useCallback(async (keywordId: number, isActive: boolean) => {
     try {
       const response = await fetch(`/api/blog-keywords/${keywordId}/toggle`, {
         method: 'PUT',
@@ -184,9 +254,9 @@ export default function BlogKeywordManagement() {
     } catch (error) {
       console.error('Failed to toggle keyword:', error)
     }
-  }
+  }, [keywords])
 
-  const handleRemoveKeyword = async (keywordId: number) => {
+  const handleRemoveKeyword = useCallback(async (keywordId: number) => {
     if (!confirm('이 키워드를 삭제하시겠습니까?')) return
 
     try {
@@ -209,7 +279,7 @@ export default function BlogKeywordManagement() {
     } catch (error) {
       console.error('Failed to remove keyword:', error)
     }
-  }
+  }, [blogProject])
 
   const handleTrackAll = async () => {
     try {
@@ -241,13 +311,16 @@ export default function BlogKeywordManagement() {
     return 'text-gray-600'
   }
 
-  const filteredKeywords = keywords.filter(k => {
-    if (!showInactive && !k.isActive) return false
-    if (searchTerm) {
-      return k.keyword.toLowerCase().includes(searchTerm.toLowerCase())
-    }
-    return true
-  })
+  // Memoize filtered keywords to prevent unnecessary recalculations
+  const filteredKeywords = useMemo(() => {
+    return keywords.filter(k => {
+      if (!showInactive && !k.isActive) return false
+      if (searchTerm) {
+        return k.keyword.toLowerCase().includes(searchTerm.toLowerCase())
+      }
+      return true
+    })
+  }, [keywords, showInactive, searchTerm])
 
   const exportToCSV = () => {
     const csvContent = [

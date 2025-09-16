@@ -1,0 +1,269 @@
+{
+  "date": "2025-07-24",
+  "customerId": "2982259",
+  "keywords": {
+    "nkw-a001-01-000006938876439": {
+      "keywordId": "nkw-a001-01-000006938876439",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 9,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 7,
+        "P": 2
+      },
+      "avgRank": 2,
+      "ctr": 0,
+      "cpc": 0
+    },
+    "nkw-a001-01-000006938876442": {
+      "keywordId": "nkw-a001-01-000006938876442",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 36,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 23,
+        "P": 13
+      },
+      "avgRank": 8,
+      "ctr": 0,
+      "cpc": 0
+    },
+    "nkw-a001-01-000006938876446": {
+      "keywordId": "nkw-a001-01-000006938876446",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 62,
+      "clicks": 1,
+      "cost": 290,
+      "devices": {
+        "M": 21,
+        "P": 41
+      },
+      "avgRank": 6,
+      "ctr": 1.6129032258064515,
+      "cpc": 290
+    },
+    "nkw-a001-01-000006938876448": {
+      "keywordId": "nkw-a001-01-000006938876448",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 12,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 12,
+        "P": 0
+      },
+      "avgRank": 3,
+      "ctr": 0,
+      "cpc": 0
+    },
+    "nkw-a001-01-000006938876540": {
+      "keywordId": "nkw-a001-01-000006938876540",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 5,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 0,
+        "P": 5
+      },
+      "avgRank": 1,
+      "ctr": 0,
+      "cpc": 0
+    }
+  },
+  "extendedSearchResults": {
+    "grp-a001-01-000000048644254": {
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 6,
+      "clicks": 1,
+      "cost": 70,
+      "devices": {
+        "M": 4,
+        "P": 2
+      },
+      "ctr": 16.666666666666664,
+      "cpc": 70
+    },
+    "grp-a001-06-000000039961935": {
+      "adgroupId": "grp-a001-06-000000039961935",
+      "campaignId": "cmp-a001-06-000000007657011",
+      "impressions": 161,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 158,
+        "P": 3
+      },
+      "ctr": 0,
+      "cpc": 0
+    },
+    "grp-a001-06-000000039962052": {
+      "adgroupId": "grp-a001-06-000000039962052",
+      "campaignId": "cmp-a001-06-000000007657032",
+      "impressions": 107,
+      "clicks": 0,
+      "cost": 0,
+      "devices": {
+        "M": 87,
+        "P": 20
+      },
+      "ctr": 0,
+      "cpc": 0
+    },
+    "grp-a001-06-000000048644419": {
+      "adgroupId": "grp-a001-06-000000048644419",
+      "campaignId": "cmp-a001-06-000000009160550",
+      "impressions": 342,
+      "clicks": 0,
+      "cost": 158,
+      "devices": {
+        "M": 254,
+        "P": 88
+      },
+      "ctr": 0,
+      "cpc": 0
+    }
+  },
+  "campaigns": {
+    "cmp-a001-01-000000009160501": {
+      "impressions": 130,
+      "clicks": 2,
+      "cost": 360
+    },
+    "cmp-a001-06-000000007657011": {
+      "impressions": 161,
+      "clicks": 0,
+      "cost": 0
+    },
+    "cmp-a001-06-000000007657032": {
+      "impressions": 107,
+      "clicks": 0,
+      "cost": 0
+    },
+    "cmp-a001-06-000000009160550": {
+      "impressions": 342,
+      "clicks": 0,
+      "cost": 158
+    }
+  },
+  "adgroups": {
+    "grp-a001-01-000000048644254": {
+      "impressions": 130,
+      "clicks": 2,
+      "cost": 360
+    },
+    "grp-a001-06-000000039961935": {
+      "impressions": 161,
+      "clicks": 0,
+      "cost": 0
+    },
+    "grp-a001-06-000000039962052": {
+      "impressions": 107,
+      "clicks": 0,
+      "cost": 0
+    },
+    "grp-a001-06-000000048644419": {
+      "impressions": 342,
+      "clicks": 0,
+      "cost": 158
+    }
+  },
+  "rawData": [
+    {
+      "keywordId": "nkw-a001-01-000006938876439",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 2,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 1,
+      "device": "P",
+      "date": "2025-07-24"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876439",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 7,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 3,
+      "device": "M",
+      "date": "2025-07-24"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876442",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 13,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 5,
+      "device": "P",
+      "date": "2025-07-24"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876442",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 23,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 11,
+      "device": "M",
+      "date": "2025-07-24"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876446",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 41,
+      "clicks": 1,
+      "cost": 290,
+      "avgRank": 9,
+      "device": "P",
+      "date": "2025-07-24"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876446",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 21,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 3,
+      "device": "M",
+      "date": "2025-07-24"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876448",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 12,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 3,
+      "device": "M",
+      "date": "2025-07-24"
+    },
+    {
+      "keywordId": "nkw-a001-01-000006938876540",
+      "adgroupId": "grp-a001-01-000000048644254",
+      "campaignId": "cmp-a001-01-000000009160501",
+      "impressions": 5,
+      "clicks": 0,
+      "cost": 0,
+      "avgRank": 1,
+      "device": "P",
+      "date": "2025-07-24"
+    }
+  ]
+}

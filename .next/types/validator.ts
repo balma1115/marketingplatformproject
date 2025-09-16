@@ -47,10 +47,34 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 }
 
 
+// Validate ..\..\app\blog\keywords\monthly\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\blog\\keywords\\monthly\\page.js")
+  handler satisfies AppPageConfig<"/blog/keywords/monthly">
+}
+
+// Validate ..\..\app\blog\keywords\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\blog\\keywords\\page.js")
+  handler satisfies AppPageConfig<"/blog/keywords">
+}
+
+// Validate ..\..\app\blog\keywords\trend\[keywordId]\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\blog\\keywords\\trend\\[keywordId]\\page.js")
+  handler satisfies AppPageConfig<"/blog/keywords/trend/[keywordId]">
+}
+
 // Validate ..\..\app\dashboard\academy\page.tsx
 {
   const handler = {} as typeof import("..\\..\\app\\dashboard\\academy\\page.js")
   handler satisfies AppPageConfig<"/dashboard/academy">
+}
+
+// Validate ..\..\app\dashboard\admin\organization\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\organization\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/admin/organization">
 }
 
 // Validate ..\..\app\dashboard\admin\page.tsx
@@ -59,10 +83,76 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   handler satisfies AppPageConfig<"/dashboard/admin">
 }
 
+// Validate ..\..\app\dashboard\admin\tracking\[userId]\blog\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\tracking\\[userId]\\blog\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/admin/tracking/[userId]/blog">
+}
+
+// Validate ..\..\app\dashboard\admin\tracking\[userId]\smartplace\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\tracking\\[userId]\\smartplace\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/admin/tracking/[userId]/smartplace">
+}
+
+// Validate ..\..\app\dashboard\admin\tracking\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\tracking\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/admin/tracking">
+}
+
+// Validate ..\..\app\dashboard\admin\users\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\users\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/admin/users">
+}
+
+// Validate ..\..\app\dashboard\ads\adgroups\[adgroupId]\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\adgroups\\[adgroupId]\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/ads/adgroups/[adgroupId]">
+}
+
+// Validate ..\..\app\dashboard\ads\campaigns\[campaignId]\create-adgroup\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\campaigns\\[campaignId]\\create-adgroup\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/ads/campaigns/[campaignId]/create-adgroup">
+}
+
+// Validate ..\..\app\dashboard\ads\campaigns\[campaignId]\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\campaigns\\[campaignId]\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/ads/campaigns/[campaignId]">
+}
+
+// Validate ..\..\app\dashboard\ads\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/ads">
+}
+
 // Validate ..\..\app\dashboard\agency\page.tsx
 {
   const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\page.js")
   handler satisfies AppPageConfig<"/dashboard/agency">
+}
+
+// Validate ..\..\app\dashboard\agency\tracking\[userId]\blog\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\tracking\\[userId]\\blog\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/agency/tracking/[userId]/blog">
+}
+
+// Validate ..\..\app\dashboard\agency\tracking\[userId]\smartplace\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\tracking\\[userId]\\smartplace\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/agency/tracking/[userId]/smartplace">
+}
+
+// Validate ..\..\app\dashboard\agency\tracking\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\tracking\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/agency/tracking">
 }
 
 // Validate ..\..\app\dashboard\branch\page.tsx
@@ -95,10 +185,28 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   handler satisfies AppPageConfig<"/diagnosis/smartplace">
 }
 
+// Validate ..\..\app\keyword-analysis\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\keyword-analysis\\page.js")
+  handler satisfies AppPageConfig<"/keyword-analysis">
+}
+
 // Validate ..\..\app\login\page.tsx
 {
   const handler = {} as typeof import("..\\..\\app\\login\\page.js")
   handler satisfies AppPageConfig<"/login">
+}
+
+// Validate ..\..\app\management\keywords\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\management\\keywords\\page.js")
+  handler satisfies AppPageConfig<"/management/keywords">
+}
+
+// Validate ..\..\app\management\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\management\\page.js")
+  handler satisfies AppPageConfig<"/management">
 }
 
 // Validate ..\..\app\mypage\page.tsx
@@ -117,6 +225,300 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   const handler = {} as typeof import("..\\..\\app\\register\\page.js")
   handler satisfies AppPageConfig<"/register">
+}
+
+// Validate ..\..\app\smartplace\keywords\monthly\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\smartplace\\keywords\\monthly\\page.js")
+  handler satisfies AppPageConfig<"/smartplace/keywords/monthly">
+}
+
+// Validate ..\..\app\smartplace\keywords\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\smartplace\\keywords\\page.js")
+  handler satisfies AppPageConfig<"/smartplace/keywords">
+}
+
+// Validate ..\..\app\smartplace\keywords\trend\[keywordId]\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\smartplace\\keywords\\trend\\[keywordId]\\page.js")
+  handler satisfies AppPageConfig<"/smartplace/keywords/trend/[keywordId]">
+}
+
+// Validate ..\..\app\test-sse\page.tsx
+{
+  const handler = {} as typeof import("..\\..\\app\\test-sse\\page.js")
+  handler satisfies AppPageConfig<"/test-sse">
+}
+
+// Validate ..\..\app\api\admin\academies\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\academies\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/academies">
+}
+
+// Validate ..\..\app\api\admin\ads-refresh\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\ads-refresh\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/ads-refresh">
+}
+
+// Validate ..\..\app\api\admin\branches\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\branches\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/branches">
+}
+
+// Validate ..\..\app\api\admin\csv-upload\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\csv-upload\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/csv-upload">
+}
+
+// Validate ..\..\app\api\admin\scheduler\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\scheduler\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/scheduler">
+}
+
+// Validate ..\..\app\api\admin\subjects\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\subjects\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/subjects">
+}
+
+// Validate ..\..\app\api\admin\tracking\[userId]\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\[userId]\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/[userId]">
+}
+
+// Validate ..\..\app\api\admin\tracking\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking">
+}
+
+// Validate ..\..\app\api\admin\tracking\sse-fixed\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-fixed\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-fixed">
+}
+
+// Validate ..\..\app\api\admin\tracking\sse-realtime\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-realtime\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-realtime">
+}
+
+// Validate ..\..\app\api\admin\tracking\sse-simple\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-simple\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-simple">
+}
+
+// Validate ..\..\app\api\admin\tracking\sse-test\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-test\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-test">
+}
+
+// Validate ..\..\app\api\admin\tracking\sse-working\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-working\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-working">
+}
+
+// Validate ..\..\app\api\admin\tracking\status\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\status\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/status">
+}
+
+// Validate ..\..\app\api\admin\tracking\stream\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\stream\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/stream">
+}
+
+// Validate ..\..\app\api\admin\tracking\test-event\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\test-event\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/tracking/test-event">
+}
+
+// Validate ..\..\app\api\admin\users\[userId]\approve\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\users\\[userId]\\approve\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/users/[userId]/approve">
+}
+
+// Validate ..\..\app\api\admin\users\[userId]\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\users\\[userId]\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/users/[userId]">
+}
+
+// Validate ..\..\app\api\admin\users\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\admin\\users\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/admin/users">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\ad-extensions\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\ad-extensions\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/ad-extensions">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\ads\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\ads\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/ads">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\extended-search\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\extended-search\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/extended-search">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\extensions\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\extensions\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/extensions">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\keywords\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\keywords\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/keywords">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\negative-keywords\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\negative-keywords\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/negative-keywords">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\products\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\products\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/products">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\restricted-keywords\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\restricted-keywords\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/restricted-keywords">
+}
+
+// Validate ..\..\app\api\ads\adgroups\[adgroupId]\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]">
+}
+
+// Validate ..\..\app\api\ads\adgroups\create\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\create\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups/create">
+}
+
+// Validate ..\..\app\api\ads\adgroups\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/adgroups">
+}
+
+// Validate ..\..\app\api\ads\campaigns\[campaignId]\adgroups\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\[campaignId]\\adgroups\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/campaigns/[campaignId]/adgroups">
+}
+
+// Validate ..\..\app\api\ads\campaigns\[campaignId]\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\[campaignId]\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/campaigns/[campaignId]">
+}
+
+// Validate ..\..\app\api\ads\campaigns\[campaignId]\toggle\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\[campaignId]\\toggle\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/campaigns/[campaignId]/toggle">
+}
+
+// Validate ..\..\app\api\ads\campaigns\bulk-delete\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\bulk-delete\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/campaigns/bulk-delete">
+}
+
+// Validate ..\..\app\api\ads\campaigns\create\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\create\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/campaigns/create">
+}
+
+// Validate ..\..\app\api\ads\campaigns\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/campaigns">
+}
+
+// Validate ..\..\app\api\ads\dashboard\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\dashboard\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/dashboard">
+}
+
+// Validate ..\..\app\api\ads\keywords\[keywordId]\toggle\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\[keywordId]\\toggle\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/keywords/[keywordId]/toggle">
+}
+
+// Validate ..\..\app\api\ads\keywords\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/keywords">
+}
+
+// Validate ..\..\app\api\ads\keywords\stats\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\stats\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/keywords/stats">
+}
+
+// Validate ..\..\app\api\ads\keywords\suggestions\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\suggestions\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/keywords/suggestions">
+}
+
+// Validate ..\..\app\api\ads\performance\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\performance\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/performance">
+}
+
+// Validate ..\..\app\api\ads\places\naver\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\places\\naver\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/places/naver">
+}
+
+// Validate ..\..\app\api\ads\places\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\places\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/places">
+}
+
+// Validate ..\..\app\api\ads\processed-data\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\ads\\processed-data\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/ads/processed-data">
 }
 
 // Validate ..\..\app\api\auth\login\route.ts
@@ -143,6 +545,234 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   handler satisfies RouteHandlerConfig<"/api/auth/register">
 }
 
+// Validate ..\..\app\api\auth\send-verification\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\auth\\send-verification\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/auth/send-verification">
+}
+
+// Validate ..\..\app\api\auth\test-login\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\auth\\test-login\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/auth/test-login">
+}
+
+// Validate ..\..\app\api\auth\verify-code\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\auth\\verify-code\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/auth/verify-code">
+}
+
+// Validate ..\..\app\api\blog-keywords\[keywordId]\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\[keywordId]\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/[keywordId]">
+}
+
+// Validate ..\..\app\api\blog-keywords\[keywordId]\toggle\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\[keywordId]\\toggle\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/[keywordId]/toggle">
+}
+
+// Validate ..\..\app\api\blog-keywords\[keywordId]\trend\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\[keywordId]\\trend\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/[keywordId]/trend">
+}
+
+// Validate ..\..\app\api\blog-keywords\add\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\add\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/add">
+}
+
+// Validate ..\..\app\api\blog-keywords\clear-all\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\clear-all\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/clear-all">
+}
+
+// Validate ..\..\app\api\blog-keywords\list\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\list\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/list">
+}
+
+// Validate ..\..\app\api\blog-keywords\monthly-data\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\monthly-data\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/monthly-data">
+}
+
+// Validate ..\..\app\api\blog-keywords\my-blog\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\my-blog\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/my-blog">
+}
+
+// Validate ..\..\app\api\blog-keywords\projects\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\projects\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/projects">
+}
+
+// Validate ..\..\app\api\blog-keywords\register-blog\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\register-blog\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/register-blog">
+}
+
+// Validate ..\..\app\api\blog-keywords\track-all\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\track-all\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/track-all">
+}
+
+// Validate ..\..\app\api\blog-keywords\update-blog\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\update-blog\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/update-blog">
+}
+
+// Validate ..\..\app\api\focus-keywords\[source]\[keywordId]\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\[source]\\[keywordId]\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/focus-keywords/[source]/[keywordId]">
+}
+
+// Validate ..\..\app\api\focus-keywords\add-to-blog\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\add-to-blog\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/focus-keywords/add-to-blog">
+}
+
+// Validate ..\..\app\api\focus-keywords\add-to-smartplace\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\add-to-smartplace\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/focus-keywords/add-to-smartplace">
+}
+
+// Validate ..\..\app\api\focus-keywords\unified\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\unified\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/focus-keywords/unified">
+}
+
+// Validate ..\..\app\api\keyword-analysis\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\keyword-analysis\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/keyword-analysis">
+}
+
+// Validate ..\..\app\api\public\academies\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\public\\academies\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/public/academies">
+}
+
+// Validate ..\..\app\api\public\branches\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\public\\branches\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/public/branches">
+}
+
+// Validate ..\..\app\api\public\subjects\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\public\\subjects\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/public/subjects">
+}
+
+// Validate ..\..\app\api\scheduler\init\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\scheduler\\init\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/scheduler/init">
+}
+
+// Validate ..\..\app\api\settings\api-keys\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\settings\\api-keys\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/settings/api-keys">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\[keywordId]\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\[keywordId]\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/[keywordId]">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\[keywordId]\toggle\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\[keywordId]\\toggle\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/[keywordId]/toggle">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\[keywordId]\trend\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\[keywordId]\\trend\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/[keywordId]/trend">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\add\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\add\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/add">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\list\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\list\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/list">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\monthly-data\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\monthly-data\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/monthly-data">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\my-place\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\my-place\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/my-place">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\projects\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\projects\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/projects">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\register-place\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\register-place\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/register-place">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\sessions\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\sessions\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/sessions">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\track-all-realtime\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\track-all-realtime\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/track-all-realtime">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\track-all-v4\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\track-all-v4\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/track-all-v4">
+}
+
+// Validate ..\..\app\api\smartplace-keywords\track-all\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\track-all\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/track-all">
+}
+
 // Validate ..\..\app\api\smartplace\analyze\route.ts
 {
   const handler = {} as typeof import("..\\..\\app\\api\\smartplace\\analyze\\route.js")
@@ -165,6 +795,18 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   const handler = {} as typeof import("..\\..\\app\\api\\smartplace\\resolve-url\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace/resolve-url">
+}
+
+// Validate ..\..\app\api\test-adgroups-simple\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\test-adgroups-simple\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/test-adgroups-simple">
+}
+
+// Validate ..\..\app\api\user\update-plan\route.ts
+{
+  const handler = {} as typeof import("..\\..\\app\\api\\user\\update-plan\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/user/update-plan">
 }
 
 

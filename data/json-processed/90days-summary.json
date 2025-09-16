@@ -1,0 +1,763 @@
+{
+  "period": "2025-06-11 ~ 2025-09-08",
+  "totalDays": 90,
+  "successfulDays": 90,
+  "failedDays": 0,
+  "totals": {
+    "impressions": 4792,
+    "clicks": 40,
+    "cost": 7140
+  },
+  "monthlyBreakdown": [
+    {
+      "month": "2025-06",
+      "days": 20,
+      "impressions": 946,
+      "clicks": 6,
+      "cost": 870
+    },
+    {
+      "month": "2025-07",
+      "days": 31,
+      "impressions": 1839,
+      "clicks": 23,
+      "cost": 4460
+    },
+    {
+      "month": "2025-08",
+      "days": 31,
+      "impressions": 1560,
+      "clicks": 9,
+      "cost": 1380
+    },
+    {
+      "month": "2025-09",
+      "days": 8,
+      "impressions": 447,
+      "clicks": 2,
+      "cost": 430
+    }
+  ],
+  "details": [
+    {
+      "date": "2025-06-11",
+      "tsvFile": "report_2025-06-11.tsv",
+      "jsonFile": "processed_2025-06-11.json",
+      "impressions": 44,
+      "clicks": 1,
+      "cost": 70
+    },
+    {
+      "date": "2025-06-12",
+      "tsvFile": "report_2025-06-12.tsv",
+      "jsonFile": "processed_2025-06-12.json",
+      "impressions": 55,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-13",
+      "tsvFile": "report_2025-06-13.tsv",
+      "jsonFile": "processed_2025-06-13.json",
+      "impressions": 39,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-14",
+      "tsvFile": "report_2025-06-14.tsv",
+      "jsonFile": "processed_2025-06-14.json",
+      "impressions": 30,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-15",
+      "tsvFile": "report_2025-06-15.tsv",
+      "jsonFile": "processed_2025-06-15.json",
+      "impressions": 13,
+      "clicks": 1,
+      "cost": 300
+    },
+    {
+      "date": "2025-06-16",
+      "tsvFile": "report_2025-06-16.tsv",
+      "jsonFile": "processed_2025-06-16.json",
+      "impressions": 17,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-17",
+      "tsvFile": "report_2025-06-17.tsv",
+      "jsonFile": "processed_2025-06-17.json",
+      "impressions": 46,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-18",
+      "tsvFile": "report_2025-06-18.tsv",
+      "jsonFile": "processed_2025-06-18.json",
+      "impressions": 53,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-19",
+      "tsvFile": "report_2025-06-19.tsv",
+      "jsonFile": "processed_2025-06-19.json",
+      "impressions": 41,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-20",
+      "tsvFile": "report_2025-06-20.tsv",
+      "jsonFile": "processed_2025-06-20.json",
+      "impressions": 28,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-21",
+      "tsvFile": "report_2025-06-21.tsv",
+      "jsonFile": "processed_2025-06-21.json",
+      "impressions": 56,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-22",
+      "tsvFile": "report_2025-06-22.tsv",
+      "jsonFile": "processed_2025-06-22.json",
+      "impressions": 36,
+      "clicks": 2,
+      "cost": 360
+    },
+    {
+      "date": "2025-06-23",
+      "tsvFile": "report_2025-06-23.tsv",
+      "jsonFile": "processed_2025-06-23.json",
+      "impressions": 117,
+      "clicks": 1,
+      "cost": 70
+    },
+    {
+      "date": "2025-06-24",
+      "tsvFile": "report_2025-06-24.tsv",
+      "jsonFile": "processed_2025-06-24.json",
+      "impressions": 94,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-25",
+      "tsvFile": "report_2025-06-25.tsv",
+      "jsonFile": "processed_2025-06-25.json",
+      "impressions": 87,
+      "clicks": 1,
+      "cost": 70
+    },
+    {
+      "date": "2025-06-26",
+      "tsvFile": "report_2025-06-26.tsv",
+      "jsonFile": "processed_2025-06-26.json",
+      "impressions": 52,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-27",
+      "tsvFile": "report_2025-06-27.tsv",
+      "jsonFile": "processed_2025-06-27.json",
+      "impressions": 40,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-28",
+      "tsvFile": "report_2025-06-28.tsv",
+      "jsonFile": "processed_2025-06-28.json",
+      "impressions": 5,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-29",
+      "tsvFile": "report_2025-06-29.tsv",
+      "jsonFile": "processed_2025-06-29.json",
+      "impressions": 29,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-06-30",
+      "tsvFile": "report_2025-06-30.tsv",
+      "jsonFile": "processed_2025-06-30.json",
+      "impressions": 64,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-01",
+      "tsvFile": "report_2025-07-01.tsv",
+      "jsonFile": "processed_2025-07-01.json",
+      "impressions": 61,
+      "clicks": 2,
+      "cost": 460
+    },
+    {
+      "date": "2025-07-02",
+      "tsvFile": "report_2025-07-02.tsv",
+      "jsonFile": "processed_2025-07-02.json",
+      "impressions": 62,
+      "clicks": 2,
+      "cost": 130
+    },
+    {
+      "date": "2025-07-03",
+      "tsvFile": "report_2025-07-03.tsv",
+      "jsonFile": "processed_2025-07-03.json",
+      "impressions": 71,
+      "clicks": 2,
+      "cost": 360
+    },
+    {
+      "date": "2025-07-04",
+      "tsvFile": "report_2025-07-04.tsv",
+      "jsonFile": "processed_2025-07-04.json",
+      "impressions": 26,
+      "clicks": 1,
+      "cost": 50
+    },
+    {
+      "date": "2025-07-05",
+      "tsvFile": "report_2025-07-05.tsv",
+      "jsonFile": "processed_2025-07-05.json",
+      "impressions": 34,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-06",
+      "tsvFile": "report_2025-07-06.tsv",
+      "jsonFile": "processed_2025-07-06.json",
+      "impressions": 25,
+      "clicks": 1,
+      "cost": 70
+    },
+    {
+      "date": "2025-07-07",
+      "tsvFile": "report_2025-07-07.tsv",
+      "jsonFile": "processed_2025-07-07.json",
+      "impressions": 70,
+      "clicks": 1,
+      "cost": 380
+    },
+    {
+      "date": "2025-07-08",
+      "tsvFile": "report_2025-07-08.tsv",
+      "jsonFile": "processed_2025-07-08.json",
+      "impressions": 33,
+      "clicks": 2,
+      "cost": 810
+    },
+    {
+      "date": "2025-07-09",
+      "tsvFile": "report_2025-07-09.tsv",
+      "jsonFile": "processed_2025-07-09.json",
+      "impressions": 26,
+      "clicks": 1,
+      "cost": 370
+    },
+    {
+      "date": "2025-07-10",
+      "tsvFile": "report_2025-07-10.tsv",
+      "jsonFile": "processed_2025-07-10.json",
+      "impressions": 98,
+      "clicks": 1,
+      "cost": 400
+    },
+    {
+      "date": "2025-07-11",
+      "tsvFile": "report_2025-07-11.tsv",
+      "jsonFile": "processed_2025-07-11.json",
+      "impressions": 69,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-12",
+      "tsvFile": "report_2025-07-12.tsv",
+      "jsonFile": "processed_2025-07-12.json",
+      "impressions": 30,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-13",
+      "tsvFile": "report_2025-07-13.tsv",
+      "jsonFile": "processed_2025-07-13.json",
+      "impressions": 49,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-14",
+      "tsvFile": "report_2025-07-14.tsv",
+      "jsonFile": "processed_2025-07-14.json",
+      "impressions": 100,
+      "clicks": 2,
+      "cost": 140
+    },
+    {
+      "date": "2025-07-15",
+      "tsvFile": "report_2025-07-15.tsv",
+      "jsonFile": "processed_2025-07-15.json",
+      "impressions": 116,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-16",
+      "tsvFile": "report_2025-07-16.tsv",
+      "jsonFile": "processed_2025-07-16.json",
+      "impressions": 91,
+      "clicks": 1,
+      "cost": 360
+    },
+    {
+      "date": "2025-07-17",
+      "tsvFile": "report_2025-07-17.tsv",
+      "jsonFile": "processed_2025-07-17.json",
+      "impressions": 73,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-18",
+      "tsvFile": "report_2025-07-18.tsv",
+      "jsonFile": "processed_2025-07-18.json",
+      "impressions": 75,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-19",
+      "tsvFile": "report_2025-07-19.tsv",
+      "jsonFile": "processed_2025-07-19.json",
+      "impressions": 39,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-20",
+      "tsvFile": "report_2025-07-20.tsv",
+      "jsonFile": "processed_2025-07-20.json",
+      "impressions": 56,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-21",
+      "tsvFile": "report_2025-07-21.tsv",
+      "jsonFile": "processed_2025-07-21.json",
+      "impressions": 84,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-22",
+      "tsvFile": "report_2025-07-22.tsv",
+      "jsonFile": "processed_2025-07-22.json",
+      "impressions": 79,
+      "clicks": 1,
+      "cost": 70
+    },
+    {
+      "date": "2025-07-23",
+      "tsvFile": "report_2025-07-23.tsv",
+      "jsonFile": "processed_2025-07-23.json",
+      "impressions": 80,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-24",
+      "tsvFile": "report_2025-07-24.tsv",
+      "jsonFile": "processed_2025-07-24.json",
+      "impressions": 130,
+      "clicks": 2,
+      "cost": 360
+    },
+    {
+      "date": "2025-07-25",
+      "tsvFile": "report_2025-07-25.tsv",
+      "jsonFile": "processed_2025-07-25.json",
+      "impressions": 54,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-26",
+      "tsvFile": "report_2025-07-26.tsv",
+      "jsonFile": "processed_2025-07-26.json",
+      "impressions": 49,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-27",
+      "tsvFile": "report_2025-07-27.tsv",
+      "jsonFile": "processed_2025-07-27.json",
+      "impressions": 59,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-28",
+      "tsvFile": "report_2025-07-28.tsv",
+      "jsonFile": "processed_2025-07-28.json",
+      "impressions": 35,
+      "clicks": 1,
+      "cost": 180
+    },
+    {
+      "date": "2025-07-29",
+      "tsvFile": "report_2025-07-29.tsv",
+      "jsonFile": "processed_2025-07-29.json",
+      "impressions": 33,
+      "clicks": 2,
+      "cost": 140
+    },
+    {
+      "date": "2025-07-30",
+      "tsvFile": "report_2025-07-30.tsv",
+      "jsonFile": "processed_2025-07-30.json",
+      "impressions": 7,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-07-31",
+      "tsvFile": "report_2025-07-31.tsv",
+      "jsonFile": "processed_2025-07-31.json",
+      "impressions": 25,
+      "clicks": 1,
+      "cost": 180
+    },
+    {
+      "date": "2025-08-01",
+      "tsvFile": "report_2025-08-01.tsv",
+      "jsonFile": "processed_2025-08-01.json",
+      "impressions": 6,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-02",
+      "tsvFile": "report_2025-08-02.tsv",
+      "jsonFile": "processed_2025-08-02.json",
+      "impressions": 11,
+      "clicks": 1,
+      "cost": 70
+    },
+    {
+      "date": "2025-08-03",
+      "tsvFile": "report_2025-08-03.tsv",
+      "jsonFile": "processed_2025-08-03.json",
+      "impressions": 12,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-04",
+      "tsvFile": "report_2025-08-04.tsv",
+      "jsonFile": "processed_2025-08-04.json",
+      "impressions": 83,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-05",
+      "tsvFile": "report_2025-08-05.tsv",
+      "jsonFile": "processed_2025-08-05.json",
+      "impressions": 75,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-06",
+      "tsvFile": "report_2025-08-06.tsv",
+      "jsonFile": "processed_2025-08-06.json",
+      "impressions": 53,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-07",
+      "tsvFile": "report_2025-08-07.tsv",
+      "jsonFile": "processed_2025-08-07.json",
+      "impressions": 88,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-08",
+      "tsvFile": "report_2025-08-08.tsv",
+      "jsonFile": "processed_2025-08-08.json",
+      "impressions": 51,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-09",
+      "tsvFile": "report_2025-08-09.tsv",
+      "jsonFile": "processed_2025-08-09.json",
+      "impressions": 25,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-10",
+      "tsvFile": "report_2025-08-10.tsv",
+      "jsonFile": "processed_2025-08-10.json",
+      "impressions": 51,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-11",
+      "tsvFile": "report_2025-08-11.tsv",
+      "jsonFile": "processed_2025-08-11.json",
+      "impressions": 56,
+      "clicks": 1,
+      "cost": 130
+    },
+    {
+      "date": "2025-08-12",
+      "tsvFile": "report_2025-08-12.tsv",
+      "jsonFile": "processed_2025-08-12.json",
+      "impressions": 73,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-13",
+      "tsvFile": "report_2025-08-13.tsv",
+      "jsonFile": "processed_2025-08-13.json",
+      "impressions": 31,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-14",
+      "tsvFile": "report_2025-08-14.tsv",
+      "jsonFile": "processed_2025-08-14.json",
+      "impressions": 12,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-15",
+      "tsvFile": "report_2025-08-15.tsv",
+      "jsonFile": "processed_2025-08-15.json",
+      "impressions": 13,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-16",
+      "tsvFile": "report_2025-08-16.tsv",
+      "jsonFile": "processed_2025-08-16.json",
+      "impressions": 35,
+      "clicks": 1,
+      "cost": 380
+    },
+    {
+      "date": "2025-08-17",
+      "tsvFile": "report_2025-08-17.tsv",
+      "jsonFile": "processed_2025-08-17.json",
+      "impressions": 45,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-18",
+      "tsvFile": "report_2025-08-18.tsv",
+      "jsonFile": "processed_2025-08-18.json",
+      "impressions": 59,
+      "clicks": 1,
+      "cost": 70
+    },
+    {
+      "date": "2025-08-19",
+      "tsvFile": "report_2025-08-19.tsv",
+      "jsonFile": "processed_2025-08-19.json",
+      "impressions": 60,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-20",
+      "tsvFile": "report_2025-08-20.tsv",
+      "jsonFile": "processed_2025-08-20.json",
+      "impressions": 111,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-21",
+      "tsvFile": "report_2025-08-21.tsv",
+      "jsonFile": "processed_2025-08-21.json",
+      "impressions": 78,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-22",
+      "tsvFile": "report_2025-08-22.tsv",
+      "jsonFile": "processed_2025-08-22.json",
+      "impressions": 33,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-23",
+      "tsvFile": "report_2025-08-23.tsv",
+      "jsonFile": "processed_2025-08-23.json",
+      "impressions": 45,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-24",
+      "tsvFile": "report_2025-08-24.tsv",
+      "jsonFile": "processed_2025-08-24.json",
+      "impressions": 21,
+      "clicks": 1,
+      "cost": 140
+    },
+    {
+      "date": "2025-08-25",
+      "tsvFile": "report_2025-08-25.tsv",
+      "jsonFile": "processed_2025-08-25.json",
+      "impressions": 63,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-26",
+      "tsvFile": "report_2025-08-26.tsv",
+      "jsonFile": "processed_2025-08-26.json",
+      "impressions": 55,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-27",
+      "tsvFile": "report_2025-08-27.tsv",
+      "jsonFile": "processed_2025-08-27.json",
+      "impressions": 79,
+      "clicks": 1,
+      "cost": 250
+    },
+    {
+      "date": "2025-08-28",
+      "tsvFile": "report_2025-08-28.tsv",
+      "jsonFile": "processed_2025-08-28.json",
+      "impressions": 83,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-29",
+      "tsvFile": "report_2025-08-29.tsv",
+      "jsonFile": "processed_2025-08-29.json",
+      "impressions": 52,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-08-30",
+      "tsvFile": "report_2025-08-30.tsv",
+      "jsonFile": "processed_2025-08-30.json",
+      "impressions": 45,
+      "clicks": 2,
+      "cost": 140
+    },
+    {
+      "date": "2025-08-31",
+      "tsvFile": "report_2025-08-31.tsv",
+      "jsonFile": "processed_2025-08-31.json",
+      "impressions": 56,
+      "clicks": 1,
+      "cost": 200
+    },
+    {
+      "date": "2025-09-01",
+      "tsvFile": "report_2025-09-01.tsv",
+      "jsonFile": "processed_2025-09-01.json",
+      "impressions": 92,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-09-02",
+      "tsvFile": "report_2025-09-02.tsv",
+      "jsonFile": "processed_2025-09-02.json",
+      "impressions": 97,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-09-03",
+      "tsvFile": "report_2025-09-03.tsv",
+      "jsonFile": "processed_2025-09-03.json",
+      "impressions": 30,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-09-04",
+      "tsvFile": "report_2025-09-04.tsv",
+      "jsonFile": "processed_2025-09-04.json",
+      "impressions": 29,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-09-05",
+      "tsvFile": "report_2025-09-05.tsv",
+      "jsonFile": "processed_2025-09-05.json",
+      "impressions": 67,
+      "clicks": 1,
+      "cost": 360
+    },
+    {
+      "date": "2025-09-06",
+      "tsvFile": "report_2025-09-06.tsv",
+      "jsonFile": "processed_2025-09-06.json",
+      "impressions": 27,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-09-07",
+      "tsvFile": "report_2025-09-07.tsv",
+      "jsonFile": "processed_2025-09-07.json",
+      "impressions": 55,
+      "clicks": 0,
+      "cost": 0
+    },
+    {
+      "date": "2025-09-08",
+      "tsvFile": "report_2025-09-08.tsv",
+      "jsonFile": "processed_2025-09-08.json",
+      "impressions": 50,
+      "clicks": 1,
+      "cost": 70
+    }
+  ]
+}

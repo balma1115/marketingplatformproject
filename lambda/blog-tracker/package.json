@@ -1,0 +1,24 @@
+{
+  "name": "blog-tracker-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda function for tracking blog rankings",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js",
+    "build": "npm install --production",
+    "package": "zip -r function.zip index.js node_modules package.json"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "@sparticuz/chromium": "^119.0.0",
+    "puppeteer-core": "^21.7.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.15.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "MarketingPlat",
+  "license": "MIT"
+}

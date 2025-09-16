@@ -1,0 +1,1082 @@
+{
+  "month": "2025-07",
+  "days": [
+    {
+      "date": "2025-07-01",
+      "data": {
+        "date": "2025-07-01",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 61,
+            "clicks": 2,
+            "cost": 460,
+            "costWithVAT": 506.00000000000006,
+            "ctr": 3.278688524590164,
+            "cpc": 230
+          },
+          "keywords": {
+            "impressions": 32,
+            "clicks": 1,
+            "cost": 290,
+            "costWithVAT": 319,
+            "ctr": 3.125,
+            "cpc": 290
+          },
+          "expanded": {
+            "impressions": 29,
+            "clicks": 1,
+            "cost": 170,
+            "costWithVAT": 187.00000000000003,
+            "ctr": 3.4482758620689653,
+            "cpc": 170
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-02",
+      "data": {
+        "date": "2025-07-02",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 62,
+            "clicks": 2,
+            "cost": 130,
+            "costWithVAT": 143,
+            "ctr": 3.225806451612903,
+            "cpc": 65
+          },
+          "keywords": {
+            "impressions": 44,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 18,
+            "clicks": 2,
+            "cost": 130,
+            "costWithVAT": 143,
+            "ctr": 11.11111111111111,
+            "cpc": 65
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-03",
+      "data": {
+        "date": "2025-07-03",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 71,
+            "clicks": 2,
+            "cost": 360,
+            "costWithVAT": 396.00000000000006,
+            "ctr": 2.8169014084507045,
+            "cpc": 180
+          },
+          "keywords": {
+            "impressions": 66,
+            "clicks": 1,
+            "cost": 290,
+            "costWithVAT": 319,
+            "ctr": 1.5151515151515151,
+            "cpc": 290
+          },
+          "expanded": {
+            "impressions": 5,
+            "clicks": 1,
+            "cost": 70,
+            "costWithVAT": 77,
+            "ctr": 20,
+            "cpc": 70
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-04",
+      "data": {
+        "date": "2025-07-04",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 26,
+            "clicks": 1,
+            "cost": 50,
+            "costWithVAT": 55.00000000000001,
+            "ctr": 3.8461538461538463,
+            "cpc": 50
+          },
+          "keywords": {
+            "impressions": 23,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 3,
+            "clicks": 1,
+            "cost": 50,
+            "costWithVAT": 55.00000000000001,
+            "ctr": 33.33333333333333,
+            "cpc": 50
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-05",
+      "data": {
+        "date": "2025-07-05",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 34,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 24,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 10,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-06",
+      "data": {
+        "date": "2025-07-06",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 25,
+            "clicks": 1,
+            "cost": 70,
+            "costWithVAT": 77,
+            "ctr": 4,
+            "cpc": 70
+          },
+          "keywords": {
+            "impressions": 19,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 6,
+            "clicks": 1,
+            "cost": 70,
+            "costWithVAT": 77,
+            "ctr": 16.666666666666664,
+            "cpc": 70
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-07",
+      "data": {
+        "date": "2025-07-07",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 70,
+            "clicks": 1,
+            "cost": 380,
+            "costWithVAT": 418.00000000000006,
+            "ctr": 1.4285714285714286,
+            "cpc": 380
+          },
+          "keywords": {
+            "impressions": 63,
+            "clicks": 1,
+            "cost": 380,
+            "costWithVAT": 418.00000000000006,
+            "ctr": 1.5873015873015872,
+            "cpc": 380
+          },
+          "expanded": {
+            "impressions": 7,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-08",
+      "data": {
+        "date": "2025-07-08",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 33,
+            "clicks": 2,
+            "cost": 810,
+            "costWithVAT": 891.0000000000001,
+            "ctr": 6.0606060606060606,
+            "cpc": 405
+          },
+          "keywords": {
+            "impressions": 29,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 4,
+            "clicks": 2,
+            "cost": 810,
+            "costWithVAT": 891.0000000000001,
+            "ctr": 50,
+            "cpc": 405
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-09",
+      "data": {
+        "date": "2025-07-09",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 26,
+            "clicks": 1,
+            "cost": 370,
+            "costWithVAT": 407.00000000000006,
+            "ctr": 3.8461538461538463,
+            "cpc": 370
+          },
+          "keywords": {
+            "impressions": 26,
+            "clicks": 1,
+            "cost": 370,
+            "costWithVAT": 407.00000000000006,
+            "ctr": 3.8461538461538463,
+            "cpc": 370
+          },
+          "expanded": {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-10",
+      "data": {
+        "date": "2025-07-10",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 98,
+            "clicks": 1,
+            "cost": 400,
+            "costWithVAT": 440.00000000000006,
+            "ctr": 1.0204081632653061,
+            "cpc": 400
+          },
+          "keywords": {
+            "impressions": 94,
+            "clicks": 1,
+            "cost": 400,
+            "costWithVAT": 440.00000000000006,
+            "ctr": 1.0638297872340425,
+            "cpc": 400
+          },
+          "expanded": {
+            "impressions": 4,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-11",
+      "data": {
+        "date": "2025-07-11",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 69,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 67,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 2,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-12",
+      "data": {
+        "date": "2025-07-12",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 30,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 22,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 8,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-13",
+      "data": {
+        "date": "2025-07-13",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 49,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 49,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-14",
+      "data": {
+        "date": "2025-07-14",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 100,
+            "clicks": 2,
+            "cost": 140,
+            "costWithVAT": 154,
+            "ctr": 2,
+            "cpc": 70
+          },
+          "keywords": {
+            "impressions": 94,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 6,
+            "clicks": 2,
+            "cost": 140,
+            "costWithVAT": 154,
+            "ctr": 33.33333333333333,
+            "cpc": 70
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-15",
+      "data": {
+        "date": "2025-07-15",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 116,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 113,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 3,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-16",
+      "data": {
+        "date": "2025-07-16",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 91,
+            "clicks": 1,
+            "cost": 360,
+            "costWithVAT": 396.00000000000006,
+            "ctr": 1.098901098901099,
+            "cpc": 360
+          },
+          "keywords": {
+            "impressions": 84,
+            "clicks": 1,
+            "cost": 360,
+            "costWithVAT": 396.00000000000006,
+            "ctr": 1.1904761904761905,
+            "cpc": 360
+          },
+          "expanded": {
+            "impressions": 7,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-17",
+      "data": {
+        "date": "2025-07-17",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 73,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 73,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-18",
+      "data": {
+        "date": "2025-07-18",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 75,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 70,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 5,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-19",
+      "data": {
+        "date": "2025-07-19",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 39,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 39,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-20",
+      "data": {
+        "date": "2025-07-20",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 56,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 47,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 9,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-21",
+      "data": {
+        "date": "2025-07-21",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 84,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 82,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 2,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-22",
+      "data": {
+        "date": "2025-07-22",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 79,
+            "clicks": 1,
+            "cost": 70,
+            "costWithVAT": 77,
+            "ctr": 1.2658227848101267,
+            "cpc": 70
+          },
+          "keywords": {
+            "impressions": 69,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 10,
+            "clicks": 1,
+            "cost": 70,
+            "costWithVAT": 77,
+            "ctr": 10,
+            "cpc": 70
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-23",
+      "data": {
+        "date": "2025-07-23",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 80,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 70,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 10,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-24",
+      "data": {
+        "date": "2025-07-24",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 130,
+            "clicks": 2,
+            "cost": 360,
+            "costWithVAT": 396.00000000000006,
+            "ctr": 1.5384615384615385,
+            "cpc": 180
+          },
+          "keywords": {
+            "impressions": 124,
+            "clicks": 1,
+            "cost": 290,
+            "costWithVAT": 319,
+            "ctr": 0.8064516129032258,
+            "cpc": 290
+          },
+          "expanded": {
+            "impressions": 6,
+            "clicks": 1,
+            "cost": 70,
+            "costWithVAT": 77,
+            "ctr": 16.666666666666664,
+            "cpc": 70
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-25",
+      "data": {
+        "date": "2025-07-25",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 54,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 39,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 15,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-26",
+      "data": {
+        "date": "2025-07-26",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 49,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 49,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-27",
+      "data": {
+        "date": "2025-07-27",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 59,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 59,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-28",
+      "data": {
+        "date": "2025-07-28",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 35,
+            "clicks": 1,
+            "cost": 180,
+            "costWithVAT": 198.00000000000003,
+            "ctr": 2.857142857142857,
+            "cpc": 180
+          },
+          "keywords": {
+            "impressions": 32,
+            "clicks": 1,
+            "cost": 180,
+            "costWithVAT": 198.00000000000003,
+            "ctr": 3.125,
+            "cpc": 180
+          },
+          "expanded": {
+            "impressions": 3,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-29",
+      "data": {
+        "date": "2025-07-29",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 33,
+            "clicks": 2,
+            "cost": 140,
+            "costWithVAT": 154,
+            "ctr": 6.0606060606060606,
+            "cpc": 70
+          },
+          "keywords": {
+            "impressions": 30,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 3,
+            "clicks": 2,
+            "cost": 140,
+            "costWithVAT": 154,
+            "ctr": 66.66666666666666,
+            "cpc": 70
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-30",
+      "data": {
+        "date": "2025-07-30",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 7,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "keywords": {
+            "impressions": 7,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 0,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          }
+        }
+      }
+    },
+    {
+      "date": "2025-07-31",
+      "data": {
+        "date": "2025-07-31",
+        "customerId": "2982259",
+        "campaigns": {},
+        "totals": {
+          "all": {
+            "impressions": 25,
+            "clicks": 1,
+            "cost": 180,
+            "costWithVAT": 198.00000000000003,
+            "ctr": 4,
+            "cpc": 180
+          },
+          "keywords": {
+            "impressions": 19,
+            "clicks": 0,
+            "cost": 0,
+            "costWithVAT": 0,
+            "ctr": 0,
+            "cpc": 0
+          },
+          "expanded": {
+            "impressions": 6,
+            "clicks": 1,
+            "cost": 180,
+            "costWithVAT": 198.00000000000003,
+            "ctr": 16.666666666666664,
+            "cpc": 180
+          }
+        }
+      }
+    }
+  ],
+  "totals": {
+    "all": {
+      "impressions": 1839,
+      "clicks": 23,
+      "cost": 4460,
+      "ctr": 1.2506797172376292,
+      "cpc": 193.91304347826087
+    },
+    "keywords": {
+      "impressions": 1658,
+      "clicks": 8,
+      "cost": 2560,
+      "ctr": 0.48250904704463204,
+      "cpc": 320
+    },
+    "expanded": {
+      "impressions": 181,
+      "clicks": 15,
+      "cost": 1900,
+      "ctr": 8.287292817679557,
+      "cpc": 126.66666666666667
+    }
+  }
+}

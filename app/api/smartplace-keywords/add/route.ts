@@ -16,22 +16,22 @@ export async function POST(req: NextRequest) {
       }
 
       // 사용자의 스마트플레이스 프로젝트 찾기 (1개만 존재)
-      const project = await prisma.trackingProject.findFirst({
+      const place = await prisma.smartPlace.findUnique({
         where: {
-          userId: userId
+          userId: parseInt(userId)
         }
       })
 
-      if (!project) {
+      if (!place) {
         return NextResponse.json({ error: '먼저 스마트플레이스를 등록해주세요.' }, { status: 404 })
       }
 
-      const projectId = project.id
+      const smartPlaceId = place.id
 
     // 현재 등록된 키워드 수 확인
-    const currentKeywordCount = await prisma.trackingKeyword.count({
+    const currentKeywordCount = await prisma.smartPlaceKeyword.count({
       where: {
-        projectId: projectId,
+        smartPlaceId: smartPlaceId,
         isActive: true
       }
     })
@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
       if (!trimmedKeyword) continue
 
       // 중복 확인
-      const existing = await prisma.trackingKeyword.findFirst({
+      const existing = await prisma.smartPlaceKeyword.findFirst({
         where: {
-          projectId: projectId,
+          smartPlaceId: smartPlaceId,
           keyword: trimmedKeyword
         }
       })
@@ -63,9 +63,10 @@ export async function POST(req: NextRequest) {
         continue
       }
 
-      const created = await prisma.trackingKeyword.create({
+      const created = await prisma.smartPlaceKeyword.create({
         data: {
-          projectId: projectId,
+          userId: parseInt(userId),
+          smartPlaceId: smartPlaceId,
           keyword: trimmedKeyword,
           isActive: true
         }

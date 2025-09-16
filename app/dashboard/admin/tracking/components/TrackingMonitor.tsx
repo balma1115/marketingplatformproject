@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, ChevronDown, ChevronUp, Activity } from 'lucide-react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { ko } from 'date-fns/locale'
@@ -62,8 +62,9 @@ export default function TrackingMonitor() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [activeTab, setActiveTab] = useState<'jobs' | 'logs'>('jobs')
   const [logFilter, setLogFilter] = useState<'all' | 'error' | 'warning'>('all')
-  const [autoRefresh, setAutoRefresh] = useState(true)
   const [expandedJobs, setExpandedJobs] = useState<Set<string>>(new Set())
+  const [isConnected, setIsConnected] = useState(false)
+  const eventSourceRef = useRef<EventSource | null>(null)
 
   // 데이터 로드
   const fetchData = async () => {
@@ -88,13 +89,150 @@ export default function TrackingMonitor() {
     }
   }
 
-  useEffect(() => {
-    fetchData()
-    if (autoRefresh) {
-      const interval = setInterval(fetchData, 2000)
-      return () => clearInterval(interval)
+  // SSE 연결 설정
+  const connectSSE = () => {
+    console.log('[TrackingMonitor] Attempting SSE connection...')
+    
+    if (eventSourceRef.current) {
+      console.log('[TrackingMonitor] Closing existing SSE connection')
+      eventSourceRef.current.close()
+      eventSourceRef.current = null
     }
-  }, [autoRefresh])
+
+    // SSE 연결 생성 (realtime endpoint 사용)
+    try {
+      const eventSource = new EventSource('/api/admin/tracking/sse-realtime')
+      eventSourceRef.current = eventSource
+      
+      console.log('[TrackingMonitor] EventSource created with realtime endpoint')
+
+      eventSource.onopen = () => {
+        console.log('[TrackingMonitor] SSE connection opened')
+        setIsConnected(true)
+      }
+
+      eventSource.onmessage = (event) => {
+        console.log('[TrackingMonitor] SSE message received:', event.data)
+        try {
+          const data = JSON.parse(event.data)
+          
+          // 버퍼된 이벤트인 경우 표시
+          if (data.buffered) {
+            console.log('[TrackingMonitor] Processing buffered event:', data.type)
+          }
+          
+          switch (data.type) {
+            case 'connected':
+              console.log('[TrackingMonitor] SSE connection confirmed:', data.timestamp)
+              setIsConnected(true)
+              break
+              
+            case 'initial_state':
+              // 초기 상태 데이터
+              console.log('[TrackingMonitor] Initial state received:', data)
+              if (data.jobs) setJobs(data.jobs)
+              break
+            
+            case 'status_update':
+              // 전체 상태 업데이트
+              console.log('[TrackingMonitor] Status update received:', data)
+              if (data.jobs) setJobs(data.jobs)
+              if (data.activeJobs) setActiveJobs(data.activeJobs)
+              if (data.stats) setStats(data.stats)
+              break
+            
+            case 'job_update':
+              // 특정 작업 업데이트
+              console.log('[TrackingMonitor] Job update received:', data)
+              if (data.job) {
+                setJobs(prev => {
+                  const index = prev.findIndex(j => j.id === data.job.id)
+                  if (index >= 0) {
+                    const updated = [...prev]
+                    updated[index] = data.job
+                    return updated
+                  } else {
+                    return [...prev, data.job]
+                  }
+                })
+                
+                // 활성 작업 업데이트
+                if (data.job.status === 'running' || data.job.status === 'queued') {
+                  setActiveJobs(prev => {
+                    const index = prev.findIndex(j => j.id === data.job.id)
+                    if (index >= 0) {
+                      const updated = [...prev]
+                      updated[index] = data.job
+                      return updated
+                    } else {
+                      return [...prev, data.job]
+                    }
+                  })
+                } else {
+                  // 완료된 작업은 활성 목록에서 제거
+                  setActiveJobs(prev => prev.filter(j => j.id !== data.job.id))
+                }
+              }
+              break
+            
+            case 'log_update':
+              // 로그 업데이트
+              console.log('[TrackingMonitor] Log update received:', data)
+              if (data.level && data.message) {
+                const newLog = {
+                  id: `log-${Date.now()}`,
+                  level: data.level,
+                  category: data.category || 'tracking',
+                  message: data.message,
+                  details: data.details,
+                  timestamp: data.timestamp || new Date().toISOString()
+                }
+                setLogs(prev => [newLog, ...prev].slice(0, 100)) // 최대 100개 로그 유지
+              }
+              break
+              
+            default:
+              console.log('[TrackingMonitor] Unknown event type:', data.type)
+          }
+        } catch (error) {
+          console.error('Error processing SSE message:', error)
+        }
+      }
+
+      eventSource.onerror = (error) => {
+        console.error('[TrackingMonitor] SSE error:', error)
+        setIsConnected(false)
+        
+        // 연결 상태 확인
+        if (eventSource.readyState === EventSource.CLOSED) {
+          console.log('[TrackingMonitor] SSE connection closed, attempting reconnect in 5s...')
+          // 5초 후 재연결 시도
+          setTimeout(() => {
+            console.log('[TrackingMonitor] Reconnecting SSE...')
+            connectSSE()
+          }, 5000)
+        }
+      }
+    } catch (error) {
+      console.error('[TrackingMonitor] Failed to create EventSource:', error)
+      setIsConnected(false)
+    }
+  }
+
+  useEffect(() => {
+    // 초기 데이터 로드
+    fetchData()
+    
+    // SSE 연결
+    connectSSE()
+    
+    // 클린업
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+      }
+    }
+  }, [])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-'
@@ -150,14 +288,13 @@ export default function TrackingMonitor() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">추적 모니터링 시스템</h2>
         <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-3 py-1 rounded-lg text-sm ${
-              autoRefresh ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            {autoRefresh ? '자동 새로고침 ON' : '자동 새로고침 OFF'}
-          </button>
+          {/* 연결 상태 표시 */}
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+            <span className="text-sm text-gray-600">
+              {isConnected ? '실시간 연결됨' : '연결 중...'}
+            </span>
+          </div>
           <button
             onClick={fetchData}
             className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"

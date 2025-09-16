@@ -2,12 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth } from '@/lib/auth-middleware'
 import { getNaverBlogScraperV2, closeNaverBlogScraperV2 } from '@/lib/services/naver-blog-scraper-v2'
+import { trackingManager } from '@/lib/services/tracking-manager'
+import { trackingEventManager } from '@/lib/services/event-manager'
 
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     let scraper = null
     
+    // 사용자 정보 조회
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true }
+    })
+    
+    // TrackingManager에 작업 등록
+    const jobId = trackingManager.addJob({
+      userId: userId.toString(),
+      userName: user?.name || 'Unknown',
+      userEmail: user?.email || '',
+      type: 'blog',
+      status: 'queued',
+      startedAt: new Date(),
+      progress: { current: 0, total: 0 }
+    })
+    
     try {
+      // 작업 상태를 running으로 업데이트
+      trackingManager.updateJob(jobId, { status: 'running' })
+      
       // 사용자의 블로그 프로젝트 찾기
       const blog = await prisma.blogTrackingProject.findFirst({
         where: {
@@ -16,6 +38,10 @@ export async function POST(req: NextRequest) {
       })
 
       if (!blog) {
+        trackingManager.updateJob(jobId, {
+          status: 'failed',
+          error: { message: '블로그 미등록', timestamp: new Date() }
+        })
         return NextResponse.json({ error: '먼저 블로그를 등록해주세요.' }, { status: 404 })
       }
 
@@ -28,8 +54,15 @@ export async function POST(req: NextRequest) {
       })
 
       if (keywords.length === 0) {
+        trackingManager.updateJob(jobId, {
+          status: 'failed',
+          error: { message: '추적할 키워드 없음', timestamp: new Date() }
+        })
         return NextResponse.json({ error: '추적할 키워드가 없습니다.' }, { status: 400 })
       }
+      
+      // 작업 진행률 초기화
+      trackingManager.updateProgress(jobId, 0, keywords.length)
 
       // Initialize Naver blog scraper V2
       console.log('Initializing Naver blog scraper V2...')
@@ -41,7 +74,12 @@ export async function POST(req: NextRequest) {
       const trackingDate = new Date()
       const results = []
 
-      for (const keyword of keywords) {
+      for (let i = 0; i < keywords.length; i++) {
+        const keyword = keywords[i]
+        
+        // 진행률 업데이트
+        trackingManager.updateProgress(jobId, i + 1, keywords.length, keyword.keyword)
+        
         try {
           // 실제 네이버 순위 체크
           console.log(`Checking ranking for keyword: ${keyword.keyword}`)
@@ -99,6 +137,17 @@ export async function POST(req: NextRequest) {
         }
       })
 
+      // 작업 완료 처리
+      trackingManager.updateJob(jobId, {
+        status: 'completed',
+        completedAt: new Date(),
+        results: {
+          successCount,
+          failedCount: failCount,
+          details: results
+        }
+      })
+
       return NextResponse.json({
         success: true,
         message: `순위 추적 완료: 성공 ${successCount}개, 실패 ${failCount}개`,
@@ -110,6 +159,18 @@ export async function POST(req: NextRequest) {
       })
     } catch (error) {
       console.error('Failed to track blog keywords:', error)
+      
+      // 작업 실패 처리
+      trackingManager.updateJob(jobId, {
+        status: 'failed',
+        completedAt: new Date(),
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date()
+        }
+      })
+      
       return NextResponse.json({ 
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error'

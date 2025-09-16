@@ -1,0 +1,10 @@
+{
+  "date": "2025-09-16T01:30:39.268Z",
+  "issuesFound": 3,
+  "issues": [
+    "⚠️  .env.local: JWT_SECRET이 하드코딩되어 있습니다",
+    "⚠️  .env.production: JWT_SECRET이 하드코딩되어 있습니다",
+    "⚠️  민감한 파일이 Git에 추적됨: .env.example"
+  ],
+  "passed": false
+}

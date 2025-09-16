@@ -201,6 +201,23 @@ export default function FocusKeywordManagement() {
           </div>
         </div>
 
+        {/* 데이터 날짜 표시 */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="text-blue-600" size={18} />
+            <span className="text-sm text-blue-800">
+              현재 표시된 데이터: {data?.lastTrackedDate ? 
+                new Date(data.lastTrackedDate).toLocaleString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }) : '최근 추적 데이터'}
+            </span>
+          </div>
+        </div>
+
         {/* 통계 카드 */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 rounded-lg shadow border">

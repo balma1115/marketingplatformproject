@@ -269,12 +269,13 @@ export class NaverAdsAPI {
    * API 요청 래퍼 with retry logic
    */
   async request(method: string, endpoint: string, data?: any, retryCount = 0): Promise<any> {
-    // stat-reports와 stats는 /ncc 없이 사용, 나머지는 /ncc 추가
+    // stat-reports, stats, keywordstool은 /ncc 없이 사용, 나머지는 /ncc 추가
     let uri: string
     if (endpoint.startsWith('/stat-reports') || 
         endpoint.startsWith('/report-download') || 
-        endpoint.startsWith('/stats')) {
-      uri = endpoint // No /ncc prefix for stat-reports and stats
+        endpoint.startsWith('/stats') ||
+        endpoint.startsWith('/keywordstool')) {
+      uri = endpoint // No /ncc prefix for these endpoints
     } else if (endpoint.startsWith('/ncc')) {
       uri = endpoint // Already has /ncc
     } else {
@@ -1697,26 +1698,118 @@ export class NaverAdsAPI {
 
   // ===== Keyword Tools =====
 
-  async getRelatedKeywords(keyword: string): Promise<KeywordEstimate[]> {
+  async getRelatedKeywords(keyword: string): Promise<any[]> {
     try {
+      console.log('[NaverAdsAPI] Getting related keywords for:', keyword)
+      
       const params = new URLSearchParams({
         hintKeywords: keyword,
-        showDetail: '1'
+        showDetail: '1',
+        includeHintKeywords: '0',  // 입력 키워드는 제외하고 연관 키워드만
+        returnEmptyResult: '1'     // 결과가 없어도 빈 결과 반환
       })
 
       const response = await this.request('GET', `/keywordstool?${params}`)
+      console.log('[NaverAdsAPI] Related keywords response:', JSON.stringify(response, null, 2))
+      
       const results = response?.keywordList || []
       
-      return results.map((item: any) => ({
-        keyword: item.relKeyword,
-        bidAmt: item.compIdx === 'HIGH' ? 200 : item.compIdx === 'MEDIUM' ? 150 : 100,
-        minBid: 70,
-        competition: item.compIdx || 'MEDIUM',
-        monthlySearchVolume: item.monthlyPcQcCnt + item.monthlyMobileQcCnt
-      })).slice(0, 50)
+      return results.map((item: any) => {
+        // 경쟁 정도 매핑
+        let compIdx = item.compIdx || 'UNKNOWN'
+        let compIdxKor = '알 수 없음'
+        if (compIdx === 'HIGH') compIdxKor = '높음'
+        else if (compIdx === 'MEDIUM') compIdxKor = '중간'
+        else if (compIdx === 'LOW') compIdxKor = '낮음'
+        
+        return {
+          relKeyword: item.relKeyword,
+          keyword: item.relKeyword,
+          bidAmt: compIdx === 'HIGH' ? 200 : compIdx === 'MEDIUM' ? 150 : 100,
+          minBid: 70,
+          competition: compIdx,
+          compIdx: compIdxKor,
+          monthlySearchVolume: parseInt(item.monthlyPcQcCnt || '0') + parseInt(item.monthlyMobileQcCnt || '0'),
+          monthlyPcQcCnt: parseInt(item.monthlyPcQcCnt || '0'),
+          monthlyMobileQcCnt: parseInt(item.monthlyMobileQcCnt || '0'),
+          monthlyAvePcCtr: parseFloat(item.monthlyAvePcCtr || '0'),
+          monthlyAveMobileCtr: parseFloat(item.monthlyAveMobileCtr || '0'),
+          monthlyAvePcClkCnt: parseFloat(item.monthlyAvePcClkCnt || '0'),
+          monthlyAveMobileClkCnt: parseFloat(item.monthlyAveMobileClkCnt || '0'),
+          plAvgDepth: parseInt(item.plAvgDepth || '15')
+        }
+      }).slice(0, 100)
     } catch (error) {
-      console.error('Failed to get related keywords:', error)
+      console.error('[NaverAdsAPI] Failed to get related keywords:', error)
       return []
+    }
+  }
+
+  /**
+   * 키워드 통계 조회 (키워드 분석용)
+   */
+  async getKeywordStats(keywords: string[]): Promise<any[]> {
+    try {
+      const params = new URLSearchParams({
+        hintKeywords: keywords.join(','),
+        showDetail: '1'
+      })
+
+      console.log('Requesting keyword stats for:', keywords)
+      const response = await this.request('GET', `/keywordstool?${params}`)
+      const results = response?.keywordList || []
+      console.log(`Received ${results.length} keyword results`)
+      
+      // 입력한 키워드와 정확히 일치하는 결과만 필터링
+      const keywordSet = new Set(keywords.map(k => k.toLowerCase()))
+      const exactMatches = results.filter((item: any) => 
+        keywordSet.has(item.relKeyword?.toLowerCase())
+      )
+      
+      console.log(`Found ${exactMatches.length} exact matches`)
+      
+      // 정확한 결과가 없으면 첫 번째 키워드로 기본값 생성
+      if (exactMatches.length === 0 && keywords.length > 0) {
+        console.log('No exact matches found, returning default values')
+        return keywords.map(keyword => ({
+          relKeyword: keyword,
+          monthlyPcQcCnt: 0,
+          monthlyMobileQcCnt: 0,
+          monthlyAvePcCtr: 0,
+          monthlyAveMobileCtr: 0,
+          monthlyAvePcClkCnt: 0,
+          monthlyAveMobileClkCnt: 0,
+          plAvgDepth: 15,
+          compIdx: '낮음'
+        }))
+      }
+      
+      // Handle string values like "< 10" for monthlyPcQcCnt
+      return exactMatches.map((item: any) => ({
+        relKeyword: item.relKeyword,
+        monthlyPcQcCnt: typeof item.monthlyPcQcCnt === 'string' && item.monthlyPcQcCnt.includes('<') ? 5 : parseInt(item.monthlyPcQcCnt || '0'),
+        monthlyMobileQcCnt: typeof item.monthlyMobileQcCnt === 'string' && item.monthlyMobileQcCnt.includes('<') ? 5 : parseInt(item.monthlyMobileQcCnt || '0'),
+        monthlyAvePcCtr: parseFloat(item.monthlyAvePcCtr || '0'),
+        monthlyAveMobileCtr: parseFloat(item.monthlyAveMobileCtr || '0'),
+        monthlyAvePcClkCnt: parseFloat(item.monthlyAvePcClkCnt || '0'),
+        monthlyAveMobileClkCnt: parseFloat(item.monthlyAveMobileClkCnt || '0'),
+        plAvgDepth: parseInt(item.plAvgDepth || '15'),
+        compIdx: item.compIdx || '낮음'
+      }))
+    } catch (error) {
+      console.error('Failed to get keyword stats:', error)
+      // 오류 시 기본값 반환
+      return keywords.map(keyword => ({
+        relKeyword: keyword,
+        monthlyPcQcCnt: 0,
+        monthlyMobileQcCnt: 0,
+        monthlyAvePcCtr: 0,
+        monthlyAveMobileCtr: 0,
+        monthlyAvePcClkCnt: 0,
+        monthlyAveMobileClkCnt: 0,
+        plAvgDepth: 15,
+        compIdx: '낮음'
+      }))
     }
   }
 
@@ -1865,9 +1958,9 @@ export async function saveNaverAdsCredentials(
 /**
  * 네이버 광고 자격 증명 조회
  */
-export async function getNaverAdsCredentials(userId: string): Promise<NaverAdsCredentials | null> {
+export async function getNaverAdsCredentials(userId: string | number): Promise<NaverAdsCredentials | null> {
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: typeof userId === 'string' ? parseInt(userId) : userId },
     select: {
       naverAdsCustomerId: true,
       naverAdsAccessKey: true,
@@ -1885,5 +1978,8 @@ export async function getNaverAdsCredentials(userId: string): Promise<NaverAdsCr
     secretKey: user.naverAdsSecretKey,
   }
 }
+
+// 싱글톤 인스턴스는 생성하지 않음 - 사용자별로 생성해야 함
+// export const naverAdsApi = ...
 
 export default NaverAdsAPI

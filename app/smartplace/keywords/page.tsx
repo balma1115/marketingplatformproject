@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Search, MapPin, TrendingUp, AlertCircle, RefreshCw, Download, Eye, EyeOff, Play, Calendar, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
@@ -31,6 +31,86 @@ interface SmartplaceProject {
   isActive: boolean
   lastUpdated: string | null
 }
+
+// Memoized keyword row component for better performance
+const KeywordRow = memo(({ 
+  keyword, 
+  onToggleActive, 
+  onRemove, 
+  onViewTrend,
+  getRankClass 
+}: {
+  keyword: SmartplaceKeyword
+  onToggleActive: (id: number) => void
+  onRemove: (id: number) => void
+  onViewTrend: (id: number) => void
+  getRankClass: (rank: number | null) => string
+}) => {
+  const router = useRouter()
+  
+  return (
+    <tr className="hover:bg-gray-50">
+      <td className="px-6 py-4">
+        <span className="text-sm text-gray-900">{keyword.keyword}</span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <button
+          onClick={() => onToggleActive(keyword.id)}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
+            keyword.isActive 
+              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+          }`}
+        >
+          {keyword.isActive ? '활성' : '비활성'}
+        </button>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={getRankClass(keyword.organicRank)}>
+          {keyword.organicRank ? `${keyword.organicRank}위` : '-'}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={getRankClass(keyword.adRank)}>
+          {keyword.adRank ? `${keyword.adRank}위` : '-'}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {keyword.lastTracked ? 
+          new Date(keyword.lastTracked).toLocaleDateString() : 
+          '-'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <button
+          onClick={() => router.push(`/smartplace/keywords/trend/${keyword.id}`)}
+          className="text-purple-600 hover:text-purple-900"
+          title="추세 보기"
+        >
+          📈
+        </button>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <button 
+          className="text-red-600 hover:text-red-900"
+          onClick={() => onRemove(keyword.id)}
+        >
+          <Trash2 size={18} />
+        </button>
+      </td>
+    </tr>
+  )
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memo
+  return (
+    prevProps.keyword.id === nextProps.keyword.id &&
+    prevProps.keyword.isActive === nextProps.keyword.isActive &&
+    prevProps.keyword.organicRank === nextProps.keyword.organicRank &&
+    prevProps.keyword.adRank === nextProps.keyword.adRank &&
+    prevProps.keyword.lastTracked === nextProps.keyword.lastTracked
+  )
+})
+
+KeywordRow.displayName = 'KeywordRow'
 
 export default function SmartplaceKeywordManagement() {
   const router = useRouter()
@@ -73,10 +153,15 @@ export default function SmartplaceKeywordManagement() {
 
       if (response.ok) {
         const data = await response.json()
+        console.log('Smartplace API response:', data) // 디버깅 로그
         if (data.place) {
           setSmartplaceProject(data.place)
-          fetchKeywords()
+          await fetchKeywords()  // await 추가
+        } else {
+          console.log('No place found in response') // 디버깅 로그
         }
+      } else {
+        console.error('Response not ok:', response.status) // 디버깅 로그
       }
     } catch (error) {
       console.error('Failed to fetch smartplace project:', error)
@@ -146,8 +231,8 @@ export default function SmartplaceKeywordManagement() {
         const data = await response.json()
         setSmartplaceProject(data.place)
         setShowRegisterModal(false)
-        setNewPlace({ placeName: '', placeId: '' })
-        fetchKeywords()
+        setNewPlace({ placeName: '', placeId: '', placeUrl: '' })
+        await fetchKeywords()  // await 추가
       } else {
         const data = await response.json()
         setError(data.error || '스마트플레이스 등록에 실패했습니다.')
@@ -211,7 +296,8 @@ export default function SmartplaceKeywordManagement() {
     }
   }
 
-  const handleToggleKeyword = async (keywordId: number, isActive: boolean) => {
+  // Use useCallback to memoize event handlers
+  const handleToggleKeyword = useCallback(async (keywordId: number, isActive: boolean) => {
     try {
       const response = await fetch(`/api/smartplace-keywords/${keywordId}/toggle`, {
         method: 'PUT',
@@ -228,9 +314,9 @@ export default function SmartplaceKeywordManagement() {
     } catch (error) {
       console.error('Failed to toggle keyword:', error)
     }
-  }
+  }, [keywords])
 
-  const handleRemoveKeyword = async (keywordId: number) => {
+  const handleRemoveKeyword = useCallback(async (keywordId: number) => {
     if (!confirm('이 키워드를 삭제하시겠습니까?')) return
 
     try {
@@ -253,7 +339,7 @@ export default function SmartplaceKeywordManagement() {
     } catch (error) {
       console.error('Failed to remove keyword:', error)
     }
-  }
+  }, [smartplaceProject])
 
   const handleTrackAll = async () => {
     try {
@@ -268,7 +354,7 @@ export default function SmartplaceKeywordManagement() {
         status: 'preparing'
       })
 
-      const response = await fetch('/api/smartplace-keywords/track-all', {
+      const response = await fetch('/api/smartplace-keywords/track-all-v4', {
         method: 'POST',
         credentials: 'include'
       })
@@ -396,13 +482,16 @@ export default function SmartplaceKeywordManagement() {
     return 'text-gray-600'
   }
 
-  const filteredKeywords = keywords.filter(k => {
-    if (!showInactive && !k.isActive) return false
-    if (searchTerm) {
-      return k.keyword.toLowerCase().includes(searchTerm.toLowerCase())
-    }
-    return true
-  })
+  // Memoize filtered keywords to prevent unnecessary recalculations
+  const filteredKeywords = useMemo(() => {
+    return keywords.filter(k => {
+      if (!showInactive && !k.isActive) return false
+      if (searchTerm) {
+        return k.keyword.toLowerCase().includes(searchTerm.toLowerCase())
+      }
+      return true
+    })
+  }, [keywords, showInactive, searchTerm])
 
   const exportToCSV = () => {
     const csvContent = [
@@ -900,48 +989,106 @@ export default function SmartplaceKeywordManagement() {
                     {top10Trends && top10Trends.length > 0 && (
                       <div className="border-t pt-4">
                         <h4 className="text-sm font-medium mb-4">🏆 상위 10개 업체 순위 변화</h4>
-                        <div className="h-64">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis 
-                                dataKey="date" 
-                                type="category" 
-                                allowDuplicatedCategory={false}
-                                domain={['dataMin', 'dataMax']}
-                                tickFormatter={(value) => {
-                                  const date = new Date(value)
-                                  return `${date.getMonth()+1}/${date.getDate()}`
-                                }}
-                              />
-                              <YAxis 
-                                reversed={true} 
-                                domain={[1, 10]}
-                                ticks={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-                              />
-                              <Tooltip 
-                                labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                                formatter={(value: any) => `${value}위`}
-                              />
-                              <Legend />
-                              {top10Trends.slice(0, 5).map((place, index) => (
-                                <Line 
-                                  key={place.placeId}
-                                  type="monotone" 
-                                  data={place.trendData}
-                                  dataKey="rank"
-                                  name={place.isMyPlace ? `⭐ ${place.placeName}` : place.placeName}
-                                  stroke={place.isMyPlace ? '#dc2626' : ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'][index % 5]}
-                                  strokeWidth={place.isMyPlace ? 3 : 2}
-                                  dot={{ r: place.isMyPlace ? 5 : 3 }}
-                                  connectNulls
-                                />
-                              ))}
-                            </LineChart>
-                          </ResponsiveContainer>
+                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* 테이블 형식으로 표시 */}
+                            <div>
+                              <h5 className="text-xs font-medium text-gray-700 mb-2">최근 순위</h5>
+                              <div className="space-y-1">
+                                {top10Trends.slice(0, 5).map((place, index) => {
+                                  const latestRank = place.trendData && place.trendData.length > 0 
+                                    ? place.trendData[place.trendData.length - 1].rank 
+                                    : '-';
+                                  return (
+                                    <div key={place.placeId} className="flex items-center text-xs">
+                                      <span className={`${place.isMyPlace ? 'font-bold text-red-600' : 'text-gray-600'}`}>
+                                        {place.isMyPlace && '⭐ '}
+                                        {latestRank}위
+                                      </span>
+                                      <span className="ml-2 truncate" title={place.placeName}>
+                                        {place.placeName}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-medium text-gray-700 mb-2">이전 순위</h5>
+                              <div className="space-y-1">
+                                {top10Trends.slice(0, 5).map((place, index) => {
+                                  const previousRank = place.trendData && place.trendData.length > 1 
+                                    ? place.trendData[0].rank 
+                                    : '-';
+                                  return (
+                                    <div key={place.placeId} className="flex items-center text-xs">
+                                      <span className={`${place.isMyPlace ? 'font-bold text-red-600' : 'text-gray-600'}`}>
+                                        {place.isMyPlace && '⭐ '}
+                                        {previousRank}위
+                                      </span>
+                                      <span className="ml-2 truncate" title={place.placeName}>
+                                        {place.placeName}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
                         </div>
+                        
+                        {/* 상세 데이터 테이블 */}
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-xs">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="px-2 py-1 text-left">업체명</th>
+                                {trendData.slice(-5).map((data, idx) => (
+                                  <th key={idx} className="px-2 py-1 text-center">
+                                    {new Date(data.date).getMonth()+1}/{new Date(data.date).getDate()}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {top10Trends.slice(0, 10).map((place, index) => {
+                                const placeDataMap = new Map();
+                                place.trendData.forEach((d: any) => {
+                                  // date가 이미 string일 수도 있음
+                                  const dateKey = typeof d.date === 'string' 
+                                    ? d.date.split('T')[0] 
+                                    : new Date(d.date).toISOString().split('T')[0];
+                                  placeDataMap.set(dateKey, d.rank);
+                                });
+                                
+                                return (
+                                  <tr key={`${place.placeId}-${index}`} className={place.isMyPlace ? 'bg-red-50' : ''}>
+                                    <td className={`px-2 py-1 ${place.isMyPlace ? 'font-bold' : ''}`}>
+                                      {place.isMyPlace && '⭐ '}
+                                      <span className="truncate block max-w-[150px]" title={place.placeName}>
+                                        {place.placeName}
+                                      </span>
+                                    </td>
+                                    {trendData.slice(-5).map((data, idx) => {
+                                      const dateStr = typeof data.date === 'string'
+                                        ? data.date.split('T')[0]
+                                        : new Date(data.date).toISOString().split('T')[0];
+                                      const rank = placeDataMap.get(dateStr);
+                                      return (
+                                        <td key={idx} className="px-2 py-1 text-center">
+                                          {rank || '-'}
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                        
                         <div className="mt-2 text-xs text-gray-500">
-                          * 최대 상위 5개 업체만 표시 (내 업체는 ⭐표시)
+                          * 최대 상위 10개 업체 표시 (내 업체는 ⭐표시)
                         </div>
                       </div>
                     )}

@@ -1,4 +1,4 @@
-// File: C:\Users\User\Documents\GitHub\marketingplatformproject\app\api\smartplace\info\[placeId]\route.ts
+// File: D:\marketingplatformproject\app\api\smartplace\info\[placeId]\route.ts
 import * as entry from '../../../../../../../app/api/smartplace/info/[placeId]/route.js'
 import type { NextRequest } from 'next/server.js'
 

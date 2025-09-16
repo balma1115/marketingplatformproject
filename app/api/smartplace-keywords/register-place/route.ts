@@ -44,9 +44,9 @@ export async function POST(req: NextRequest) {
       }
 
       // 기존 스마트플레이스 확인 (사용자당 1개만 허용)
-      const existing = await prisma.trackingProject.findFirst({
+      const existing = await prisma.smartPlace.findUnique({
         where: {
-          userId: userId
+          userId: parseInt(userId)
         }
       })
 
@@ -55,12 +55,11 @@ export async function POST(req: NextRequest) {
       }
 
       // 스마트플레이스 프로젝트 생성
-      const place = await prisma.trackingProject.create({
+      const place = await prisma.smartPlace.create({
         data: {
-          userId: userId,
+          userId: parseInt(userId),
           placeName: extractedPlaceName,
-          placeId: finalPlaceId,
-          isActive: true
+          placeId: finalPlaceId
         },
         include: {
           _count: {
@@ -76,7 +75,7 @@ export async function POST(req: NextRequest) {
           placeName: place.placeName,
           placeId: place.placeId,
           keywordCount: place._count.keywords,
-          isActive: place.isActive,
+          isActive: true, // SmartPlace 테이블에는 isActive 필드가 없으므로 기본값
           lastUpdated: place.lastUpdated,
           extractedInfo: placeUrl ? {
             placeId: finalPlaceId,

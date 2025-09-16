@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(npx:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Read(//c/Users/User/Desktop/**)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "mcp__playwright__playwright_navigate",
+      "mcp__playwright__playwright_screenshot",
+      "mcp__playwright__playwright_click",
+      "mcp__playwright__playwright_get_visible_text",
+      "mcp__playwright__playwright_console_logs",
+      "mcp__playwright__playwright_fill",
+      "mcp__playwright__playwright_press_key",
+      "Read(//c/Users/User/Downloads/**)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "mcp__playwright__playwright_close",
+      "Bash(timeout:*)",
+      "Read(//d/**)",
+      "Bash(python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

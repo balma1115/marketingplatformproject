@@ -10,18 +10,15 @@ export async function GET(
   return withAuth(req, async (request, userId) => {
     try {
       const { keywordId: keywordIdParam } = await params
-      const keywordId = parseInt(keywordIdParam)
       
-      // 키워드 확인
-      const keyword = await prisma.trackingKeyword.findFirst({
+      // keywordId가 문자열인지 숫자인지 확인
+      const keyword = await prisma.smartPlaceKeyword.findFirst({
         where: {
-          id: keywordId,
-          project: {
-            userId: userId
-          }
+          id: keywordIdParam, // 문자열 ID 직접 사용
+          userId: parseInt(userId)
         },
         include: {
-          project: true
+          smartPlace: true
         }
       })
       
@@ -29,7 +26,7 @@ export async function GET(
         return NextResponse.json({ error: '키워드를 찾을 수 없습니다.' }, { status: 404 })
       }
       
-      // 최근 30일 데이터 조회 (null 제외) - 한국 시간 기준
+      // 최근 30일 데이터 조회 (null 값도 포함) - 한국 시간 기준
       const kstNow = getKSTDate()
       const thirtyDaysAgo = new Date(kstNow)
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -37,16 +34,13 @@ export async function GET(
       console.log(`Trend API - KST Now: ${getKSTDateString(kstNow)}`)
       console.log(`Trend API - 30 days ago: ${getKSTDateString(thirtyDaysAgo)}`)
       
-      const rankings = await prisma.trackingRanking.findMany({
+      // SmartPlaceRanking 사용 - 모든 기록 포함 (null 값도)
+      const rankings = await prisma.smartPlaceRanking.findMany({
         where: {
-          keywordId: keywordId,
+          keywordId: keywordIdParam, // 문자열 ID 직접 사용
           checkDate: {
             gte: thirtyDaysAgo
-          },
-          OR: [
-            { organicRank: { not: null } },
-            { adRank: { not: null } }
-          ]
+          }
         },
         orderBy: {
           checkDate: 'asc'
@@ -68,22 +62,34 @@ export async function GET(
       )
       
       // 상위 10개 업체 추적 데이터 분석
-      const top10Map = new Map<string, Map<string, number>>() // placeId -> date -> rank
-      const placeNames = new Map<string, string>() // placeId -> placeName
+      const top10Map = new Map<string, Map<string, number>>() // placeKey -> date -> rank
+      const placeInfo = new Map<string, { name: string, id?: string }>() // placeKey -> info
       
       filteredRankings.forEach(r => {
         if (r.topTenPlaces) {
           try {
-            const topPlaces = JSON.parse(r.topTenPlaces)
+            const topPlaces = typeof r.topTenPlaces === 'string' 
+              ? JSON.parse(r.topTenPlaces) 
+              : r.topTenPlaces
             const dateStr = getKSTDateString(r.checkDate) // KST로 변환
             
-            topPlaces.forEach((place: any) => {
-              if (!top10Map.has(place.placeId)) {
-                top10Map.set(place.placeId, new Map())
-              }
-              top10Map.get(place.placeId)!.set(dateStr, place.rank)
-              placeNames.set(place.placeId, place.placeName)
-            })
+            if (Array.isArray(topPlaces)) {
+              topPlaces.forEach((place: any) => {
+                // placeId가 없으면 placeName을 키로 사용
+                const placeKey = place.placeId || place.placeName
+                
+                if (!placeKey) return // 키가 없으면 스킵
+                
+                if (!top10Map.has(placeKey)) {
+                  top10Map.set(placeKey, new Map())
+                }
+                top10Map.get(placeKey)!.set(dateStr, place.rank)
+                placeInfo.set(placeKey, { 
+                  name: place.placeName, 
+                  id: place.placeId 
+                })
+              })
+            }
           } catch (e) {
             console.error('Failed to parse topTenPlaces:', e)
           }
@@ -91,16 +97,20 @@ export async function GET(
       })
       
       // 상위 10개 업체 데이터 포맷팅
-      const top10Trends = Array.from(top10Map.entries()).map(([placeId, dateRankMap]) => {
+      const top10Trends = Array.from(top10Map.entries()).map(([placeKey, dateRankMap]) => {
         const trendData = Array.from(dateRankMap.entries()).map(([date, rank]) => ({
           date,
           rank
         })).sort((a, b) => a.date.localeCompare(b.date))
         
+        const info = placeInfo.get(placeKey)
+        const actualPlaceId = info?.id || placeKey
+        
         return {
-          placeId,
-          placeName: placeNames.get(placeId) || 'Unknown',
-          isMyPlace: placeId === keyword.project.placeId,
+          placeId: actualPlaceId,
+          placeName: info?.name || placeKey,
+          isMyPlace: actualPlaceId === keyword.smartPlace.placeId || 
+                     info?.name === keyword.smartPlace.placeName,
           trendData
         }
       })
@@ -119,22 +129,31 @@ export async function GET(
         adRank: r.adRank
       }))
       
-      // 통계 데이터 계산
+      // 통계 데이터 계산 (null 값 제외)
+      const organicData = trendData.filter(d => d.organicRank !== null)
+      const adData = trendData.filter(d => d.adRank !== null)
+      
       const stats = {
-        averageOrganic: trendData.filter(d => d.organicRank).reduce((sum, d) => sum + d.organicRank!, 0) / 
-                       trendData.filter(d => d.organicRank).length || null,
-        averageAd: trendData.filter(d => d.adRank).reduce((sum, d) => sum + d.adRank!, 0) / 
-                  trendData.filter(d => d.adRank).length || null,
-        bestOrganic: Math.min(...trendData.filter(d => d.organicRank).map(d => d.organicRank!)) || null,
-        bestAd: Math.min(...trendData.filter(d => d.adRank).map(d => d.adRank!)) || null,
+        averageOrganic: organicData.length > 0 
+          ? organicData.reduce((sum, d) => sum + d.organicRank!, 0) / organicData.length 
+          : null,
+        averageAd: adData.length > 0 
+          ? adData.reduce((sum, d) => sum + d.adRank!, 0) / adData.length 
+          : null,
+        bestOrganic: organicData.length > 0 
+          ? Math.min(...organicData.map(d => d.organicRank!)) 
+          : null,
+        bestAd: adData.length > 0 
+          ? Math.min(...adData.map(d => d.adRank!)) 
+          : null,
         totalDataPoints: trendData.length
       }
       
       return NextResponse.json({ 
         keyword: keyword.keyword,
         placeInfo: {
-          placeName: keyword.project.placeName,
-          placeId: keyword.project.placeId
+          placeName: keyword.smartPlace.placeName,
+          placeId: keyword.smartPlace.placeId
         },
         trendData,
         top10Trends,
