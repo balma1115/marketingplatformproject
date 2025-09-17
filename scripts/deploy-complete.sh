@@ -23,7 +23,17 @@ if [ "$EUID" -ne 0 ] && [ "$1" != "--no-nginx" ]; then
     exit 1
 fi
 
-cd ~/marketingplatformproject
+# 프로젝트 디렉토리 설정 (sudo와 일반 사용자 모두 지원)
+if [ "$EUID" -eq 0 ]; then
+    # sudo로 실행된 경우 ubuntu 사용자의 홈 디렉토리 사용
+    PROJECT_DIR="/home/ubuntu/marketingplatformproject"
+else
+    # 일반 사용자로 실행된 경우
+    PROJECT_DIR="$HOME/marketingplatformproject"
+fi
+
+cd "$PROJECT_DIR"
+echo "📁 작업 디렉토리: $PROJECT_DIR"
 
 # 1. Git 최신 코드
 echo -e "${BLUE}📥 최신 코드 가져오기...${NC}"
@@ -120,8 +130,14 @@ fi
 
 # 4. PM2 중지
 echo -e "${BLUE}⏹️  PM2 중지...${NC}"
-pm2 stop all 2>/dev/null || true
-pm2 delete all 2>/dev/null || true
+if [ "$EUID" -eq 0 ]; then
+    # sudo로 실행시 ubuntu 사용자로 PM2 실행
+    sudo -u ubuntu pm2 stop all 2>/dev/null || true
+    sudo -u ubuntu pm2 delete all 2>/dev/null || true
+else
+    pm2 stop all 2>/dev/null || true
+    pm2 delete all 2>/dev/null || true
+fi
 echo -e "${GREEN}✅ PM2 중지 완료${NC}\n"
 
 # 5. 빌드 파일 정리
@@ -160,9 +176,16 @@ module.exports = {
 }
 EOF
 
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup systemd -u ubuntu --hp /home/ubuntu 2>/dev/null || true
+if [ "$EUID" -eq 0 ]; then
+    # sudo로 실행시 ubuntu 사용자로 PM2 실행
+    sudo -u ubuntu pm2 start ecosystem.config.js
+    sudo -u ubuntu pm2 save
+    pm2 startup systemd -u ubuntu --hp /home/ubuntu 2>/dev/null || true
+else
+    pm2 start ecosystem.config.js
+    pm2 save
+    pm2 startup systemd -u ubuntu --hp /home/ubuntu 2>/dev/null || true
+fi
 echo -e "${GREEN}✅ PM2 시작 완료${NC}\n"
 
 # 9. Nginx 설정 (sudo 필요)
@@ -231,7 +254,11 @@ fi
 # 11. 상태 확인
 echo -e "\n${BLUE}📊 서비스 상태${NC}"
 echo "======================================"
-pm2 status
+if [ "$EUID" -eq 0 ]; then
+    sudo -u ubuntu pm2 status
+else
+    pm2 status
+fi
 echo ""
 
 # 12. 완료
