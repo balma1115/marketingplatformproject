@@ -5,10 +5,25 @@ import bcrypt from 'bcryptjs'
 // exhausting your database connection limit.
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
+// Ensure DATABASE_URL is set correctly in production
+const getDatabaseUrl = () => {
+  // Production database URL
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.DATABASE_URL || 'postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat'
+  }
+  // Development database URL
+  return process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/marketingplat'
+}
+
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    datasources: {
+      db: {
+        url: getDatabaseUrl()
+      }
+    }
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
