@@ -1,0 +1,79 @@
+# EC2 서버용 .env.production 파일 내용
+# 이 내용을 EC2의 /home/ubuntu/marketingplatformproject/.env.production에 복사하세요
+
+# PostgreSQL Database Configuration
+# EC2 로컬 PostgreSQL 사용 (기존 데이터베이스 유지)
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/marketingplat_dev"
+
+# Authentication (보안상 변경 권장)
+JWT_SECRET="dev-jwt-secret-change-in-production"
+JWT_EXPIRES_IN="7d"
+
+# Next.js - HTTPS로 설정 (SSL 오류 수정)
+NEXT_PUBLIC_API_URL="https://www.marekplace.co.kr"
+NEXT_PUBLIC_BASE_URL="https://www.marekplace.co.kr"
+
+# Google Gemini API (for AI content generation)
+GEMINI_API_KEY="AIzaSyDKlt6UMB2ha4ZISbOYjxU-qR8EUBwME_0"
+
+# Naver API (for search and blog)
+NAVER_CLIENT_ID="otHAAADUXSdFg1Ih7f_J"
+NAVER_CLIENT_SECRET="eSbnPqUt_q"
+
+# Naver Ads API (키워드 분석용 - 영구 적용)
+NAVER_ADS_API_KEY="0100000000be03621f69dbe8d087552a0eb6e1ab802782d132380d44b19d2f74e8bfba27af"
+NAVER_ADS_SECRET_KEY="AQAAAAC+A2Ifadvo0IdVKg624auAzaqGRa5TqwNbPN6vZv/S3A=="
+NAVER_ADS_CUSTOMER_ID="1632045"
+
+# Flux API (for AI image generation)
+FLUX_API_KEY="d3cb7f68-c880-4248-9c7b-1dea7ec00394"
+
+# Instagram API
+INSTAGRAM_ACCESS_TOKEN=""
+INSTAGRAM_USER_ID=""
+
+# AWS (프로덕션용 - 필요시 설정)
+AWS_REGION="ap-northeast-2"
+AWS_ACCESS_KEY_ID=""
+AWS_SECRET_ACCESS_KEY=""
+AWS_S3_BUCKET=""
+
+# Email (프로덕션용 - 필요시 설정)
+EMAIL_FROM="noreply@marketingplat.com"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER=""
+SMTP_PASS=""
+
+# TossPayments
+NEXT_PUBLIC_TOSS_CLIENT_KEY="test_ck_DnyRpQWGrN5yB4vDG7LrKwv1M9EN"
+TOSS_SECRET_KEY="test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R"
+
+# Environment Configuration - 프로덕션 설정
+NODE_ENV="production"
+APP_ENV="production"
+NEXT_PUBLIC_APP_ENV="production"
+
+# Smartplace Crawler
+USE_REAL_CRAWLER="true"
+USE_MOCK_SCRAPER="false"
+
+# Redis (EC2 로컬 Redis)
+REDIS_URL="redis://localhost:6379"
+
+# Tracking Service Configuration
+USE_LAMBDA_TRACKING="false"
+TRACKING_MODE="local"
+SQS_QUEUE_URL=""
+
+# Debug Mode - 프로덕션에서는 false로 설정
+DEBUG_MODE="false"
+SHOW_ERROR_DETAILS="false"
+
+# Scheduler Configuration - 프로덕션에서 자동 실행
+ENABLE_SCHEDULER="true"
+AUTO_SCHEDULER="true"
+
+# Application Settings
+PORT="3000"
+HOSTNAME="0.0.0.0"
