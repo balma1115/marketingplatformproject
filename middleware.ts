@@ -2,67 +2,26 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // 프로덕션 환경에서 HTTPS 리디렉션
-  if (process.env.NODE_ENV === 'production') {
-    const proto = request.headers.get('x-forwarded-proto');
-    const host = request.headers.get('host');
-
-    // HTTP로 들어온 요청을 HTTPS로 리디렉션
-    if (proto === 'http' && host) {
-      const httpsUrl = `https://${host}${request.nextUrl.pathname}${request.nextUrl.search}`;
-      return NextResponse.redirect(httpsUrl, 301);
-    }
-
-    // www.miraenad.com을 miraenad.com으로 리디렉션
-    if (host && host === 'www.miraenad.com') {
-      const nonWwwUrl = `https://miraenad.com${request.nextUrl.pathname}${request.nextUrl.search}`;
-      return NextResponse.redirect(nonWwwUrl, 301);
-    }
-  }
-
+  const url = request.nextUrl;
   const response = NextResponse.next();
 
-  // Security Headers
-  response.headers.set('X-DNS-Prefetch-Control', 'on');
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-
-  // HSTS (HTTP Strict Transport Security) - Only in production
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
-    );
+  // Skip middleware for static files and images
+  if (
+    url.pathname.startsWith('/_next/') ||
+    url.pathname.includes('/favicon.ico') ||
+    url.pathname.includes('.') // Skip all file extensions
+  ) {
+    return response;
   }
 
-  // Content Security Policy - Adjust based on your needs
-  const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com data:;
-    img-src 'self' data: https: blob:;
-    connect-src 'self' https://*.naver.com https://*.googleapis.com wss: ws:;
-    frame-src 'self';
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    upgrade-insecure-requests;
-  `.replace(/\n/g, '');
-
-  response.headers.set('Content-Security-Policy', cspHeader);
-
-  // CORS Configuration for API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  // API 라우트는 리다이렉트하지 않음
+  if (url.pathname.startsWith('/api/')) {
+    // CORS Configuration for API routes
     const origin = request.headers.get('origin');
 
-    // Allowed origins - Update based on your domains
+    // Allowed origins - Update for miraenad.com
     const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? ['https://marekplace.co.kr', 'https://www.marekplace.co.kr']
+      ? ['https://miraenad.com', 'https://www.miraenad.com']
       : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
     if (origin && allowedOrigins.includes(origin)) {
@@ -80,11 +39,63 @@ export function middleware(request: NextRequest) {
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, { status: 200, headers: response.headers });
     }
+
+    return response;
   }
 
-  // Rate limiting headers (informational - actual limiting done by Nginx)
-  response.headers.set('X-RateLimit-Limit', '100');
-  response.headers.set('X-RateLimit-Remaining', '99');
+  // 프로덕션 환경에서만 리다이렉션 처리
+  if (process.env.NODE_ENV === 'production') {
+    const host = request.headers.get('host');
+
+    // localhost는 리다이렉션 하지 않음
+    if (host && !host.includes('localhost')) {
+      // Cloudflare를 사용하는 경우, CF-Visitor 헤더 확인
+      const cfVisitor = request.headers.get('cf-visitor');
+      let isHttps = false;
+
+      if (cfVisitor) {
+        try {
+          const cfData = JSON.parse(cfVisitor);
+          isHttps = cfData.scheme === 'https';
+        } catch {
+          // Fallback to x-forwarded-proto
+          const proto = request.headers.get('x-forwarded-proto');
+          isHttps = proto === 'https';
+        }
+      } else {
+        // Cloudflare가 아닌 경우 x-forwarded-proto 사용
+        const proto = request.headers.get('x-forwarded-proto');
+        isHttps = proto === 'https';
+      }
+
+      // HTTPS 리다이렉션 (페이지만, Cloudflare가 처리하지 않는 경우)
+      if (!isHttps && !cfVisitor) {
+        // Cloudflare가 없을 때만 HTTPS로 리다이렉트
+        return NextResponse.redirect(`https://${host}${url.pathname}${url.search}`, 301);
+      }
+
+      // www를 non-www로 리다이렉션
+      if (host === 'www.miraenad.com') {
+        return NextResponse.redirect(`https://miraenad.com${url.pathname}${url.search}`, 301);
+      }
+    }
+  }
+
+  // Security Headers
+  response.headers.set('X-DNS-Prefetch-Control', 'on');
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  // HSTS - Only set if not using Cloudflare (they handle it)
+  if (process.env.NODE_ENV === 'production' && !request.headers.get('cf-ray')) {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains'
+    );
+  }
 
   return response;
 }
@@ -96,7 +107,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - public folder files
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
 };

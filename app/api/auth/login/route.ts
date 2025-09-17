@@ -7,12 +7,22 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
-
-    // Only log in development mode
-    if (isDevelopment) {
-      console.log('Login attempt for:', email)
+    // Parse request body
+    let body
+    try {
+      body = await request.json()
+    } catch (e) {
+      console.error('Failed to parse request body:', e)
+      return NextResponse.json(
+        { error: 'Invalid request format' },
+        { status: 400 }
+      )
     }
+
+    const { email, password } = body
+
+    // Always log in production for debugging
+    console.log(`[Login] Attempt for email: ${email}`)
 
     if (!email || !password) {
       return NextResponse.json(
@@ -21,10 +31,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const user = await findUserByEmail(email)
-
-    if (isDevelopment) {
-      console.log('User found:', !!user)
+    // Database query with error handling
+    let user
+    try {
+      user = await findUserByEmail(email)
+      console.log(`[Login] User lookup result: ${user ? 'found' : 'not found'}`)
+    } catch (dbError) {
+      console.error('[Login] Database error:', dbError)
+      return NextResponse.json(
+        {
+          error: 'Database connection error',
+          details: process.env.NODE_ENV === 'production' ? undefined : String(dbError)
+        },
+        { status: 500 }
+      )
     }
 
     if (!user) {
@@ -35,7 +55,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const isValidPassword = await validatePassword(password, user.password)
+    // Password validation with error handling
+    let isValidPassword
+    try {
+      isValidPassword = await validatePassword(password, user.password)
+    } catch (validationError) {
+      console.error('[Login] Password validation error:', validationError)
+      return NextResponse.json(
+        { error: 'Authentication error' },
+        { status: 500 }
+      )
+    }
 
     if (!isValidPassword) {
       // Same error message to prevent user enumeration
@@ -45,13 +75,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const token = generateToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role
-    })
+    // Token generation
+    let token
+    try {
+      token = generateToken({
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      })
+    } catch (tokenError) {
+      console.error('[Login] Token generation error:', tokenError)
+      return NextResponse.json(
+        { error: 'Failed to generate authentication token' },
+        { status: 500 }
+      )
+    }
 
-    await setAuthCookie(token)
+    // Set cookie
+    try {
+      await setAuthCookie(token)
+    } catch (cookieError) {
+      console.error('[Login] Cookie setting error:', cookieError)
+      return NextResponse.json(
+        { error: 'Failed to set authentication cookie' },
+        { status: 500 }
+      )
+    }
+
+    console.log(`[Login] Successful login for user ID: ${user.id}`)
 
     return NextResponse.json({
       success: true,
@@ -66,14 +117,14 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    // Only log errors in development
-    if (isDevelopment) {
-      console.error('Login error:', error)
-    }
+    console.error('[Login] Unexpected error:', error)
 
-    // Don't expose error details in production
+    // Return more detailed error in non-production
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'production' ? undefined : String(error)
+      },
       { status: 500 }
     )
   }
