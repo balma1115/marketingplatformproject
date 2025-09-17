@@ -27,7 +27,7 @@ echo -e "${YELLOW}4. Next.js 빌드...${NC}"
 DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat" npm run build
 
 echo -e "${YELLOW}5. PM2 재시작...${NC}"
-pm2 restart marketingplat
+pm2 restart miraenad
 
 echo -e "${GREEN}✅ 배포 완료!${NC}"
 echo ""

@@ -43,7 +43,10 @@ if [ $? -ne 0 ]; then
 fi
 
 echo -e "${YELLOW}6. PM2 서비스 재시작...${NC}"
-pm2 restart marketingplat || pm2 start npm --name marketingplat -- start
+# miraenad 앱 재시작 (이미 실행 중인 앱)
+pm2 restart miraenad || pm2 start npm --name miraenad -- start
+# marketingplat 앱이 있다면 삭제
+pm2 delete marketingplat 2>/dev/null || true
 pm2 save
 
 echo -e "${GREEN}========================================"
