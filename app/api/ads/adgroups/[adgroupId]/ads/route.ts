@@ -365,13 +365,13 @@ export async function POST(
         final: body.mobileUrl || body.pcUrl
       }
     }
-    
+
     const newAd = await naverAdsApi.createAd({
       nccAdgroupId: adgroupId,
-      ad: JSON.stringify(adData),
+      ad: JSON.stringify(adData) as any,  // Type assertion for API compatibility
       userLock: false,
       adType: 'TEXT_45'
-    })
+    } as any)
     
     return NextResponse.json({
       success: true,
