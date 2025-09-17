@@ -199,28 +199,27 @@ if [ "$1" != "--no-nginx" ] && [ "$EUID" -eq 0 ]; then
         apt-get install -y nginx certbot python3-certbot-nginx
     fi
 
-    # 설정 파일 복사
-    if [ -f nginx/miraenad.conf ]; then
-        cp nginx/miraenad.conf /etc/nginx/sites-available/miraenad
+    # Cloudflare용 설정 파일 복사
+    if [ -f nginx/miraenad-cloudflare.conf ]; then
+        echo -e "${CYAN}📦 Cloudflare 모드로 Nginx 설정${NC}"
+        cp nginx/miraenad-cloudflare.conf /etc/nginx/sites-available/miraenad
         ln -sf /etc/nginx/sites-available/miraenad /etc/nginx/sites-enabled/miraenad
 
         # 기본 사이트 비활성화
         rm -f /etc/nginx/sites-enabled/default
 
         # Nginx 설정 테스트
-        nginx -t
-
-        # Nginx 재시작
-        systemctl reload nginx
-        echo -e "${GREEN}✅ Nginx 설정 완료${NC}"
-
-        # SSL 인증서 확인
-        if [ ! -f /etc/letsencrypt/live/miraenad.com/fullchain.pem ]; then
-            echo -e "${YELLOW}SSL 인증서 설정...${NC}"
-            certbot --nginx -d miraenad.com -d www.miraenad.com --non-interactive --agree-tos --email admin@miraenad.com
+        if nginx -t; then
+            # Nginx 재시작
+            systemctl reload nginx
+            echo -e "${GREEN}✅ Nginx 설정 완료 (Cloudflare 모드)${NC}"
+            echo -e "${CYAN}   SSL은 Cloudflare에서 처리됩니다${NC}"
+        else
+            echo -e "${RED}❌ Nginx 설정 오류${NC}"
+            echo -e "${YELLOW}   수동으로 확인이 필요합니다${NC}"
         fi
     else
-        echo -e "${YELLOW}⚠️  nginx/miraenad.conf 파일이 없습니다${NC}"
+        echo -e "${YELLOW}⚠️  nginx/miraenad-cloudflare.conf 파일이 없습니다${NC}"
     fi
     echo ""
 fi
