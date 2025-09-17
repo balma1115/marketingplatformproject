@@ -150,12 +150,12 @@ export async function GET(
         // 일반 TEXT_45 광고인 경우 (기존 로직)
         else if (parsedAd && typeof parsedAd === 'object') {
           // headline과 description은 pc/mobile과 같은 레벨에 있음
-          if ('headline' in parsedAd) {
+          if ('headline' in parsedAd && typeof parsedAd.headline === 'string') {
             finalHeadline = parsedAd.headline
             allHeadlines = [parsedAd.headline]
             console.log('Found headline in parsedAd.headline:', finalHeadline)
           }
-          if ('description' in parsedAd) {
+          if ('description' in parsedAd && typeof parsedAd.description === 'string') {
             finalDescription = parsedAd.description
             allDescriptions = [parsedAd.description]
             console.log('Found description in parsedAd.description:', finalDescription)

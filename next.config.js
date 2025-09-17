@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // workspace root 설정 (lockfile 경고 해결)
+  outputFileTracingRoot: '/home/ubuntu/marketingplatformproject',
+
   // 이미지 도메인 허용
   images: {
     domains: ['localhost', 'miraenad.com', 'images.unsplash.com'],
