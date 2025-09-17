@@ -6,7 +6,7 @@ interface ApiUsage {
   id: number
   userId: number
   serviceType: string
-  costInNyang: number
+  costInNyang: number | null
   createdAt: string
   user: {
     email: string
@@ -42,9 +42,10 @@ export default function AdminApiPage() {
         let total = 0, today = 0, month = 0
         data.usages?.forEach((usage: ApiUsage) => {
           const usageDate = new Date(usage.createdAt)
-          total += usage.costInNyang
-          if (usageDate >= todayStart) today += usage.costInNyang
-          if (usageDate >= monthStart) month += usage.costInNyang
+          const cost = usage.costInNyang || 0
+          total += cost
+          if (usageDate >= todayStart) today += cost
+          if (usageDate >= monthStart) month += cost
         })
 
         setStats({ total, today, month })
@@ -116,7 +117,7 @@ export default function AdminApiPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {usage.costInNyang} 냥
+                  {usage.costInNyang || 0} 냥
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(usage.createdAt).toLocaleString()}

@@ -36,26 +36,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get API usage data - apiUsage 테이블이 없을 경우 빈 배열 반환
-    let usages = []
-    try {
-      // apiUsage 테이블이 존재하는지 확인
-      usages = await prisma.apiUsage.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-        include: {
-          user: {
-            select: {
-              email: true,
-              name: true
-            }
+    // Get API usage data - APIUsageLog 테이블 사용
+    const usages = await prisma.aPIUsageLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true
           }
         }
-      })
-    } catch (error) {
-      console.log('[Admin/ApiUsage] apiUsage table not found, returning empty array')
-      usages = []
-    }
+      }
+    })
 
     return NextResponse.json({
       success: true,
