@@ -63,7 +63,7 @@ export async function GET(
     })
 
     // Get ad group details first to get the group bid amount
-    let adGroup
+    let adGroup: any = null
     try {
       const adGroups = await naverAdsApi.getAdGroups(undefined)
       adGroup = adGroups.find((ag: any) => ag.nccAdgroupId === adgroupId)
@@ -75,7 +75,7 @@ export async function GET(
     // Get keywords for the ad group
     console.log('Fetching keywords for ad group:', adgroupId)
     
-    let keywords
+    let keywords: any[] = []
     try {
       keywords = await naverAdsApi.getKeywords(adgroupId)
       console.log('Keywords fetched successfully:', keywords?.length || 0, 'keywords')

@@ -92,7 +92,7 @@ export async function GET(
     // Get ad group details
     console.log('Fetching ad group details:', adgroupId)
     
-    let adGroup
+    let adGroup: any = null
     try {
       // Get single ad group by ID
       const adGroups = await naverAdsApi.getAdGroups()

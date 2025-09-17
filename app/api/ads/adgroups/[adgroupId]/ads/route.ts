@@ -92,7 +92,7 @@ export async function GET(
     // Get ads for the ad group
     console.log('Fetching ads for ad group:', adgroupId)
     
-    let ads
+    let ads: any[] = []
     try {
       ads = await naverAdsApi.getAds(adgroupId)
       console.log('Ads fetched successfully:', ads?.length || 0, 'ads')

@@ -151,7 +151,7 @@ export async function PUT(request: NextRequest) {
       customerId: user.naverAdCustomerId
     })
 
-    let result
+    let result: any = null
     if (bulk && updates) {
       // 일괄 수정
       result = await naverAds.bulkUpdateKeywordBids(updates)

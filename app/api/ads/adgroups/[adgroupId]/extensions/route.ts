@@ -92,7 +92,7 @@ export async function GET(
     // Get ad extensions for the ad group
     console.log('Fetching ad extensions for ad group:', adgroupId)
     
-    let extensions
+    let extensions: any[] = []
     try {
       // Ad extensions are linked to campaigns or accounts, not directly to ad groups
       // We'll fetch all extensions and filter if needed

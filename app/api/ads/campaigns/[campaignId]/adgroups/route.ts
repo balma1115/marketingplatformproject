@@ -94,7 +94,7 @@ export async function GET(
     console.log('Using credentials - Access Key:', accessKey?.substring(0, 5) + '...')
     console.log('Customer ID:', customerId)
     
-    let adGroups
+    let adGroups: any[] = []
     try {
       adGroups = await naverAdsApi.getAdGroups(campaignId)
       console.log('Ad groups fetched successfully:', adGroups?.length || 0, 'groups')
