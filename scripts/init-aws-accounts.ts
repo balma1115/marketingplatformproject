@@ -1,285 +1,226 @@
+#!/usr/bin/env node
+/**
+ * AWS RDS 초기 계정 설정 스크립트
+ *
+ * 사용법:
+ * - 로컬: npx tsx scripts/init-aws-accounts.ts
+ * - EC2: cd ~/marketingplatformproject && npx tsx scripts/init-aws-accounts.ts
+ */
+
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const prisma = new PrismaClient();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// 색상 코드 정의
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  red: '\x1b[31m',
-};
+// .env 파일 로드 (로컬 및 EC2 환경 지원)
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+dotenv.config({ path: path.resolve(__dirname, '..', '.env.local') });
 
-async function main() {
-  console.log(`${colors.cyan}${colors.bright}=================================${colors.reset}`);
-  console.log(`${colors.yellow}🚀 AWS RDS 초기 계정 설정 시작${colors.reset}`);
-  console.log(`${colors.cyan}${colors.bright}=================================${colors.reset}\n`);
+// Prisma 클라이언트 설정
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+  log: ['error', 'warn']
+});
 
-  // 초기 계정 데이터 정의
-  const initialAccounts = [
-    // 1. 관리자 계정
-    {
-      email: 'admin@marketingplat.com',
-      password: 'admin123!@#',
-      name: 'MarketingPlat 관리자',
-      phone: '010-1000-0001',
-      role: 'admin',
-      plan: 'enterprise',
-      academyName: 'MarketingPlat 본사',
-      academyAddress: '서울시 강남구 테헤란로 123',
-      coin: 999999.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: true,
-    },
-    // 2. 대행사 계정
-    {
-      email: 'agency@marketingplat.com',
-      password: 'agency123!@#',
-      name: '서울마케팅 대행사',
-      phone: '010-2000-0001',
-      role: 'agency',
-      plan: 'enterprise',
-      academyName: '서울마케팅 대행사',
-      academyAddress: '서울시 서초구 서초대로 456',
-      coin: 50000.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: true,
-    },
-    // 3. 지사 계정
-    {
-      email: 'branch@marketingplat.com',
-      password: 'branch123!@#',
-      name: '강남지사',
-      phone: '010-3000-0001',
-      role: 'branch',
-      plan: 'professional',
-      academyName: '강남지사',
-      academyAddress: '서울시 강남구 강남대로 789',
-      coin: 30000.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: true,
-    },
-    // 4. 학원 계정
-    {
-      email: 'academy@marketingplat.com',
-      password: 'academy123!@#',
-      name: '샘플 영어학원',
-      phone: '010-4000-0001',
-      role: 'academy',
-      plan: 'professional',
-      academyName: '샘플 영어학원',
-      academyAddress: '서울시 송파구 올림픽로 321',
-      coin: 10000.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: false,
-    },
-    // 5. 일반회원 계정
-    {
-      email: 'user@marketingplat.com',
-      password: 'user123!@#',
-      name: '홍길동',
-      phone: '010-5000-0001',
-      role: 'user',
-      plan: 'basic',
-      academyName: null,
-      academyAddress: null,
-      coin: 100.00,
-      isActive: true,
-      isApproved: false,
-      ktPassVerified: false,
-    },
-    // 추가 테스트 계정들
-    {
-      email: 'test.admin@marketingplat.com',
-      password: 'test1234',
-      name: '테스트 관리자',
-      phone: '010-1111-1111',
-      role: 'admin',
-      plan: 'enterprise',
-      academyName: '테스트 관리',
-      coin: 100000.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: true,
-    },
-    {
-      email: 'test.agency@marketingplat.com',
-      password: 'test1234',
-      name: '테스트 대행사',
-      phone: '010-2222-2222',
-      role: 'agency',
-      plan: 'enterprise',
-      academyName: '테스트 마케팅 대행사',
-      coin: 5000.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: true,
-    },
-    {
-      email: 'test.branch@marketingplat.com',
-      password: 'test1234',
-      name: '테스트 지사',
-      phone: '010-3333-3333',
-      role: 'branch',
-      plan: 'professional',
-      academyName: '테스트 강북지사',
-      coin: 3000.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: true,
-    },
-    {
-      email: 'test.academy@marketingplat.com',
-      password: 'test1234',
-      name: '테스트 학원장',
-      phone: '010-4444-4444',
-      role: 'academy',
-      plan: 'professional',
-      academyName: '테스트 수학학원',
-      academyAddress: '서울시 노원구 동일로 111',
-      coin: 1000.00,
-      isActive: true,
-      isApproved: true,
-      ktPassVerified: false,
-    },
-    {
-      email: 'test.user@marketingplat.com',
-      password: 'test1234',
-      name: '테스트 사용자',
-      phone: '010-5555-5555',
-      role: 'user',
-      plan: 'basic',
-      coin: 100.00,
-      isActive: true,
-      isApproved: false,
-      ktPassVerified: false,
-    },
-  ];
-
-  console.log(`${colors.blue}📋 생성할 계정 수: ${initialAccounts.length}개${colors.reset}\n`);
-
-  // 계정 생성 진행
-  let successCount = 0;
-  let skipCount = 0;
-  let errorCount = 0;
-
-  for (const accountData of initialAccounts) {
-    try {
-      // 비밀번호 해싱
-      const hashedPassword = await bcrypt.hash(accountData.password, 10);
-
-      // upsert로 중복 방지하며 계정 생성/업데이트
-      const user = await prisma.user.upsert({
-        where: { email: accountData.email },
-        update: {
-          name: accountData.name,
-          phone: accountData.phone,
-          role: accountData.role,
-          plan: accountData.plan,
-          academyName: accountData.academyName,
-          academyAddress: accountData.academyAddress,
-          coin: accountData.coin,
-          isActive: accountData.isActive,
-          isApproved: accountData.isApproved,
-          ktPassVerified: accountData.ktPassVerified,
-        },
-        create: {
-          ...accountData,
-          password: hashedPassword,
-        },
-      });
-
-      const roleEmoji = {
-        admin: '👑',
-        agency: '🏢',
-        branch: '🏪',
-        academy: '🏫',
-        user: '👤',
-      }[accountData.role] || '👤';
-
-      console.log(`${colors.green}✅ ${roleEmoji} [${accountData.role.toUpperCase()}] ${accountData.email}${colors.reset}`);
-      console.log(`   비밀번호: ${accountData.password}`);
-      console.log(`   이름: ${accountData.name}`);
-      console.log(`   플랜: ${accountData.plan} | 코인: ${accountData.coin.toLocaleString('ko-KR')}`);
-      console.log('');
-
-      successCount++;
-    } catch (error: any) {
-      if (error.code === 'P2002') {
-        console.log(`${colors.yellow}⏭️  [SKIP] ${accountData.email} - 이미 존재하는 계정${colors.reset}\n`);
-        skipCount++;
-      } else {
-        console.error(`${colors.red}❌ [ERROR] ${accountData.email} 생성 실패:${colors.reset}`, error.message, '\n');
-        errorCount++;
-      }
-    }
-  }
-
-  console.log(`${colors.cyan}${colors.bright}=================================${colors.reset}`);
-  console.log(`${colors.magenta}📊 실행 결과${colors.reset}`);
-  console.log(`${colors.cyan}${colors.bright}=================================${colors.reset}`);
-  console.log(`${colors.green}✅ 성공: ${successCount}개${colors.reset}`);
-  console.log(`${colors.yellow}⏭️  건너뜀: ${skipCount}개${colors.reset}`);
-  console.log(`${colors.red}❌ 실패: ${errorCount}개${colors.reset}\n`);
-
-  // 생성된 계정 확인
-  const totalUsers = await prisma.user.count();
-  const roleStats = await prisma.user.groupBy({
-    by: ['role'],
-    _count: true,
-  });
-
-  console.log(`${colors.blue}📈 현재 데이터베이스 상태${colors.reset}`);
-  console.log(`총 계정 수: ${totalUsers}개`);
-  console.log('\n역할별 분포:');
-  console.log('------------------------');
-  roleStats.forEach(stat => {
-    const emoji = {
-      admin: '👑',
-      agency: '🏢',
-      branch: '🏪',
-      academy: '🏫',
-      user: '👤',
-    }[stat.role] || '👤';
-    console.log(`${emoji} ${stat.role}: ${stat._count}개`);
-  });
-
-  console.log('\n');
-  console.log(`${colors.cyan}${colors.bright}=================================${colors.reset}`);
-  console.log(`${colors.green}✅ 초기 계정 설정 완료!${colors.reset}`);
-  console.log(`${colors.cyan}${colors.bright}=================================${colors.reset}\n`);
-
-  // 로그인 정보 출력
-  console.log(`${colors.yellow}🔑 로그인 정보:${colors.reset}`);
-  console.log('----------------------------------------');
-  console.log('메인 계정:');
-  console.log('  👑 관리자: admin@marketingplat.com / admin123!@#');
-  console.log('  🏢 대행사: agency@marketingplat.com / agency123!@#');
-  console.log('  🏪 지사: branch@marketingplat.com / branch123!@#');
-  console.log('  🏫 학원: academy@marketingplat.com / academy123!@#');
-  console.log('  👤 일반: user@marketingplat.com / user123!@#');
-  console.log('\n테스트 계정:');
-  console.log('  모든 테스트 계정 비밀번호: test1234');
-  console.log('----------------------------------------\n');
+// 계정 정보 타입
+interface AccountInfo {
+  email: string;
+  password: string;
+  name: string;
+  role: 'admin' | 'academy' | 'user';  // 소문자로 통일 (DB 스키마와 일치)
+  description: string;
 }
 
-main()
-  .catch((e) => {
-    console.error(`${colors.red}❌ 치명적 오류:${colors.reset}`, e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// 초기 계정 목록
+const accounts: AccountInfo[] = [
+  {
+    email: 'admin@marketingplat.com',
+    password: 'admin123',
+    name: '관리자',
+    role: 'admin',
+    description: '시스템 관리자 계정'
+  },
+  {
+    email: 'academy@marketingplat.com',
+    password: 'academy123',
+    name: '테스트학원',
+    role: 'academy',
+    description: '학원 테스트 계정'
+  },
+  {
+    email: 'nokyang@marketingplat.com',
+    password: 'nokyang123',
+    name: '녹양학원',
+    role: 'academy',
+    description: '녹양학원 전용 계정'
+  },
+  {
+    email: 'user@test.com',
+    password: 'test1234',
+    name: '일반사용자',
+    role: 'user',
+    description: '일반 사용자 테스트 계정'
+  }
+];
 
-// 실행 방법:
-// npx tsx scripts/init-aws-accounts.ts
+async function initAccounts() {
+  console.log('╔══════════════════════════════════════════════════════════════╗');
+  console.log('║           AWS RDS 초기 계정 설정 시스템                      ║');
+  console.log('╚══════════════════════════════════════════════════════════════╝');
+  console.log();
+
+  // 환경 정보 출력
+  const dbUrl = process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@') || 'Not configured';
+  const environment = process.env.NODE_ENV || 'development';
+
+  console.log('📍 환경 정보:');
+  console.log(`   - Environment: ${environment}`);
+  console.log(`   - Database: ${dbUrl}`);
+  console.log(`   - Timestamp: ${new Date().toISOString()}`);
+  console.log();
+
+  try {
+    // 데이터베이스 연결 테스트
+    console.log('🔌 데이터베이스 연결 중...');
+    await prisma.$connect();
+    console.log('✅ 데이터베이스 연결 성공!');
+    console.log();
+
+    // 계정 처리
+    console.log('👤 계정 처리 시작:');
+    console.log('─'.repeat(60));
+
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    for (const account of accounts) {
+      try {
+        // 기존 계정 확인
+        const existingUser = await prisma.user.findUnique({
+          where: { email: account.email }
+        });
+
+        if (existingUser) {
+          // 비밀번호 확인 및 업데이트
+          const hashedPassword = await bcrypt.hash(account.password, 10);
+          const passwordMatch = await bcrypt.compare(account.password, existingUser.password);
+
+          if (!passwordMatch) {
+            await prisma.user.update({
+              where: { email: account.email },
+              data: {
+                password: hashedPassword,
+                name: account.name,
+                role: account.role,
+                updatedAt: new Date()
+              }
+            });
+            console.log(`🔄 업데이트: ${account.email} (ID: ${existingUser.id})`);
+            updated++;
+          } else {
+            console.log(`⏭️  건너뜀: ${account.email} (ID: ${existingUser.id}) - 이미 최신`);
+            skipped++;
+          }
+        } else {
+          // 새 계정 생성
+          const hashedPassword = await bcrypt.hash(account.password, 10);
+          const newUser = await prisma.user.create({
+            data: {
+              email: account.email,
+              password: hashedPassword,
+              name: account.name,
+              role: account.role,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          });
+          console.log(`✅ 생성: ${account.email} (ID: ${newUser.id})`);
+          created++;
+        }
+      } catch (error: any) {
+        console.error(`❌ 오류 (${account.email}): ${error.message}`);
+      }
+    }
+
+    console.log('─'.repeat(60));
+    console.log(`📊 결과: 생성 ${created}개, 업데이트 ${updated}개, 건너뜀 ${skipped}개`);
+    console.log();
+
+    // 전체 사용자 목록 조회
+    console.log('📋 전체 사용자 목록:');
+    console.log('─'.repeat(80));
+    console.log('ID │ 이메일                        │ 이름         │ 역할     │ 프로젝트');
+    console.log('─'.repeat(80));
+
+    const allUsers = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        _count: {
+          select: {
+            smartplaceInfo: true,
+            trackingProjects: true,
+            blogTrackingProjects: true
+          }
+        }
+      },
+      orderBy: { id: 'asc' }
+    });
+
+    for (const user of allUsers) {
+      const id = user.id.toString().padStart(2);
+      const email = user.email.padEnd(29);
+      const name = (user.name || '-').padEnd(12);
+      const role = user.role.padEnd(8);
+      const sp = user._count.smartplaceInfo.toString().padStart(2);
+      const tp = user._count.trackingProjects.toString().padStart(2);
+      const bl = user._count.blogTrackingProjects.toString().padStart(2);
+
+      console.log(`${id} │ ${email} │ ${name} │ ${role} │ SP:${sp} TP:${tp} BL:${bl}`);
+    }
+
+    console.log('─'.repeat(80));
+    console.log(`📊 총 ${allUsers.length}개 계정`);
+    console.log();
+
+    // 로그인 정보 요약
+    console.log('╔══════════════════════════════════════════════════════════════╗');
+    console.log('║                    🔐 테스트 로그인 정보                      ║');
+    console.log('╠══════════════════════════════════════════════════════════════╣');
+
+    for (const account of accounts) {
+      const roleStr = account.role.toUpperCase().padEnd(7);
+      const emailStr = account.email.padEnd(27);
+      console.log(`║ ${roleStr} │ ${emailStr} │ ${account.password.padEnd(10)} ║`);
+    }
+
+    console.log('╚══════════════════════════════════════════════════════════════╝');
+    console.log();
+
+    console.log('✨ 초기 계정 설정 완료!');
+    console.log('🌐 웹사이트: https://marketingplat.shop');
+    console.log('📧 관리자: admin@marketingplat.com / admin123');
+    console.log();
+
+  } catch (error: any) {
+    console.error('❌ 초기화 실패:', error.message);
+    console.error('상세 오류:', error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+// 메인 실행
+initAccounts().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
