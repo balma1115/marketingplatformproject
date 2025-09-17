@@ -2,6 +2,24 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  // 프로덕션 환경에서 HTTPS 리디렉션
+  if (process.env.NODE_ENV === 'production') {
+    const proto = request.headers.get('x-forwarded-proto');
+    const host = request.headers.get('host');
+
+    // HTTP로 들어온 요청을 HTTPS로 리디렉션
+    if (proto === 'http' && host) {
+      const httpsUrl = `https://${host}${request.nextUrl.pathname}${request.nextUrl.search}`;
+      return NextResponse.redirect(httpsUrl, 301);
+    }
+
+    // www 없는 도메인을 www로 리디렉션
+    if (host && host === 'marekplace.co.kr') {
+      const wwwUrl = `https://www.marekplace.co.kr${request.nextUrl.pathname}${request.nextUrl.search}`;
+      return NextResponse.redirect(wwwUrl, 301);
+    }
+  }
+
   const response = NextResponse.next();
 
   // Security Headers
@@ -44,7 +62,7 @@ export function middleware(request: NextRequest) {
 
     // Allowed origins - Update based on your domains
     const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? ['https://marketingplat.com', 'https://www.marketingplat.com']
+      ? ['https://marekplace.co.kr', 'https://www.marekplace.co.kr']
       : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
     if (origin && allowedOrigins.includes(origin)) {

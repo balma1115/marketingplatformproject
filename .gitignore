@@ -110,3 +110,65 @@ prisma/dev.db-journal
 # Security - Logs
 *.log
 logs/
+
+# Test and migration files
+test-*.ts
+test-*.js
+check-*.ts
+check-*.js
+migrate-*.ts
+migrate-*.js
+migrate-*.sql
+data-migration.sql
+migration.sql
+*.test.ts
+*.test.js
+
+# Development and debugging files
+*-debug.ts
+*-debug.js
+*-test.ts
+*-test.js
+process-*.ts
+direct-*.js
+generate-*.js
+clean-*.js
+compare-*.ts
+complete-*.ts
+safe-*.ts
+simple-*.sql
+update-*.sql
+
+# Redis
+redis/
+*.zip
+
+# PM2
+ecosystem.config.js
+
+# Analysis files
+*-analysis-*.json
+*-analysis-*.md
+
+# Temporary test data
+test/
+tests/
+testing/
+*.png
+*.jpg
+*.jpeg
+nul
+
+# PostgreSQL specific
+.env.postgresql
+schema.postgresql.prisma
+schema.sqlite.prisma
+*.psql
+
+# Data files
+data/
+tsv-*.json
+
+# Documentation (development only)
+test-results-*.md
+naverkeyword.md
