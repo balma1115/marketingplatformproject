@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 프로덕션에서 도메인 사용 강제
-  assetPrefix: process.env.NODE_ENV === 'production' ? 'https://www.marekplace.co.kr' : '',
+  // assetPrefix 제거 - IP 주소 직접 사용
+  // assetPrefix: process.env.NODE_ENV === 'production' ? 'https://www.marekplace.co.kr' : '',
 
   // Next.js 15에서는 experimental.serverComponentsExternalPackages가 serverExternalPackages로 이동
   serverExternalPackages: ['playwright', 'playwright-core', 'playwright-chromium'],
