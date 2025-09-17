@@ -446,7 +446,7 @@ export default function AdExtensionsTab({ adgroupId, campaignType }: AdExtension
                                   <div>
                                     {adData.imagePath ? (
                                       <img 
-                                        src={getImageUrl(adData.imagePath)} 
+                                        src={getImageUrl(adData.imagePath) || ''} 
                                         alt="파워링크 이미지"
                                         className="w-16 h-16 object-cover rounded border"
                                       />
@@ -497,7 +497,7 @@ export default function AdExtensionsTab({ adgroupId, campaignType }: AdExtension
                                   <div>
                                     {adData.imagePath ? (
                                       <img 
-                                        src={getImageUrl(adData.imagePath)} 
+                                        src={getImageUrl(adData.imagePath) || ''} 
                                         alt="카탈로그 이미지"
                                         className="w-16 h-16 object-cover rounded border"
                                       />
@@ -547,7 +547,7 @@ export default function AdExtensionsTab({ adgroupId, campaignType }: AdExtension
                                   <div className="space-y-1">
                                     {adData.imagePath && (
                                       <img 
-                                        src={getImageUrl(adData.imagePath)} 
+                                        src={getImageUrl(adData.imagePath) || ''} 
                                         alt="동영상 썸네일"
                                         className="w-20 h-12 object-cover rounded"
                                       />
