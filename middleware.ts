@@ -2,23 +2,23 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // HTTPS 리디렉션 비활성화 - HTTP만 사용
-  // if (process.env.NODE_ENV === 'production') {
-  //   const proto = request.headers.get('x-forwarded-proto');
-  //   const host = request.headers.get('host');
+  // 프로덕션 환경에서 HTTPS 리디렉션
+  if (process.env.NODE_ENV === 'production') {
+    const proto = request.headers.get('x-forwarded-proto');
+    const host = request.headers.get('host');
 
-  //   // HTTP로 들어온 요청을 HTTPS로 리디렉션
-  //   if (proto === 'http' && host) {
-  //     const httpsUrl = `https://${host}${request.nextUrl.pathname}${request.nextUrl.search}`;
-  //     return NextResponse.redirect(httpsUrl, 301);
-  //   }
+    // HTTP로 들어온 요청을 HTTPS로 리디렉션
+    if (proto === 'http' && host) {
+      const httpsUrl = `https://${host}${request.nextUrl.pathname}${request.nextUrl.search}`;
+      return NextResponse.redirect(httpsUrl, 301);
+    }
 
-  //   // www 없는 도메인을 www로 리디렉션
-  //   if (host && host === 'marekplace.co.kr') {
-  //     const wwwUrl = `https://www.marekplace.co.kr${request.nextUrl.pathname}${request.nextUrl.search}`;
-  //     return NextResponse.redirect(wwwUrl, 301);
-  //   }
-  // }
+    // www.miraenad.com을 miraenad.com으로 리디렉션
+    if (host && host === 'www.miraenad.com') {
+      const nonWwwUrl = `https://miraenad.com${request.nextUrl.pathname}${request.nextUrl.search}`;
+      return NextResponse.redirect(nonWwwUrl, 301);
+    }
+  }
 
   const response = NextResponse.next();
 

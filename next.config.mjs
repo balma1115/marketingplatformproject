@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // assetPrefix 제거 - IP 주소 직접 사용
-  // assetPrefix: process.env.NODE_ENV === 'production' ? 'https://www.marekplace.co.kr' : '',
+  // 프로덕션에서 miraenad.com 도메인 사용
+  assetPrefix: process.env.NODE_ENV === 'production' ? 'https://miraenad.com' : '',
 
   // Next.js 15에서는 experimental.serverComponentsExternalPackages가 serverExternalPackages로 이동
   serverExternalPackages: ['playwright', 'playwright-core', 'playwright-chromium'],
@@ -37,7 +37,7 @@ const nextConfig = {
 
   // 이미지 최적화 설정
   images: {
-    domains: ['localhost', 'marekplace.co.kr', 'www.marekplace.co.kr'],
+    domains: ['localhost', 'miraenad.com', 'www.miraenad.com'],
     unoptimized: process.env.NODE_ENV === 'development',
   },
 
