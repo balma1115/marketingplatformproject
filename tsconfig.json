@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "app/**/*.ts", "app/**/*.tsx", "components/**/*.ts", "components/**/*.tsx", "lib/**/*.ts", "lib/**/*.tsx", "contexts/**/*.ts", "contexts/**/*.tsx", "hooks/**/*.ts", "hooks/**/*.tsx", "utils/**/*.ts", "utils/**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "check-*.ts", "test-*.ts", "scripts/**/*", "lambda-functions/**/*", "lambda/**/*", "*.js", "*.mjs"]
 }

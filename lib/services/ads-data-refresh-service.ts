@@ -221,7 +221,7 @@ export class AdsDataRefreshService {
         avgRnk: dayStats.avgRnk || 0,
         ctr: dayStats.ctr || 0,
         conversions: dayStats.ccnt || 0,
-        conversionRate: dayStats.convRs || 0
+        conversionRate: (dayStats as any).convRs || 0
       };
 
     } catch (error) {

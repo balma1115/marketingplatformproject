@@ -20,6 +20,7 @@ interface Keyword {
   useGroupBidAmt: boolean
   status: string
   inspectStatus: string
+  qualityIndex?: number
   stats?: {
     impCnt: number
     clkCnt: number
@@ -206,7 +207,7 @@ export default function AdGroupDetailPage() {
 
   const handleRefresh = () => {
     setForceRefresh(prev => prev + 1)
-    cacheManager.clearByPrefix(CacheKeys.adGroup(adgroupId))
+    cacheManager.invalidateAdGroup(adgroupId)
   }
   
   // 날짜 변경 핸들러
@@ -281,7 +282,7 @@ export default function AdGroupDetailPage() {
       if (!res.ok) throw new Error('Failed to toggle keyword')
       
       // 캐시 무효화 및 새로고침
-      cacheManager.clearByPrefix(CacheKeys.keywords(adgroupId))
+      cacheManager.invalidateAdGroup(adgroupId)
       setForceRefresh(prev => prev + 1)
     } catch (error) {
       console.error('Error toggling keyword:', error)
@@ -308,7 +309,7 @@ export default function AdGroupDetailPage() {
       if (!res.ok) throw new Error('Failed to update ad group')
       
       // 캐시 무효화 및 새로고침
-      cacheManager.clearByPrefix(CacheKeys.adGroup(adgroupId))
+      cacheManager.invalidateAdGroup(adgroupId)
       setForceRefresh(prev => prev + 1)
       setShowSettingsModal(false)
     } catch (error) {
@@ -638,9 +639,9 @@ export default function AdGroupDetailPage() {
                                 <div
                                   key={i}
                                   className={`w-1.5 h-4 ${
-                                    i < keyword.qualityIndex 
-                                      ? keyword.qualityIndex >= 6 ? 'bg-green-500' 
-                                        : keyword.qualityIndex >= 4 ? 'bg-yellow-500'
+                                    i < keyword.qualityIndex!
+                                      ? keyword.qualityIndex! >= 6 ? 'bg-green-500'
+                                        : keyword.qualityIndex! >= 4 ? 'bg-yellow-500'
                                         : 'bg-red-500'
                                       : 'bg-gray-200'
                                   }`}

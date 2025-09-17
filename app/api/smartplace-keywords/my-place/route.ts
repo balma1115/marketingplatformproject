@@ -10,14 +10,14 @@ export async function GET(req: NextRequest) {
       // TrackingProject 테이블에서 먼저 조회 (기존 데이터가 있을 수 있음)
       const trackingProject = await prisma.trackingProject.findFirst({
         where: {
-          userId: parseInt(userId)
+          userId: userId
         }
       })
       
       // SmartPlace 테이블에서 사용자의 스마트플레이스 프로젝트 조회 (1개만)
       let place = await prisma.smartPlace.findUnique({
         where: {
-          userId: parseInt(userId)
+          userId: userId
         },
         include: {
           _count: {
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
           // SmartPlace 생성 (고유한 placeId로)
           place = await prisma.smartPlace.create({
             data: {
-              userId: parseInt(userId),
+              userId: userId,
               placeId: newPlaceId,
               placeName: trackingProject.placeName
             },
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
           // placeId가 사용 가능하면 그대로 사용
           place = await prisma.smartPlace.create({
             data: {
-              userId: parseInt(userId),
+              userId: userId,
               placeId: trackingProject.placeId,
               placeName: trackingProject.placeName
             },
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
         for (const tk of trackingKeywords) {
           await prisma.smartPlaceKeyword.create({
             data: {
-              userId: parseInt(userId),
+              userId: userId,
               smartPlaceId: place.id,
               keyword: tk.keyword,
               isActive: tk.isActive

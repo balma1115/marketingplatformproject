@@ -811,7 +811,7 @@ function generateComprehensiveRecommendations(data: any, analysis: any) {
   }
   
   // Sort by priority
-  const priorityOrder = { high: 0, medium: 1, low: 2 }
+  const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
   recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
   
   return recommendations
@@ -1065,7 +1065,7 @@ function generateRecommendations(info: any, analysis: any) {
   }
 
   // Sort by priority
-  const priorityOrder = { high: 0, medium: 1, low: 2 }
+  const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
   recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
   
   return recommendations.slice(0, 8) // Return top 8 recommendations

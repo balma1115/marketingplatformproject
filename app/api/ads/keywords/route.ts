@@ -153,8 +153,8 @@ export async function PUT(request: NextRequest) {
 
     let result: any = null
     if (bulk && updates) {
-      // 일괄 수정
-      result = await naverAds.bulkUpdateKeywordBids(updates)
+      // 일괄 수정 - updateKeywords 메서드 사용
+      result = await naverAds.updateKeywords(updates)
     } else if (keywordId && updates) {
       // 개별 수정
       result = await naverAds.updateKeyword(keywordId, updates)

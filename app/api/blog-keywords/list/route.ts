@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
       // userId 파라미터가 있으면 해당 사용자의 데이터 조회, 없으면 현재 사용자의 데이터 조회
-      const queryUserId = targetUserId ? parseInt(targetUserId) : parseInt(userId)
+      const queryUserId = targetUserId ? parseInt(targetUserId) : userId
       
       // BlogTrackingProject 모두 조회
       const blogTrackingProjects = await prisma.blogTrackingProject.findMany({
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         }
       })
 
-      let formattedKeywords = [];
+      let formattedKeywords: any[] = [];
 
       if (blogTrackingProjects.length > 0) {
         // 모든 프로젝트의 키워드 조회
@@ -62,17 +62,17 @@ export async function GET(req: NextRequest) {
         })
 
         if (blogProjects.length > 0) {
-          // BlogKeyword 조회
-          const keywords = await prisma.blogKeyword.findMany({
+          // BlogTrackingKeyword 조회 (이전 스키마 호환성)
+          const keywords = await prisma.blogTrackingKeyword.findMany({
             where: {
               projectId: {
                 in: blogProjects.map(p => p.id)
               }
             },
             include: {
-              rankings: {
+              results: {
                 orderBy: {
-                  checkDate: 'desc'
+                  trackingDate: 'desc'
                 },
                 take: 1
               }
@@ -85,12 +85,12 @@ export async function GET(req: NextRequest) {
             keyword: k.keyword,
             isActive: k.isActive,
             addedDate: k.addedDate,
-            blogTabRank: k.rankings[0]?.rank || null,
-            mainTabExposed: k.rankings[0]?.mainTabExposed || false,
-            mainTabRank: k.rankings[0]?.rank || null,
-            viewTabRank: null,
-            adRank: null,
-            lastTracked: k.rankings[0]?.checkDate || null,
+            blogTabRank: k.results[0]?.blogTabRank || null,
+            mainTabExposed: k.results[0]?.mainTabExposed || false,
+            mainTabRank: k.results[0]?.mainTabRank || null,
+            viewTabRank: k.results[0]?.viewTabRank || null,
+            adRank: k.results[0]?.adRank || null,
+            lastTracked: k.results[0]?.trackingDate || null,
             createdAt: k.createdAt
           }))
         }

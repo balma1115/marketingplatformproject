@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       // 사용자의 스마트플레이스 프로젝트 찾기 (1개만 존재)
       const place = await prisma.smartPlace.findUnique({
         where: {
-          userId: parseInt(userId)
+          userId: userId
         }
       })
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
       const created = await prisma.smartPlaceKeyword.create({
         data: {
-          userId: parseInt(userId),
+          userId: userId,
           smartPlaceId: smartPlaceId,
           keyword: trimmedKeyword,
           isActive: true

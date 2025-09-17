@@ -143,7 +143,7 @@ export default function FocusKeywordManagement() {
     return 'text-gray-600'
   }
 
-  const filteredKeywords = keywords.filter(k => {
+  const filteredKeywords = keywords.filter((k: any) => {
     if (filter === 'smartplace' && !k.smartplace) return false
     if (filter === 'blog' && !k.blog) return false
     if (filter === 'both' && (!k.smartplace || !k.blog)) return false
@@ -158,7 +158,7 @@ export default function FocusKeywordManagement() {
   const exportToCSV = () => {
     const csvContent = [
       ['키워드', '스마트플레이스 오가닉', '스마트플레이스 광고', '블로그 통합검색', '블로그탭'],
-      ...filteredKeywords.map(k => [
+      ...filteredKeywords.map((k: any) => [
         k.keyword,
         k.smartplace?.currentRank || '-',
         k.smartplace?.adRank || '-',
@@ -362,7 +362,7 @@ export default function FocusKeywordManagement() {
                   </td>
                 </tr>
               ) : (
-                filteredKeywords.map((keyword, index) => (
+                filteredKeywords.map((keyword: any, index: number) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <strong>{keyword.keyword}</strong>

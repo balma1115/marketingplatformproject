@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   
   return withAuth(req, async (request, userId) => {
     try {
-      const queryUserId = targetUserId ? parseInt(targetUserId) : parseInt(userId)
+      const queryUserId = targetUserId ? parseInt(targetUserId) : userId
       
       // Get blog project
       const blogProject = await prisma.blogProject.findFirst({

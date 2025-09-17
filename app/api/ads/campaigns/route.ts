@@ -130,11 +130,18 @@ export async function PUT(request: NextRequest) {
         customerId: user.naverAdCustomerId
       })
 
-      const result = await naverAds.bulkUpdateCampaignStatus(campaignIds, enable)
-      
+      // Update campaigns individually since bulk update is not available
+      const results = await Promise.all(
+        campaignIds.map((campaignId: string) =>
+          naverAds.updateCampaign(campaignId, {
+            status: enable ? 'ELIGIBLE' : 'PAUSED'
+          })
+        )
+      )
+
       return NextResponse.json({
         success: true,
-        data: result
+        data: results
       })
     } catch (error: any) {
       console.error('Failed to update campaigns:', error)

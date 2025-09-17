@@ -33,7 +33,7 @@ export async function GET(
       }
       
       // Verify user has access
-      const queryUserId = targetUserId ? parseInt(targetUserId) : parseInt(userId)
+      const queryUserId = targetUserId ? parseInt(targetUserId) : userId
       if (keyword.project.userId !== queryUserId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }

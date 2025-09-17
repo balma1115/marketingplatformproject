@@ -5,7 +5,7 @@ import { withAuth } from '@/lib/auth-middleware'
 export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
-      const userIdNum = parseInt(userId)
+      const userIdNum = userId
       
       // 스마트플레이스 조회
       const smartPlace = await prisma.smartPlace.findFirst({

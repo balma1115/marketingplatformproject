@@ -884,8 +884,8 @@ export default function AdsDashboard() {
                   🎯 파워링크 성과 분석
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                  기간: {dashboardData.breakdown.period || dashboardData.breakdown.date}
-                  {dashboardData.breakdown.daysProcessed && ` (${dashboardData.breakdown.daysProcessed}일간)`}
+                  기간: {(dashboardData.breakdown as any).period || dashboardData.breakdown.date}
+                  {(dashboardData.breakdown as any).daysProcessed && ` (${(dashboardData.breakdown as any).daysProcessed}일간)`}
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

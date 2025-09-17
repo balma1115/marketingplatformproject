@@ -84,7 +84,7 @@ export default function DashboardLayout({
 
   if (!user) return null
 
-  const menus = roleMenus[user.role] || []
+  const menus = roleMenus[user.role as keyof typeof roleMenus] || []
 
   // For branch, academy, and user roles, don't show the dashboard layout
   if (['branch', 'academy', 'user'].includes(user.role)) {
@@ -178,7 +178,7 @@ export default function DashboardLayout({
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-xs text-gray-500 mb-1">현재 플랜</p>
               <p className="font-bold text-accent-blue capitalize">{user.plan}</p>
-              <p className="text-xs text-gray-500 mt-2">만료일: {user.planExpiry}</p>
+              <p className="text-xs text-gray-500 mt-2">만료일: {(user as any).planExpiry || '-'}</p>
               <Link 
                 href="/dashboard/plan"
                 className="mt-3 block text-center text-xs px-3 py-2 bg-white border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"

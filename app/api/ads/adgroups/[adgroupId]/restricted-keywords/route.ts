@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, props: Props) {
     const { adgroupId } = params
     
     // 인증 확인
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('token')
     
     if (!token) {
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest, props: Props) {
     const { adgroupId } = params
     
     // 인증 확인
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('token')
     
     if (!token) {
@@ -172,7 +172,7 @@ export async function DELETE(req: NextRequest, props: Props) {
     const { adgroupId } = params
     
     // 인증 확인
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('token')
     
     if (!token) {

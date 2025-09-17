@@ -157,7 +157,7 @@ export default function TrackingMonitorSSE() {
       const newJobs = new Map(prevJobs)
       
       if (data.action === 'added' || data.action === 'updated' || data.action === 'progress') {
-        const existingJob = newJobs.get(data.jobId) || {}
+        const existingJob: any = newJobs.get(data.jobId) || {}
         newJobs.set(data.jobId, {
           ...existingJob,
           id: data.jobId,

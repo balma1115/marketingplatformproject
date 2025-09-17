@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       // 기존 스마트플레이스 확인 (사용자당 1개만 허용)
       const existing = await prisma.smartPlace.findUnique({
         where: {
-          userId: parseInt(userId)
+          userId: userId
         }
       })
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       // 스마트플레이스 프로젝트 생성
       const place = await prisma.smartPlace.create({
         data: {
-          userId: parseInt(userId),
+          userId: userId,
           placeName: extractedPlaceName,
           placeId: finalPlaceId
         },

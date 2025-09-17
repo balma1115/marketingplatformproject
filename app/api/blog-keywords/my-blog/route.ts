@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
       // BlogTrackingProject에서 사용자의 블로그 프로젝트 조회 (1개만)
       const blog = await prisma.blogTrackingProject.findFirst({
         where: {
-          userId: parseInt(userId)
+          userId: userId
         },
         include: {
           _count: {

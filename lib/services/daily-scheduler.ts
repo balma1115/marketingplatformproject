@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import { trackAllUsers } from './simple-tracking-service';
 import { adsDataRefreshService } from './ads-data-refresh-service';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -24,9 +24,8 @@ class DailyScheduler {
     this.dailyJob = cron.schedule('0 0 * * *', async () => {
       await this.runAllDailyTasks();
     }, {
-      scheduled: false,
       timezone
-    });
+    } as any);
 
     // 다음 실행 시간 계산
     this.calculateNextRunTime();

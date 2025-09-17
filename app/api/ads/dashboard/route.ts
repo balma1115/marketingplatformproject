@@ -71,12 +71,10 @@ export async function GET(request: NextRequest) {
             ...campaign,
             stats,
             // 캠페인 유형 한글 변환
-            campaignTypeLabel: 
+            campaignTypeLabel:
               campaign.campaignTp === 'WEB_SITE' ? '파워링크' :
               campaign.campaignTp === 'POWER_CONTENTS' ? '파워콘텐츠' :
-              campaign.campaignTp === 'PLACE' ? '플레이스' :
               campaign.campaignTp === 'SHOPPING' ? '쇼핑' :
-              campaign.campaignTp === 'BRAND_SEARCH' ? '브랜드검색' :
               campaign.campaignTp
           }
         } catch (error) {
@@ -91,12 +89,10 @@ export async function GET(request: NextRequest) {
               cpc: 0,
               avgRnk: 0
             },
-            campaignTypeLabel: 
+            campaignTypeLabel:
               campaign.campaignTp === 'WEB_SITE' ? '파워링크' :
               campaign.campaignTp === 'POWER_CONTENTS' ? '파워콘텐츠' :
-              campaign.campaignTp === 'PLACE' ? '플레이스' :
               campaign.campaignTp === 'SHOPPING' ? '쇼핑' :
-              campaign.campaignTp === 'BRAND_SEARCH' ? '브랜드검색' :
               campaign.campaignTp
           }
         }

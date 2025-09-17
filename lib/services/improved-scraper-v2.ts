@@ -134,7 +134,7 @@ export class ImprovedNaverScraperV2 {
         await frame.waitForTimeout(1000)
         
         // 페이지네이션 버튼 찾기
-        const paginationHandled = await frame.evaluate((pageNum) => {
+        const paginationHandled = await frame.evaluate((pageNum: number) => {
           // 다음 페이지 버튼
           const nextButton = document.querySelector('#app-root > div > div.XUrfU > div.zRM9F > a:nth-child(7)')
           if (nextButton && !nextButton.classList.contains('fvwqf')) { // disabled가 아닌 경우
@@ -168,7 +168,7 @@ export class ImprovedNaverScraperV2 {
           // 새 결과가 로드될 때까지 대기
           try {
             await frame.waitForFunction(
-              (prevCount) => {
+              (prevCount: number) => {
                 const items = document.querySelectorAll('#_pcmap_list_scroll_container > ul > li')
                 return items.length !== prevCount
               },
@@ -245,8 +245,8 @@ export class ImprovedNaverScraperV2 {
         
         // iframe 찾기
         const frames = page.frames()
-        let searchFrame = page
-        
+        let searchFrame: any = page
+
         for (const frame of frames) {
           if (frame.url().includes('pcmap.place.naver.com')) {
             searchFrame = frame
@@ -346,16 +346,16 @@ export class ImprovedNaverScraperV2 {
           return items
         })
         
-        console.log(`Found ${results.length} results`)
-        
+        console.log(`Found ${allResults.length} results`)
+
         // 타겟 찾기
         let organicRank: number | null = null
-        let adRank: number | null = null  
+        let adRank: number | null = null
         let found = false
         const topTenPlaces: any[] = []
         
         // 빈 이름 제거
-        const validResults = results.filter(r => r.placeName && r.placeName.trim() !== '')
+        const validResults = allResults.filter(r => r.placeName && r.placeName.trim() !== '')
         
         // 스마트플레이스에 등록된 이름만 사용
         const targetNormalized = this.normalizeName(targetPlace.placeName)
@@ -417,7 +417,7 @@ export class ImprovedNaverScraperV2 {
         await page.close()
         await context.close()
       }
-    })
+    }) as Promise<SmartPlaceRankingResult>
   }
 
   // 여러 키워드를 Queue로 처리

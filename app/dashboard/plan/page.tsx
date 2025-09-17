@@ -73,7 +73,7 @@ export default function PlanManagementPage() {
     { date: '2024-09-01', amount: '₩99,000', status: '결제완료', invoice: 'INV-2024-09-001' }
   ]
 
-  const currentPlan = currentPlanDetails[user?.plan || 'basic']
+  const currentPlan = currentPlanDetails[(user?.plan || 'basic') as keyof typeof currentPlanDetails]
 
   const upgradePlans = [
     {
@@ -136,9 +136,9 @@ export default function PlanManagementPage() {
                 </span>
               </div>
               <p className="text-gray-600">
-                {user?.plan === 'basic' 
-                  ? `무료 체험 기간: ${user?.planExpiry}까지`
-                  : `다음 결제일: ${user?.planExpiry}`
+                {user?.plan === 'basic'
+                  ? `무료 체험 기간: ${(user as any)?.planExpiry || '2025-01-31'}까지`
+                  : `다음 결제일: ${(user as any)?.planExpiry || '2025-01-31'}`
                 }
               </p>
             </div>
@@ -154,16 +154,16 @@ export default function PlanManagementPage() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">블로그 포스트</span>
                 <span className="text-sm font-medium">
-                  {user?.usage?.blogPosts || 0}/{user?.usage?.blogPostsLimit === 999999 ? '∞' : (user?.usage?.blogPostsLimit || 0)}
+                  {(user as any)?.usage?.blogPosts || 0}/{(user as any)?.usage?.blogPostsLimit === 999999 ? '∞' : ((user as any)?.usage?.blogPostsLimit || 0)}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-blue-500 h-2 rounded-full"
                   style={{ 
-                    width: user?.usage?.blogPostsLimit === 999999 
+                    width: (user as any)?.usage?.blogPostsLimit === 999999 
                       ? '0%' 
-                      : `${((user?.usage?.blogPosts || 0) / (user?.usage?.blogPostsLimit || 1)) * 100}%` 
+                      : `${(((user as any)?.usage?.blogPosts || 0) / ((user as any)?.usage?.blogPostsLimit || 1)) * 100}%` 
                   }}
                 />
               </div>
@@ -172,16 +172,16 @@ export default function PlanManagementPage() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">키워드 분석</span>
                 <span className="text-sm font-medium">
-                  {user?.usage?.keywords || 0}/{user?.usage?.keywordsLimit === 999999 ? '∞' : (user?.usage?.keywordsLimit || 0)}
+                  {(user as any)?.usage?.keywords || 0}/{(user as any)?.usage?.keywordsLimit === 999999 ? '∞' : ((user as any)?.usage?.keywordsLimit || 0)}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-green-500 h-2 rounded-full"
                   style={{ 
-                    width: user?.usage?.keywordsLimit === 999999 
+                    width: (user as any)?.usage?.keywordsLimit === 999999 
                       ? '0%' 
-                      : `${((user?.usage?.keywords || 0) / (user?.usage?.keywordsLimit || 1)) * 100}%` 
+                      : `${(((user as any)?.usage?.keywords || 0) / ((user as any)?.usage?.keywordsLimit || 1)) * 100}%` 
                   }}
                 />
               </div>
@@ -190,16 +190,16 @@ export default function PlanManagementPage() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">썸네일 생성</span>
                 <span className="text-sm font-medium">
-                  {user?.usage?.thumbnails || 0}/{user?.usage?.thumbnailsLimit === 999999 ? '∞' : (user?.usage?.thumbnailsLimit || 0)}
+                  {(user as any)?.usage?.thumbnails || 0}/{(user as any)?.usage?.thumbnailsLimit === 999999 ? '∞' : ((user as any)?.usage?.thumbnailsLimit || 0)}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-purple-500 h-2 rounded-full"
                   style={{ 
-                    width: user?.usage?.thumbnailsLimit === 999999 
+                    width: (user as any)?.usage?.thumbnailsLimit === 999999 
                       ? '0%' 
-                      : `${((user?.usage?.thumbnails || 0) / (user?.usage?.thumbnailsLimit || 1)) * 100}%` 
+                      : `${(((user as any)?.usage?.thumbnails || 0) / ((user as any)?.usage?.thumbnailsLimit || 1)) * 100}%` 
                   }}
                 />
               </div>

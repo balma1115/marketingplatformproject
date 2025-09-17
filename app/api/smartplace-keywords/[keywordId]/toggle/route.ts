@@ -19,19 +19,14 @@ export async function PUT(
     }
 
     const userId = decoded.userId
-    const { keywordId: keywordIdStr } = await params // await params
-    const keywordId = parseInt(keywordIdStr)
+    const { keywordId } = await params // await params
     const { isActive } = await req.json()
-
-    if (isNaN(keywordId)) {
-      return NextResponse.json({ error: 'Invalid keyword ID' }, { status: 400 })
-    }
 
     // 키워드 확인 - SmartPlaceKeyword 사용
     const keyword = await prisma.smartPlaceKeyword.findFirst({
       where: {
         id: keywordId,
-        userId: parseInt(userId)
+        userId: userId
       }
     })
 

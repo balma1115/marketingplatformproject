@@ -92,19 +92,27 @@ export async function GET(request: NextRequest) {
           impressions: 0,
           clicks: 0,
           cost: 0,
-          costWithVAT: 0
+          costWithVAT: 0,
+          ctr: 0,
+          cpc: 0
         },
         keywords: {
           impressions: 0,
           clicks: 0,
           cost: 0,
-          costWithVAT: 0
+          costWithVAT: 0,
+          ctr: 0,
+          cpc: 0,
+          percentage: 0
         },
         expanded: {
           impressions: 0,
           clicks: 0,
           cost: 0,
-          costWithVAT: 0
+          costWithVAT: 0,
+          ctr: 0,
+          cpc: 0,
+          percentage: 0
         }
       }
 

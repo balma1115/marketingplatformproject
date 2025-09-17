@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         // 사용자의 스마트플레이스 프로젝트 찾기
         const place = await prisma.smartPlace.findUnique({
           where: {
-            userId: parseInt(userId)
+            userId: userId
           }
         })
 
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       // 추적 세션 생성 (TrackingSession 테이블은 그대로 사용)
       const session = await prisma.trackingSession.create({
         data: {
-          userId: parseInt(userId),
+          userId: userId,
           projectId: null, // SmartPlace는 projectId가 없으므로 null
           totalKeywords: keywords.length,
           completedKeywords: 0,
@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
                   adRank: result.adRank,
                   checkDate: checkDate,
                   totalResults: result.topTenPlaces?.length || 0,
-                  topTenPlaces: result.topTenPlaces ? JSON.stringify(result.topTenPlaces) : null
+                  topTenPlaces: result.topTenPlaces || []
                 }
               })
               
@@ -240,7 +240,7 @@ export async function POST(req: NextRequest) {
                     adRank: null,
                     checkDate: checkDate,
                     totalResults: 0,
-                    topTenPlaces: null
+                    topTenPlaces: []
                   }
                 })
               } catch (saveError) {

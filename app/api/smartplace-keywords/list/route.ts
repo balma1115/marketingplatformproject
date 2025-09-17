@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
       // userId 파라미터가 있으면 해당 사용자의 데이터 조회, 없으면 현재 사용자의 데이터 조회
-      const queryUserId = targetUserId ? parseInt(targetUserId) : parseInt(userId)
+      const queryUserId = targetUserId ? parseInt(targetUserId) : userId
       
       // 스마트플레이스 먼저 조회
       const smartPlace = await prisma.smartPlace.findFirst({

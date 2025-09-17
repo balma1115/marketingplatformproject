@@ -44,13 +44,13 @@ export async function POST(req: NextRequest) {
     
     // 사용자 정보 조회
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(userId) },
+      where: { id: userId },
       select: { name: true, email: true }
     })
     
     // TrackingManager에 작업 등록
     const jobId = trackingManager.addJob({
-      userId: userId,
+      userId: String(userId),
       userName: user?.name || 'Unknown',
       userEmail: user?.email || '',
       type: 'smartplace',
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         // 사용자의 스마트플레이스 프로젝트 찾기
         const place = await prisma.smartPlace.findUnique({
           where: {
-            userId: parseInt(userId)
+            userId: userId
           }
         })
 
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       // 추적 세션 생성 (TrackingSession 테이블은 그대로 사용)
       const session = await prisma.trackingSession.create({
         data: {
-          userId: parseInt(userId),
+          userId: userId,
           projectId: null, // SmartPlace는 projectId가 없으므로 null
           totalKeywords: keywords.length,
           completedKeywords: 0,
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
                   adRank: result.adRank,
                   checkDate: checkDate,
                   totalResults: result.topTenPlaces?.length || 0,
-                  topTenPlaces: result.topTenPlaces ? JSON.stringify(result.topTenPlaces) : null
+                  topTenPlaces: result.topTenPlaces || []
                 }
               })
               
@@ -262,7 +262,7 @@ export async function POST(req: NextRequest) {
                   adRank: null,
                   checkDate: checkDate,
                   totalResults: 0,
-                  topTenPlaces: null
+                  topTenPlaces: []
                 }
               })
             } catch (error) {
@@ -304,7 +304,7 @@ export async function POST(req: NextRequest) {
           })
           
           try {
-            const rankings = await scraper.trackRanking(keyword.keyword, {
+            const rankings = await (scraper as any).trackRanking(keyword.keyword, {
               placeId: place.placeId,
               placeName: place.placeName
             })
@@ -316,7 +316,7 @@ export async function POST(req: NextRequest) {
                 adRank: rankings.adRank,
                 checkDate: checkDate,
                 totalResults: rankings.topTenPlaces?.length || 0,
-                topTenPlaces: rankings.topTenPlaces ? JSON.stringify(rankings.topTenPlaces) : null
+                topTenPlaces: rankings.topTenPlaces || []
               }
             })
             

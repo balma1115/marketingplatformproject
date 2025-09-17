@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Set the auth cookie
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

@@ -15,7 +15,7 @@ export async function GET(
       const keyword = await prisma.smartPlaceKeyword.findFirst({
         where: {
           id: keywordIdParam, // 문자열 ID 직접 사용
-          userId: parseInt(userId)
+          userId: userId
         },
         include: {
           smartPlace: true

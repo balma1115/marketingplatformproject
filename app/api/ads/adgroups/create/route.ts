@@ -7,7 +7,7 @@ import { prisma } from '@/lib/db'
 export async function POST(req: NextRequest) {
   try {
     // 인증 확인
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('token')
     
     if (!token) {

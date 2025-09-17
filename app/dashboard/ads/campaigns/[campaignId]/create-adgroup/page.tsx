@@ -12,6 +12,9 @@ interface Place {
   placeName: string
   address?: string
   phoneNumber?: string
+  isRegistered?: boolean
+  status?: string
+  category?: string
 }
 
 interface Campaign {

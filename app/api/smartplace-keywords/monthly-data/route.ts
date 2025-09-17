@@ -5,8 +5,8 @@ import { withAuth } from '@/lib/auth-middleware'
 export async function GET(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     try {
-      // userId를 숫자로 변환 (문자열로 전달될 수 있음)
-      const numericUserId = typeof userId === 'string' ? parseInt(userId) : userId;
+      // userId는 withAuth에서 이미 number 타입으로 전달됨
+      const numericUserId = userId;
       
       console.log('[Monthly Data API] User ID:', userId, 'Type:', typeof userId, 'Numeric:', numericUserId);
       

@@ -43,9 +43,9 @@ export async function POST(
       customerId: user.naverAdCustomerId
     })
 
-    // 캠페인 상태 업데이트
+    // 캠페인 상태 업데이트 (ELIGIBLE는 활성화된 상태를 의미)
     const updatedCampaign = await naverAds.updateCampaign(campaignId, {
-      status: enabled ? 'ENABLED' : 'PAUSED'
+      status: enabled ? 'ELIGIBLE' : 'PAUSED'
     })
 
     return NextResponse.json({
