@@ -53,7 +53,7 @@ if [ -f .env.local_backup ]; then
         grep "DATABASE_URL" .env.local_backup >> .env
         echo -e "${GREEN}✅ DATABASE_URL 복원${NC}"
     else
-        echo 'DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"' >> .env
+        echo 'DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"' >> .env
         echo -e "${YELLOW}⚠️  DATABASE_URL을 기본값으로 설정${NC}"
     fi
     echo "" >> .env
@@ -92,7 +92,7 @@ else
 NODE_ENV=production
 
 # Database - AWS RDS
-DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
+DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
 
 # Domain
 NEXTAUTH_URL=https://miraenad.com

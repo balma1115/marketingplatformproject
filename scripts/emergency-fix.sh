@@ -39,7 +39,7 @@ fi
 cat > .env << 'ENVEOF'
 # CRITICAL: Production Database Configuration
 NODE_ENV=production
-DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
+DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
 
 # Domain
 NEXTAUTH_URL=https://miraenad.com
@@ -62,7 +62,7 @@ grep DATABASE_URL .env
 echo ""
 
 # 4. 환경변수 export (빌드 시 사용)
-export DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
+export DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
 export NODE_ENV=production
 export NEXTAUTH_URL=https://miraenad.com
 
@@ -87,7 +87,7 @@ node << 'NODEEOF'
 const { PrismaClient } = require('@prisma/client');
 
 // 환경변수 직접 설정
-process.env.DATABASE_URL = "postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat";
+process.env.DATABASE_URL = "postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat";
 
 const prisma = new PrismaClient({
   datasources: {
@@ -122,7 +122,7 @@ echo ""
 echo -e "${BLUE}🏗️  Next.js 빌드 (환경변수 강제 적용)...${NC}"
 
 # 빌드 시 환경변수 명시적 전달
-DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat" \
+DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat" \
 NODE_ENV=production \
 NEXTAUTH_URL=https://miraenad.com \
 npm run build
@@ -152,7 +152,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 3000,
-      DATABASE_URL: 'postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat',
+      DATABASE_URL: 'postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat',
       NEXTAUTH_URL: 'https://miraenad.com',
       JWT_SECRET: 'MiraenAdProductionJWTSecretKey2025SuperSecure',
       NEXTAUTH_SECRET: 'MiraenAdProductionNextAuthSecretKey2025SuperSecure'

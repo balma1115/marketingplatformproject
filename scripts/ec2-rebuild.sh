@@ -34,7 +34,7 @@ if grep -q "localhost:5432" .env; then
     cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
 
     # 자동 수정
-    sed -i 's|DATABASE_URL="postgresql://[^"]*"|DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"|' .env
+    sed -i 's|DATABASE_URL="postgresql://[^"]*"|DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"|' .env
     echo "✅ DATABASE_URL 수정 완료"
 else
     echo "✅ DATABASE_URL 정상"

@@ -22,7 +22,7 @@ if grep -q "localhost:5432" .env; then
     echo ""
     echo "📝 다음과 같이 .env 파일을 수정하세요:"
     echo ""
-    echo "DATABASE_URL=\"postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat\""
+    echo "DATABASE_URL=\"postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat\""
     echo ""
 
     # 자동 수정 옵션
@@ -30,7 +30,7 @@ if grep -q "localhost:5432" .env; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         # DATABASE_URL 자동 수정
-        sed -i 's|DATABASE_URL="postgresql://[^"]*"|DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"|' .env
+        sed -i 's|DATABASE_URL="postgresql://[^"]*"|DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"|' .env
         echo "✅ DATABASE_URL 수정 완료"
     fi
 else

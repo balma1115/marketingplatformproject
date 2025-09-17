@@ -46,7 +46,7 @@ if (dbUrlMatch) {
     console.log('   AWS RDS로 변경 필요');
 
     // 자동 수정
-    const newDbUrl = 'postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat';
+    const newDbUrl = 'postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat';
     envContent = envContent.replace(/DATABASE_URL="[^"]+"/g, `DATABASE_URL="${newDbUrl}"`);
     fs.writeFileSync(envPath, envContent);
     console.log('✅ DATABASE_URL 수정 완료');

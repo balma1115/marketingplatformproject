@@ -109,7 +109,7 @@ fetch('/api/auth/login', {
 nano .env
 
 # DATABASE_URL을 AWS RDS로 변경
-DATABASE_URL="postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
+DATABASE_URL="postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat"
 
 # PM2 재시작
 pm2 restart marketingplat

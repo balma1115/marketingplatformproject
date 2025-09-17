@@ -35,7 +35,7 @@ fi
 
 # .env 파일 확인 및 수정
 if ! grep -q "DATABASE_URL" .env; then
-    echo "DATABASE_URL=\"postgresql://postgres:Devmoonki119!@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat\"" >> .env
+    echo "DATABASE_URL=\"postgresql://postgres:Asungmini77A@marketingplat-db.cn2ke0yskrjo.ap-northeast-2.rds.amazonaws.com:5432/marketingplat\"" >> .env
     echo -e "${GREEN}✅ DATABASE_URL 추가${NC}"
 fi
 
