@@ -99,11 +99,11 @@ export async function GET(
       
       // Parse ad JSON if present
       ads = ads.map((ad: any) => {
-        let parsedAd = {}
-        
+        let parsedAd: any = {}
+
         // 전체 ad 객체 구조 확인을 위한 로깅
         console.log(`Ad ${ad.nccAdId} type:`, ad.type)
-        
+
         // ad 필드가 JSON 문자열인 경우 파싱
         if (ad.ad) {
           if (typeof ad.ad === 'string') {
@@ -189,12 +189,12 @@ export async function GET(
           description: finalDescription,
           allHeadlines: allHeadlines,
           allDescriptions: allDescriptions,
-          pc: parsedAd.pc || ad.pc,
-          mobile: parsedAd.mobile || ad.mobile,
-          pcUrl: parsedAd.pc?.final || ad.pcUrl || ad.pc?.url || ad.ad?.pc?.final,
-          mobileUrl: parsedAd.mobile?.final || ad.mobileUrl || ad.mobile?.url || ad.ad?.mobile?.final,
-          pcDisplayUrl: ad.pcDisplayUrl || ad.pc?.displayUrl || parsedAd.pc?.display || ad.ad?.pc?.display,
-          mobileDisplayUrl: ad.mobileDisplayUrl || ad.mobile?.displayUrl || parsedAd.mobile?.display || ad.ad?.mobile?.display,
+          pc: parsedAd?.pc || ad.pc,
+          mobile: parsedAd?.mobile || ad.mobile,
+          pcUrl: parsedAd?.pc?.final || ad.pcUrl || ad.pc?.url || ad.ad?.pc?.final,
+          mobileUrl: parsedAd?.mobile?.final || ad.mobileUrl || ad.mobile?.url || ad.ad?.mobile?.final,
+          pcDisplayUrl: ad.pcDisplayUrl || ad.pc?.displayUrl || parsedAd?.pc?.display || ad.ad?.pc?.display,
+          mobileDisplayUrl: ad.mobileDisplayUrl || ad.mobile?.displayUrl || parsedAd?.mobile?.display || ad.ad?.mobile?.display,
           parsedAd: parsedAd
         }
       })
