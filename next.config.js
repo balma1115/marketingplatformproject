@@ -1,26 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
 
   // 이미지 도메인 허용
   images: {
     domains: ['localhost', 'miraenad.com', 'images.unsplash.com'],
-  },
-
-  // API 요청 크기 제한 증가
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-    responseLimit: false,
-  },
-
-  // 서버 설정
-  serverOptions: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
   },
 
   // 환경 변수
@@ -37,6 +21,13 @@ const nextConfig = {
       tls: false,
     }
     return config
+  },
+
+  // 실험적 기능 - 요청 크기 제한
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
 }
 

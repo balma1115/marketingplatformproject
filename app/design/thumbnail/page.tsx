@@ -44,7 +44,7 @@ export default function ThumbnailCreatorPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50">
       {/* Top Toolbar */}
       <TopToolbar
         canvasSize={canvasSize}
