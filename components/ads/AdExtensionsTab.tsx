@@ -462,7 +462,7 @@ export default function AdExtensionsTab({ adgroupId, campaignType }: AdExtension
                                         <div key={idx} className="flex items-start gap-3 p-2 bg-gray-50 rounded">
                                           {link.imagePath && (
                                             <img 
-                                              src={getImageUrl(link.imagePath)} 
+                                              src={getImageUrl(link.imagePath) || ''} 
                                               alt={link.name}
                                               className="w-12 h-12 object-cover rounded"
                                             />
