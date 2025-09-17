@@ -80,11 +80,17 @@ export default function Header() {
 
   // 학원/지사용 메뉴 - 대시보드만 추가
   let menuItems = [...commonMenuItems]
-  
+
   if (user && (user.role === 'academy' || user.role === 'agency')) {
     // 학원/지사는 대시보드 메뉴를 맨 앞에 추가
     menuItems = [
-      { href: '/dashboard', label: '대시보드', icon: Home },
+      {
+        label: '대시보드',
+        icon: Home,
+        children: [
+          { href: '/dashboard', label: '메인 대시보드' }
+        ]
+      },
       ...commonMenuItems
     ]
   }
@@ -129,9 +135,9 @@ export default function Header() {
                   </>
                 ) : (
                   <Link
-                    href={item.href}
+                    href={(item as any).href}
                     className={`px-3 py-2 text-sm font-medium rounded-md flex items-center space-x-1 ${
-                      pathname === item.href
+                      pathname === (item as any).href
                         ? 'text-brand-navy bg-gray-50'
                         : 'text-gray-700 hover:text-brand-navy hover:bg-gray-50'
                     }`}
@@ -224,10 +230,10 @@ export default function Header() {
                   </div>
                 ) : (
                   <Link
-                    href={item.href}
+                    href={(item as any).href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`block px-3 py-2 text-sm rounded-md flex items-center space-x-1 ${
-                      pathname === item.href
+                      pathname === (item as any).href
                         ? 'text-brand-navy bg-gray-50 font-medium'
                         : 'text-gray-700 hover:text-brand-navy hover:bg-gray-50'
                     }`}

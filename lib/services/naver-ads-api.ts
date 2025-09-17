@@ -637,11 +637,11 @@ export class NaverAdsAPI {
           since: params.dateRange.since,  // YYYYMMDD format
           until: params.dateRange.until   // YYYYMMDD format
         }
-      } else if (params.timeRange) {
+      } else if ((params as any).timeRange) {
         // Convert timeRange (YYYY-MM-DD) to dateRange (YYYYMMDD) format
         requestBody.dateRange = {
-          since: params.timeRange.since.replace(/-/g, ''),
-          until: params.timeRange.until.replace(/-/g, '')
+          since: (params as any).timeRange.since.replace(/-/g, ''),
+          until: (params as any).timeRange.until.replace(/-/g, '')
         }
       } else {
         throw new Error('Either dateRange or timeRange must be provided')

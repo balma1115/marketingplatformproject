@@ -345,7 +345,11 @@ export class ImprovedNaverScraperV2 {
           
           return items
         })
-        
+
+        allResults.push(...pageResults)
+        currentPage++
+        }
+
         console.log(`Found ${allResults.length} results`)
 
         // 타겟 찾기
@@ -398,9 +402,12 @@ export class ImprovedNaverScraperV2 {
             }
           }
         }
-        
+
         console.log(`Final Result - Organic: ${organicRank}, Ad: ${adRank}, Found: ${found}`)
-        
+
+        await page.close()
+        await context.close()
+
         return {
           organicRank,
           adRank,
@@ -408,14 +415,12 @@ export class ImprovedNaverScraperV2 {
           timestamp: new Date(),
           topTenPlaces
         }
-        
+
       } catch (error) {
-        console.error('Tracking error:', error)
-        throw error
-        
-      } finally {
         await page.close()
         await context.close()
+        console.error('Tracking error:', error)
+        throw error
       }
     }) as Promise<SmartPlaceRankingResult>
   }

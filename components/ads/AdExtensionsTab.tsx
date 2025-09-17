@@ -588,9 +588,9 @@ export default function AdExtensionsTab({ adgroupId, campaignType }: AdExtension
                                 ) : <span className="text-gray-400">전화번호 정보 없음</span>
                                 
                               case 'CALLOUT':
-                                return extension.adExtensionCallouts && extension.adExtensionCallouts.length > 0 ? (
+                                return (extension as any).adExtensionCallouts && (extension as any).adExtensionCallouts.length > 0 ? (
                                   <div>
-                                    {extension.adExtensionCallouts.map((callout: any, idx: number) => (
+                                    {(extension as any).adExtensionCallouts.map((callout: any, idx: number) => (
                                       <span key={idx} className="inline-block mr-2 mb-1 px-2 py-1 bg-gray-100 rounded text-xs">
                                         {callout.text}
                                       </span>

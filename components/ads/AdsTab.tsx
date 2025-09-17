@@ -283,11 +283,11 @@ export default function AdsTab({ adgroupId, campaignType }: AdsTabProps) {
                         {/* 제목 섹션 */}
                         <div className="mb-3">
                           <div className="text-xs font-semibold text-gray-500 mb-2">
-                            제목 {ad.allHeadlines && ad.allHeadlines.length > 1 ? `(${ad.allHeadlines.length}개)` : ''}
+                            제목 {(ad as any).allHeadlines && (ad as any).allHeadlines.length > 1 ? `(${(ad as any).allHeadlines.length}개)` : ''}
                           </div>
                           <div className="space-y-1">
-                            {ad.allHeadlines && ad.allHeadlines.length > 0 ? (
-                              ad.allHeadlines.map((headline: string, index: number) => (
+                            {(ad as any).allHeadlines && (ad as any).allHeadlines.length > 0 ? (
+                              (ad as any).allHeadlines.map((headline: string, index: number) => (
                                 <div key={index} className="font-medium text-blue-700">
                                   {headline}
                                 </div>
@@ -306,11 +306,11 @@ export default function AdsTab({ adgroupId, campaignType }: AdsTabProps) {
                         {/* 설명 섹션 */}
                         <div>
                           <div className="text-xs font-semibold text-gray-500 mb-2">
-                            설명 {ad.allDescriptions && ad.allDescriptions.length > 1 ? `(${ad.allDescriptions.length}개)` : ''}
+                            설명 {(ad as any).allDescriptions && (ad as any).allDescriptions.length > 1 ? `(${(ad as any).allDescriptions.length}개)` : ''}
                           </div>
                           <div className="space-y-2">
-                            {ad.allDescriptions && ad.allDescriptions.length > 0 ? (
-                              ad.allDescriptions.map((description: string, index: number) => (
+                            {(ad as any).allDescriptions && (ad as any).allDescriptions.length > 0 ? (
+                              (ad as any).allDescriptions.map((description: string, index: number) => (
                                 <div key={index} className="text-sm text-gray-700">
                                   {description}
                                 </div>
@@ -327,39 +327,39 @@ export default function AdsTab({ adgroupId, campaignType }: AdsTabProps) {
                       {/* 추가 정보 */}
                       <div className="text-xs text-gray-600 space-y-1 pl-2">
                         {/* PC URL */}
-                        {(ad.pcUrl || ad.pc?.final) && (
+                        {(ad.pcUrl || (ad as any).pc?.final) && (
                           <div className="flex items-center gap-2">
                             <span className="text-gray-500">• 표시 URL:</span>
-                            <span>{ad.pcDisplayUrl || ad.pcUrl || ad.pc?.final}</span>
+                            <span>{ad.pcDisplayUrl || ad.pcUrl || (ad as any).pc?.final}</span>
                           </div>
                         )}
                         
                         {/* 연결 URL */}
-                        {(ad.pcFinalUrl || ad.pc?.final) && (
+                        {(ad.pcFinalUrl || (ad as any).pc?.final) && (
                           <div className="flex items-center gap-2">
                             <span className="text-gray-500">• 연결 URL:</span>
-                            <a 
-                              href={ad.pcFinalUrl || ad.pc?.final} 
-                              target="_blank" 
+                            <a
+                              href={ad.pcFinalUrl || (ad as any).pc?.final}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline"
                             >
-                              {ad.pcFinalUrl || ad.pc?.final}
+                              {ad.pcFinalUrl || (ad as any).pc?.final}
                             </a>
                           </div>
                         )}
                         
                         {/* 모바일 URL (있는 경우) */}
-                        {(ad.mobileUrl || ad.mobile?.final) && (
+                        {(ad.mobileUrl || (ad as any).mobile?.final) && (
                           <div className="flex items-center gap-2">
                             <span className="text-gray-500">• 모바일 URL:</span>
                             <a 
-                              href={ad.mobileUrl || ad.mobile?.final} 
+                              href={ad.mobileUrl || (ad as any).mobile?.final} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline"
                             >
-                              {ad.mobileUrl || ad.mobile?.final}
+                              {ad.mobileUrl || (ad as any).mobile?.final}
                             </a>
                           </div>
                         )}

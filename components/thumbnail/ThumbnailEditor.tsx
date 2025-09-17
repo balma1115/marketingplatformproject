@@ -177,7 +177,7 @@ export default function ThumbnailEditor({
         onResizeStop={handleResizeStop}
         disableDragging={layer.locked}
         enableResizing={!layer.locked}
-        onClick={(e) => {
+        onClick={(e: any) => {
           e.stopPropagation()
           onSelectLayer(layer.id)
         }}

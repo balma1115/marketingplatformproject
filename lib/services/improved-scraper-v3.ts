@@ -111,7 +111,9 @@ export class ImprovedNaverScraperV3 {
         ]
         
         if (pageNum <= 3 && pageSelectors[pageNum - 1]) {
-          const pageButton = document.querySelector(pageSelectors[pageNum - 1])
+          const selector = pageSelectors[pageNum - 1]
+          if (!selector) return false
+          const pageButton = document.querySelector(selector)
           if (pageButton && !(pageButton as HTMLElement).classList.contains('fvwqf')) {
             (pageButton as HTMLElement).click()
             return true
@@ -185,7 +187,7 @@ export class ImprovedNaverScraperV3 {
   
   // 현재 페이지의 결과 수집
   private async collectPageResults(frame: Page | any, startRank: number = 0): Promise<any[]> {
-    return await frame.evaluate((startRank) => {
+    return await frame.evaluate((startRank: number) => {
       const items: any[] = []
       const listItems = document.querySelectorAll('#_pcmap_list_scroll_container > ul > li')
       console.log(`Found ${listItems.length} items on current page`)
@@ -258,7 +260,7 @@ export class ImprovedNaverScraperV3 {
   async trackRanking(
     keyword: string,
     targetPlace: { placeId: string; placeName: string }
-  ): Promise<SmartPlaceRankingResult> {
+  ): Promise<any> {
     const startTime = Date.now()
     console.log(`[${new Date().toISOString()}] Queuing keyword: "${keyword}"`)
     
@@ -287,7 +289,7 @@ export class ImprovedNaverScraperV3 {
         
         // iframe 찾기
         const frames = page.frames()
-        let searchFrame = page
+        let searchFrame: any = page
         
         for (const frame of frames) {
           if (frame.url().includes('pcmap.place.naver.com')) {

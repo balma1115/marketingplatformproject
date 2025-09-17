@@ -58,7 +58,9 @@ export class ImprovedNaverScraperV3WithCallbacks {
         ]
         
         if (pageNum <= 3 && pageSelectors[pageNum - 1]) {
-          const pageButton = document.querySelector(pageSelectors[pageNum - 1])
+          const selector = pageSelectors[pageNum - 1]
+          if (!selector) return false
+          const pageButton = document.querySelector(selector)
           if (pageButton && !(pageButton as HTMLElement).classList.contains('fvwqf')) {
             (pageButton as HTMLElement).click()
             return true
@@ -169,10 +171,10 @@ export class ImprovedNaverScraperV3WithCallbacks {
       onComplete?: (result: SmartPlaceRankingResult) => void
       onError?: (error: Error) => void
     }
-  ): Promise<SmartPlaceRankingResult> {
+  ): Promise<any> {
     const startTime = Date.now()
     console.log(`[${new Date().toISOString()}] Queuing keyword: "${keyword}"`)
-    
+
     return this.queue.add(async () => {
       const queueStartTime = Date.now()
       console.log(`[${new Date().toISOString()}] Starting tracking for: "${keyword}" (waited ${queueStartTime - startTime}ms in queue)`)
@@ -203,7 +205,7 @@ export class ImprovedNaverScraperV3WithCallbacks {
         
         // iframe 찾기
         const frames = page.frames()
-        let searchFrame = page
+        let searchFrame: any = page
         
         for (const frame of frames) {
           if (frame.url().includes('pcmap.place.naver.com')) {
@@ -328,13 +330,21 @@ export class ImprovedNaverScraperV3WithCallbacks {
         
       } catch (error) {
         console.error(`[${new Date().toISOString()}] Error tracking "${keyword}":`, error)
-        
+
         // 에러 콜백 호출
         if (callbacks?.onError) {
           callbacks.onError(error as Error)
         }
-        
-        throw error
+
+        // Return a failed result instead of throwing
+        return {
+          organicRank: null,
+          adRank: null,
+          found: false,
+          timestamp: new Date(),
+          totalResults: 0,
+          topTenPlaces: []
+        }
         
       } finally {
         await page.close()
