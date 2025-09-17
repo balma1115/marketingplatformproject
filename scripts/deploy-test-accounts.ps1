@@ -8,7 +8,7 @@ Write-Host "===================================" -ForegroundColor Cyan
 $EC2_HOST = "43.203.199.103"
 $EC2_USER = "ubuntu"
 $EC2_KEY = "$env:USERPROFILE\marketingplat.pem"
-$EC2_APP_PATH = "/home/ubuntu/marketingplatform"
+$EC2_APP_PATH = "/home/ubuntu/marketingplatformproject"
 
 Write-Host ""
 Write-Host "1️⃣ GitHub으로 코드 푸시 중..." -ForegroundColor Green
@@ -25,7 +25,7 @@ Write-Host "2️⃣ EC2 서버에 SSH 접속하여 코드 풀 및 테스트 계�
 # SSH 명령 실행
 $sshCommands = @"
 echo '📂 프로젝트 디렉토리로 이동...'
-cd /home/ubuntu/marketingplatform
+cd /home/ubuntu/marketingplatformproject
 
 echo '📥 최신 코드 가져오기...'
 git pull origin main

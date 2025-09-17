@@ -46,7 +46,7 @@ ssh -i ~/marketingplat.pem ubuntu@43.203.199.103
 
 3. **EC2에서 코드 업데이트 및 스크립트 실행**
 ```bash
-cd /home/ubuntu/marketingplatform
+cd /home/ubuntu/marketingplatformproject
 git pull origin main
 npm install
 npx prisma generate

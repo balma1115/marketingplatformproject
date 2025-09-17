@@ -10,7 +10,7 @@ echo "==================================="
 EC2_HOST="43.203.199.103"
 EC2_USER="ubuntu"
 EC2_KEY="~/marketingplat.pem"  # 로컬 PC에서의 키 위치
-EC2_APP_PATH="/home/ubuntu/marketingplatform"
+EC2_APP_PATH="/home/ubuntu/marketingplatformproject"
 
 # Windows에서 실행 시 키 파일 경로 조정
 if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
@@ -31,7 +31,7 @@ echo "2️⃣ EC2 서버에 SSH 접속하여 코드 풀 및 테스트 계정 생
 
 ssh -i "$EC2_KEY" "$EC2_USER@$EC2_HOST" << 'ENDSSH'
     echo "📂 프로젝트 디렉토리로 이동..."
-    cd /home/ubuntu/marketingplatform
+    cd /home/ubuntu/marketingplatformproject
 
     echo "📥 최신 코드 가져오기..."
     git pull origin main
