@@ -368,7 +368,7 @@ export default function AdExtensionsTab({ adgroupId, campaignType }: AdExtension
                         {/* 확장소재 내용 표시 - parsedAdExtension 사용 */}
                         <div className="pl-6 text-sm">
                           {(() => {
-                            const adData = extension.parsedAdExtension || {}
+                            const adData = (extension as any).parsedAdExtension || {}
                             
                             // 이미지 경로를 전체 URL로 변환하는 함수
                             const getImageUrl = (path: string) => {
