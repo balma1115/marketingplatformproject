@@ -17,7 +17,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    const text = await file.text()
+    let text = await file.text()
+    // Remove BOM if present
+    if (text.charCodeAt(0) === 0xFEFF) {
+      text = text.substring(1)
+    }
     const lines = text.split('\n').filter(line => line.trim())
     
     // Skip header row

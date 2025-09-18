@@ -331,7 +331,9 @@ export default function OrganizationManagementPage() {
       filename = 'academies_sample.csv'
     }
 
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+    // Add UTF-8 BOM for proper Korean encoding in Excel
+    const BOM = '\uFEFF'
+    const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
     link.download = filename
