@@ -366,7 +366,7 @@ export default function RegisterPage() {
                           <SelectTrigger className="relative z-50">
                             <SelectValue placeholder="지사를 선택하세요" />
                           </SelectTrigger>
-                          <SelectContent className="relative z-[100]" position="popper">
+                          <SelectContent className="relative z-[100] bg-white border border-gray-200 shadow-lg" position="popper" sideOffset={5}>
                             {branches
                               .filter(branch => branch.subjectId === subject.id)
                               .map(branch => (
@@ -396,7 +396,7 @@ export default function RegisterPage() {
                           <SelectTrigger className="relative z-40">
                             <SelectValue placeholder="학원을 선택하세요" />
                           </SelectTrigger>
-                          <SelectContent className="relative z-[90]" position="popper">
+                          <SelectContent className="relative z-[90] bg-white border border-gray-200 shadow-lg" position="popper" sideOffset={5}>
                             <SelectItem value="branch_manager" className="font-semibold">
                               <div className="flex items-center gap-2">
                                 <User className="h-3 w-3" />
