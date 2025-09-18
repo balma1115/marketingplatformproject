@@ -1097,15 +1097,15 @@ export default function OrganizationManagementPage() {
                         CSV 업로드
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[80vh]">
-                      <DialogHeader>
+                    <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+                      <DialogHeader className="flex-shrink-0">
                         <DialogTitle>CSV 업로드</DialogTitle>
                         <DialogDescription>
                           학원 데이터를 CSV 파일로 일괄 등록합니다. (과목/지사 자동 생성)
                         </DialogDescription>
                       </DialogHeader>
 
-                      <div className="space-y-4 overflow-y-auto">
+                      <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                         {/* 파일 업로드 */}
                         {csvData.length === 0 && (
                           <div className="border-2 border-dashed rounded-lg p-6">
@@ -1166,42 +1166,39 @@ export default function OrganizationManagementPage() {
                             )}
 
                             {/* 데이터 미리보기 */}
-                            <div className="border rounded-lg overflow-hidden">
-                              <table className="w-full text-sm">
-                                <thead className="bg-gray-50">
-                                  <tr>
-                                    <th className="p-2 text-left">상태</th>
-                                    <th className="p-2 text-left">과목명</th>
-                                    <th className="p-2 text-left">지사명</th>
-                                    <th className="p-2 text-left">학원명</th>
-                                    <th className="p-2 text-left">주소</th>
-                                    <th className="p-2 text-left">전화번호</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {csvData.slice(0, 10).map((row, index) => (
-                                    <tr key={index} className={row.valid ? '' : 'bg-red-50'}>
-                                      <td className="p-2">
-                                        {row.valid ? (
-                                          <span className="text-green-600">✓</span>
-                                        ) : (
-                                          <span className="text-red-600">✗</span>
-                                        )}
-                                      </td>
-                                      <td className="p-2">{row.subjectName}</td>
-                                      <td className="p-2">{row.branchName}</td>
-                                      <td className="p-2">{row.academyName}</td>
-                                      <td className="p-2">{row.address || '-'}</td>
-                                      <td className="p-2">{row.phone || '-'}</td>
+                            <div className="border rounded-lg">
+                              <div className="max-h-[300px] overflow-y-auto">
+                                <table className="w-full text-sm">
+                                  <thead className="bg-gray-50 sticky top-0">
+                                    <tr>
+                                      <th className="p-2 text-left">상태</th>
+                                      <th className="p-2 text-left">과목명</th>
+                                      <th className="p-2 text-left">지사명</th>
+                                      <th className="p-2 text-left">학원명</th>
+                                      <th className="p-2 text-left min-w-[200px]">주소</th>
+                                      <th className="p-2 text-left">전화번호</th>
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                              {csvData.length > 10 && (
-                                <div className="p-2 text-center text-sm text-gray-500">
-                                  ... {csvData.length - 10}개 더 있음
-                                </div>
-                              )}
+                                  </thead>
+                                  <tbody>
+                                    {csvData.map((row, index) => (
+                                      <tr key={index} className={row.valid ? '' : 'bg-red-50'}>
+                                        <td className="p-2">
+                                          {row.valid ? (
+                                            <span className="text-green-600">✓</span>
+                                          ) : (
+                                            <span className="text-red-600">✗</span>
+                                          )}
+                                        </td>
+                                        <td className="p-2 text-xs">{row.subjectName}</td>
+                                        <td className="p-2 text-xs">{row.branchName}</td>
+                                        <td className="p-2 text-xs">{row.academyName}</td>
+                                        <td className="p-2 text-xs">{row.address || '-'}</td>
+                                        <td className="p-2 text-xs">{row.phone || '-'}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -1225,9 +1222,9 @@ export default function OrganizationManagementPage() {
                             </div>
 
                             {uploadResult.details.length > 0 && (
-                              <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
+                              <div className="border rounded-lg p-4">
                                 <h4 className="font-semibold mb-2">상세 결과</h4>
-                                <div className="space-y-1">
+                                <div className="max-h-40 overflow-y-auto space-y-1">
                                   {uploadResult.details.map((detail, index) => (
                                     <div key={index} className="text-sm">{detail}</div>
                                   ))}
@@ -1238,7 +1235,7 @@ export default function OrganizationManagementPage() {
                         )}
                       </div>
 
-                      <DialogFooter>
+                      <DialogFooter className="flex-shrink-0 border-t pt-4">
                         {csvData.length > 0 && !uploadResult && (
                           <>
                             <Button
