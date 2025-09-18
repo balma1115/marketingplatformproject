@@ -327,7 +327,7 @@ export default function OrganizationManagementPage() {
       content = '과목명,지사명,지사코드\n미래엔영어,강남지사,gangnam\n미래엔수학,서초지사,seocho'
       filename = 'branches_sample.csv'
     } else if (activeTab === 'academies') {
-      content = '과목명,지사명,학원명,주소,전화번호,사업자등록번호\n미래엔영어,강남지사,강남영어학원,서울시 강남구,02-1234-5678,123-45-67890'
+      content = '과목명,지사명,학원명,주소,전화번호\n미래엔영어,강남지사,강남영어학원,서울시 강남구 테헤란로 123,02-1234-5678\n미래엔수학,서초지사,서초수학학원,서울시 서초구 서초대로 456,02-2345-6789'
       filename = 'academies_sample.csv'
     }
 

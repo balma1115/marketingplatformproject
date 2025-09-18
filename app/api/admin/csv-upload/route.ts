@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
     } else if (type === 'academies') {
       // Process academies CSV
       for (const line of dataLines) {
-        const [subjectName, branchName, academyName, address, phone, registrationNumber] = 
+        const [subjectName, branchName, academyName, address, phone] =
           line.split(',').map(s => s.trim())
         
         if (!subjectName || !branchName || !academyName) {
@@ -176,8 +176,8 @@ export async function POST(req: NextRequest) {
               branchId: branch.id,
               name: academyName,
               address: address || undefined,
-              phone: phone || undefined,
-              registrationNumber: registrationNumber || undefined
+              phone: phone || undefined
+              // registrationNumber는 관리자가 별도로 입력
             }
           })
 
