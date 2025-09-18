@@ -41,8 +41,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Check if user is branch manager or admin
-    if (currentUser.role !== 'branch_manager' && currentUser.role !== 'admin') {
+    // Check if user is branch manager, branch or admin
+    if (currentUser.role !== 'branch_manager' && currentUser.role !== 'branch' && currentUser.role !== 'admin') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 

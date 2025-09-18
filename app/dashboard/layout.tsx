@@ -94,6 +94,7 @@ export default function DashboardLayout({
   const menus = roleMenus[user.role as keyof typeof roleMenus] || []
 
   // For branch_manager, branch, academy, and user roles, don't show the dashboard layout
+  // But branch role should have the same menu as branch_manager
   if (['branch_manager', 'branch', 'academy', 'user'].includes(user.role)) {
     return <>{children}</>
   }

@@ -73,7 +73,7 @@ export default function BranchAcademiesPage() {
       : 0
   }
 
-  if (!user || (user.role !== 'branch_manager' && user.role !== 'admin')) {
+  if (!user || (user.role !== 'branch_manager' && user.role !== 'branch' && user.role !== 'admin')) {
     return (
       <div className="container mx-auto py-6">
         <Card>
