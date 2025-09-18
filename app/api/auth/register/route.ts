@@ -5,11 +5,11 @@ import { generateToken, setAuthCookie } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, phone, userSubjects } = await request.json()
+    const { email, password, name, userSubjects } = await request.json()
 
-    if (!email || !password || !name || !phone) {
+    if (!email || !password || !name) {
       return NextResponse.json(
-        { error: 'Email, password, name, and phone are required' },
+        { error: 'Email, password, and name are required' },
         { status: 400 }
       )
     }
@@ -34,14 +34,22 @@ export async function POST(request: NextRequest) {
 
     // Create new user with userSubjects in a transaction
     const user = await prisma.$transaction(async (tx) => {
+      // Determine user role based on selections
+      let userRole = 'user'
+      const hasBranchManager = userSubjects.some((s: any) => s.isBranchManager)
+
+      if (hasBranchManager) {
+        userRole = 'branch_manager'
+      }
+
       // Create user
       const newUser = await tx.user.create({
         data: {
           email,
           password, // Note: In production, this should be hashed
           name,
-          phone,
-          role: 'user',
+          phone: '', // Phone is optional now
+          role: userRole,
           plan: 'basic',
           isApproved: false // Requires branch approval
         }
@@ -54,22 +62,29 @@ export async function POST(request: NextRequest) {
             userId: newUser.id,
             subjectId: subject.subjectId,
             branchId: subject.branchId,
-            academyId: subject.academyId
+            academyId: subject.academyId || null, // Can be null for branch managers
+            isBranchManager: subject.isBranchManager || false
           }
         })
       }
 
-      // Get the academy name for the first subject
-      const firstUserSubject = userSubjects[0]
-      const academy = await tx.academy.findUnique({
-        where: { id: firstUserSubject.academyId }
-      })
+      // Get the academy name for display (if not branch manager)
+      let academyName = ''
+      if (!hasBranchManager) {
+        const firstUserSubject = userSubjects.find((s: any) => s.academyId)
+        if (firstUserSubject) {
+          const academy = await tx.academy.findUnique({
+            where: { id: firstUserSubject.academyId }
+          })
+          academyName = academy?.name || ''
+        }
+      }
 
-      // Update user with academy name
+      // Update user with academy name (if applicable)
       const updatedUser = await tx.user.update({
         where: { id: newUser.id },
         data: {
-          academyName: academy?.name || ''
+          academyName: academyName
         }
       })
 

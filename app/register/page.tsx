@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
-import { Eye, EyeOff, Phone } from 'lucide-react'
+import { Eye, EyeOff, User, Building, School as SchoolIcon } from 'lucide-react'
 
 interface Subject {
   id: number
@@ -35,6 +35,7 @@ interface SubjectSelection {
   selected: boolean
   branchId: string
   academyId: string
+  isBranchManager: boolean  // 지사장 여부
 }
 
 export default function RegisterPage() {
@@ -44,13 +45,11 @@ export default function RegisterPage() {
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [error, setError] = useState('')
 
-  // Form data
+  // Form data - 이름과 연락처 제거
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    passwordConfirm: '',
-    name: '',
-    phone: ''
+    passwordConfirm: ''
   })
 
   // Organization data
@@ -61,10 +60,18 @@ export default function RegisterPage() {
   // Subject selections
   const [subjectSelections, setSubjectSelections] = useState<Record<string, SubjectSelection>>({})
 
+  // 자동 생성된 이름
+  const [generatedName, setGeneratedName] = useState('미선택')
+
   // Fetch organization data
   useEffect(() => {
     fetchOrganizationData()
   }, [])
+
+  // 이름 자동 생성
+  useEffect(() => {
+    generateUserName()
+  }, [subjectSelections, subjects, branches, academies])
 
   const fetchOrganizationData = async () => {
     try {
@@ -79,7 +86,8 @@ export default function RegisterPage() {
         initialSelections[subject.id.toString()] = {
           selected: false,
           branchId: '',
-          academyId: ''
+          academyId: '',
+          isBranchManager: false
         }
       })
       setSubjectSelections(initialSelections)
@@ -98,6 +106,32 @@ export default function RegisterPage() {
     }
   }
 
+  const generateUserName = () => {
+    const selectedSubjects = Object.entries(subjectSelections)
+      .filter(([_, value]) => value.selected && value.branchId)
+      .map(([subjectId, selection]) => {
+        const subject = subjects.find(s => s.id.toString() === subjectId)
+        const branch = branches.find(b => b.id.toString() === selection.branchId)
+
+        if (selection.isBranchManager) {
+          return `${subject?.name || ''} ${branch?.name || ''} 지사장`
+        } else {
+          const academy = academies.find(a => a.id.toString() === selection.academyId)
+          if (academy) {
+            return academy.name
+          }
+        }
+        return null
+      })
+      .filter(Boolean)
+
+    if (selectedSubjects.length > 0) {
+      setGeneratedName(selectedSubjects.join(', '))
+    } else {
+      setGeneratedName('미선택')
+    }
+  }
+
   const handleSubjectToggle = (subjectId: string) => {
     setSubjectSelections(prev => ({
       ...prev,
@@ -106,7 +140,8 @@ export default function RegisterPage() {
         selected: !prev[subjectId].selected,
         // Reset selections when toggling off
         branchId: !prev[subjectId].selected ? prev[subjectId].branchId : '',
-        academyId: !prev[subjectId].selected ? prev[subjectId].academyId : ''
+        academyId: !prev[subjectId].selected ? prev[subjectId].academyId : '',
+        isBranchManager: false
       }
     }))
   }
@@ -117,21 +152,23 @@ export default function RegisterPage() {
       [subjectId]: {
         ...prev[subjectId],
         branchId,
-        academyId: '' // Reset academy when branch changes
+        academyId: '', // Reset academy when branch changes
+        isBranchManager: false
       }
     }))
   }
 
   const handleAcademySelect = (subjectId: string, academyId: string) => {
+    const isBranchManager = academyId === 'branch_manager'
     setSubjectSelections(prev => ({
       ...prev,
       [subjectId]: {
         ...prev[subjectId],
-        academyId
+        academyId: isBranchManager ? '' : academyId,
+        isBranchManager
       }
     }))
   }
-
 
   // Handle registration
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,8 +176,8 @@ export default function RegisterPage() {
     setError('')
 
     // Validation
-    if (!formData.email || !formData.password || !formData.name || !formData.phone) {
-      setError('필수 정보를 모두 입력해주세요.')
+    if (!formData.email || !formData.password) {
+      setError('이메일과 비밀번호를 입력해주세요.')
       return
     }
 
@@ -156,11 +193,17 @@ export default function RegisterPage() {
       return
     }
 
-    // Validate all selected subjects have branch and academy
+    // Validate all selected subjects have branch
     for (const [subjectId, selection] of selectedSubjects) {
-      if (!selection.branchId || !selection.academyId) {
+      if (!selection.branchId) {
         const subject = subjects.find(s => s.id.toString() === subjectId)
-        setError(`${subject?.name}의 지사와 학원을 모두 선택해주세요.`)
+        setError(`${subject?.name}의 지사를 선택해주세요.`)
+        return
+      }
+      // 학원은 선택사항 (지사장일 수 있음)
+      if (!selection.isBranchManager && !selection.academyId) {
+        const subject = subjects.find(s => s.id.toString() === subjectId)
+        setError(`${subject?.name}의 학원을 선택하거나 지사장을 선택해주세요.`)
         return
       }
     }
@@ -172,7 +215,8 @@ export default function RegisterPage() {
       const userSubjects = selectedSubjects.map(([subjectId, selection]) => ({
         subjectId: parseInt(subjectId),
         branchId: parseInt(selection.branchId),
-        academyId: parseInt(selection.academyId)
+        academyId: selection.isBranchManager ? null : parseInt(selection.academyId),
+        isBranchManager: selection.isBranchManager
       }))
 
       const response = await fetch('/api/auth/register', {
@@ -181,8 +225,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          name: formData.name,
-          phone: formData.phone,
+          name: generatedName,  // 자동 생성된 이름 사용
           userSubjects
         })
       })
@@ -213,36 +256,21 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
+            {/* Account Information */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg">기본 정보</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700 font-medium">이메일 (ID)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="email@example.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-700 font-medium">이름</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="홍길동"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                    required
-                  />
-                </div>
+              <h3 className="font-semibold text-lg">계정 정보</h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-700 font-medium">이메일 (로그인 ID)</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -266,7 +294,7 @@ export default function RegisterPage() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="passwordConfirm" className="text-gray-700 font-medium">비밀번호 확인</Label>
                   <div className="relative">
@@ -290,32 +318,24 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Phone Number */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">연락처</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-gray-700 font-medium">전화번호</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="01012345678"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="pl-10 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                    required
-                  />
+            {/* Generated Name Display */}
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">계정명</Label>
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-900 font-medium">{generatedName}</span>
                 </div>
-                <p className="text-sm text-gray-500">하이픈(-) 없이 입력해주세요.</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  선택하신 과목 및 소속에 따라 자동으로 생성됩니다.
+                </p>
               </div>
             </div>
 
             {/* Subject Selection */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">과목 및 소속 선택</h3>
-              
+
               {subjects.map(subject => (
                 <div key={subject.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-center space-x-2">
@@ -324,7 +344,7 @@ export default function RegisterPage() {
                       checked={subjectSelections[subject.id]?.selected || false}
                       onCheckedChange={() => handleSubjectToggle(subject.id.toString())}
                     />
-                    <Label 
+                    <Label
                       htmlFor={`subject-${subject.id}`}
                       className="text-base font-medium cursor-pointer"
                     >
@@ -335,15 +355,18 @@ export default function RegisterPage() {
                   {subjectSelections[subject.id]?.selected && (
                     <div className="grid grid-cols-2 gap-4 pl-6">
                       <div className="space-y-2">
-                        <Label>소속 지사</Label>
+                        <Label className="flex items-center gap-1">
+                          <Building className="h-3 w-3" />
+                          소속 지사
+                        </Label>
                         <Select
                           value={subjectSelections[subject.id].branchId}
                           onValueChange={(value) => handleBranchSelect(subject.id.toString(), value)}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="relative z-50">
                             <SelectValue placeholder="지사를 선택하세요" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="relative z-[100]" position="popper">
                             {branches
                               .filter(branch => branch.subjectId === subject.id)
                               .map(branch => (
@@ -357,18 +380,32 @@ export default function RegisterPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>학원명</Label>
+                        <Label className="flex items-center gap-1">
+                          <SchoolIcon className="h-3 w-3" />
+                          학원명
+                        </Label>
                         <Select
-                          value={subjectSelections[subject.id].academyId}
+                          value={
+                            subjectSelections[subject.id].isBranchManager
+                              ? 'branch_manager'
+                              : subjectSelections[subject.id].academyId
+                          }
                           onValueChange={(value) => handleAcademySelect(subject.id.toString(), value)}
                           disabled={!subjectSelections[subject.id].branchId}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="relative z-40">
                             <SelectValue placeholder="학원을 선택하세요" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="relative z-[90]" position="popper">
+                            <SelectItem value="branch_manager" className="font-semibold">
+                              <div className="flex items-center gap-2">
+                                <User className="h-3 w-3" />
+                                지사장 (학원 미선택)
+                              </div>
+                            </SelectItem>
+                            <div className="border-t my-1" />
                             {academies
-                              .filter(academy => 
+                              .filter(academy =>
                                 academy.branchId === parseInt(subjectSelections[subject.id].branchId)
                               )
                               .map(academy => (
@@ -379,6 +416,11 @@ export default function RegisterPage() {
                             }
                           </SelectContent>
                         </Select>
+                        {subjectSelections[subject.id].isBranchManager && (
+                          <p className="text-xs text-blue-600">
+                            지사장 권한으로 가입합니다.
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -392,9 +434,9 @@ export default function RegisterPage() {
               </Alert>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full bg-accent-blue hover:bg-secondary-blue text-white font-medium py-6 text-base transition-all duration-200" 
+            <Button
+              type="submit"
+              className="w-full bg-accent-blue hover:bg-secondary-blue text-white font-medium py-6 text-base transition-all duration-200"
               disabled={loading}
             >
               {loading ? '처리 중...' : '회원가입'}
