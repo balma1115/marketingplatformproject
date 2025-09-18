@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { createUser, findUserByEmail } from '@/lib/db'
-import { generateToken, setAuthCookie } from '@/lib/auth'
+import { findUserByEmail } from '@/lib/db'
+import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await findUserByEmail(email)
-    
+
     if (existingUser) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
     // Create new user with userSubjects in a transaction
     const user = await prisma.$transaction(async (tx) => {
       // Determine user role based on selections
@@ -46,9 +49,9 @@ export async function POST(request: NextRequest) {
       const newUser = await tx.user.create({
         data: {
           email,
-          password, // Note: In production, this should be hashed
+          password: hashedPassword, // Use hashed password
           name,
-          phone: '', // Phone is optional now
+          phone: null, // Phone is optional now
           role: userRole,
           plan: 'basic',
           isApproved: false // Requires branch approval
@@ -68,27 +71,7 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Get the academy name for display (if not branch manager)
-      let academyName = ''
-      if (!hasBranchManager) {
-        const firstUserSubject = userSubjects.find((s: any) => s.academyId)
-        if (firstUserSubject) {
-          const academy = await tx.academy.findUnique({
-            where: { id: firstUserSubject.academyId }
-          })
-          academyName = academy?.name || ''
-        }
-      }
-
-      // Update user with academy name (if applicable)
-      const updatedUser = await tx.user.update({
-        where: { id: newUser.id },
-        data: {
-          academyName: academyName
-        }
-      })
-
-      return updatedUser
+      return newUser
     })
 
     // Don't generate auth token for unapproved users
@@ -102,7 +85,6 @@ export async function POST(request: NextRequest) {
         name: user.name,
         role: user.role,
         plan: user.plan,
-        academyName: user.academyName,
         isApproved: user.isApproved
       }
     })
