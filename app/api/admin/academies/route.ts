@@ -126,15 +126,18 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id, name, address, phone, registrationNumber } = await req.json()
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ error: 'Academy ID is required' }, { status: 400 })
     }
 
+    const { name, address, phone, registrationNumber } = await req.json()
+
     // 학원 존재 확인
     const academy = await prisma.academy.findUnique({
-      where: { id }
+      where: { id: parseInt(id) }
     })
 
     if (!academy) {
@@ -147,7 +150,7 @@ export async function PUT(req: NextRequest) {
         where: {
           branchId: academy.branchId,
           name,
-          NOT: { id }
+          NOT: { id: parseInt(id) }
         }
       })
 
@@ -159,7 +162,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const updatedAcademy = await prisma.academy.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: {
         ...(name && { name }),
         ...(address !== undefined && { address }),

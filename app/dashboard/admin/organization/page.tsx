@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { Plus, Trash2, Edit, Upload, Download, Building2, Users, School } from 'lucide-react'
+import { Plus, Trash2, Edit, Upload, Download, Building2, Users, School, Filter, X } from 'lucide-react'
 
 interface Subject {
   id: number
@@ -68,16 +69,30 @@ export default function OrganizationManagementPage() {
   const [academies, setAcademies] = useState<Academy[]>([])
   const [loading, setLoading] = useState(false)
 
+  // 필터 상태
+  const [selectedSubject, setSelectedSubject] = useState<string>('all')
+  const [selectedBranch, setSelectedBranch] = useState<string>('all')
+  const [searchText, setSearchText] = useState('')
+
+  // 선택 상태
+  const [selectedAcademies, setSelectedAcademies] = useState<Set<number>>(new Set())
+  const [selectedBranches, setSelectedBranches] = useState<Set<number>>(new Set())
+  const [selectAll, setSelectAll] = useState(false)
+
   // Form states
   const [subjectForm, setSubjectForm] = useState({ name: '', code: '' })
   const [branchForm, setBranchForm] = useState({ subjectId: '', name: '', code: '' })
-  const [academyForm, setAcademyForm] = useState({ 
-    branchId: '', 
-    name: '', 
-    address: '', 
-    phone: '', 
-    registrationNumber: '' 
+  const [academyForm, setAcademyForm] = useState({
+    branchId: '',
+    name: '',
+    address: '',
+    phone: '',
+    registrationNumber: ''
   })
+
+  // 수정 모드
+  const [editingAcademy, setEditingAcademy] = useState<Academy | null>(null)
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null)
 
   // Dialog states
   const [isSubjectDialogOpen, setIsSubjectDialogOpen] = useState(false)
@@ -98,6 +113,32 @@ export default function OrganizationManagementPage() {
     failed: number
     details: string[]
   } | null>(null)
+
+  // 필터링된 데이터
+  const filteredBranches = branches.filter(branch => {
+    if (selectedSubject !== 'all' && branch.subjectId !== parseInt(selectedSubject)) {
+      return false
+    }
+    if (searchText && !branch.name.toLowerCase().includes(searchText.toLowerCase())) {
+      return false
+    }
+    return true
+  })
+
+  const filteredAcademies = academies.filter(academy => {
+    if (selectedSubject !== 'all' && academy.branch.subject.id !== parseInt(selectedSubject)) {
+      return false
+    }
+    if (selectedBranch !== 'all' && academy.branchId !== parseInt(selectedBranch)) {
+      return false
+    }
+    if (searchText && !academy.name.toLowerCase().includes(searchText.toLowerCase()) &&
+        !academy.address?.toLowerCase().includes(searchText.toLowerCase()) &&
+        !academy.phone?.includes(searchText)) {
+      return false
+    }
+    return true
+  })
 
   // Fetch data
   const fetchSubjects = useCallback(async () => {
@@ -148,6 +189,118 @@ export default function OrganizationManagementPage() {
     fetchAcademies()
   }, [fetchSubjects, fetchBranches, fetchAcademies])
 
+  // 전체 선택 토글
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked)
+    if (checked) {
+      if (activeTab === 'academies') {
+        setSelectedAcademies(new Set(filteredAcademies.map(a => a.id)))
+      } else if (activeTab === 'branches') {
+        setSelectedBranches(new Set(filteredBranches.map(b => b.id)))
+      }
+    } else {
+      setSelectedAcademies(new Set())
+      setSelectedBranches(new Set())
+    }
+  }
+
+  // 개별 선택 토글
+  const handleSelectAcademy = (id: number, checked: boolean) => {
+    const newSelected = new Set(selectedAcademies)
+    if (checked) {
+      newSelected.add(id)
+    } else {
+      newSelected.delete(id)
+    }
+    setSelectedAcademies(newSelected)
+    setSelectAll(newSelected.size === filteredAcademies.length && filteredAcademies.length > 0)
+  }
+
+  const handleSelectBranch = (id: number, checked: boolean) => {
+    const newSelected = new Set(selectedBranches)
+    if (checked) {
+      newSelected.add(id)
+    } else {
+      newSelected.delete(id)
+    }
+    setSelectedBranches(newSelected)
+  }
+
+  // 일괄 삭제
+  const handleBulkDelete = async () => {
+    if (activeTab === 'academies' && selectedAcademies.size > 0) {
+      if (!confirm(`선택한 ${selectedAcademies.size}개의 학원을 삭제하시겠습니까?`)) return
+
+      setLoading(true)
+      let successCount = 0
+      let failCount = 0
+
+      for (const id of selectedAcademies) {
+        try {
+          const response = await fetch(`/api/admin/academies?id=${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          })
+
+          if (response.ok) {
+            successCount++
+          } else {
+            failCount++
+          }
+        } catch (error) {
+          failCount++
+        }
+      }
+
+      setLoading(false)
+      setSelectedAcademies(new Set())
+      setSelectAll(false)
+
+      if (successCount > 0) {
+        toast.success(`${successCount}개의 학원이 삭제되었습니다.`)
+        fetchAcademies()
+      }
+      if (failCount > 0) {
+        toast.error(`${failCount}개의 학원 삭제에 실패했습니다.`)
+      }
+    } else if (activeTab === 'branches' && selectedBranches.size > 0) {
+      if (!confirm(`선택한 ${selectedBranches.size}개의 지사를 삭제하시겠습니까?`)) return
+
+      setLoading(true)
+      let successCount = 0
+      let failCount = 0
+
+      for (const id of selectedBranches) {
+        try {
+          const response = await fetch(`/api/admin/branches?id=${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          })
+
+          if (response.ok) {
+            successCount++
+          } else {
+            failCount++
+          }
+        } catch (error) {
+          failCount++
+        }
+      }
+
+      setLoading(false)
+      setSelectedBranches(new Set())
+      setSelectAll(false)
+
+      if (successCount > 0) {
+        toast.success(`${successCount}개의 지사가 삭제되었습니다.`)
+        fetchBranches()
+      }
+      if (failCount > 0) {
+        toast.error(`${failCount}개의 지사 삭제에 실패했습니다.`)
+      }
+    }
+  }
+
   // Subject CRUD
   const handleAddSubject = async () => {
     setLoading(true)
@@ -158,7 +311,7 @@ export default function OrganizationManagementPage() {
         credentials: 'include',
         body: JSON.stringify(subjectForm)
       })
-      
+
       if (response.ok) {
         toast.success('과목이 추가되었습니다.')
         setIsSubjectDialogOpen(false)
@@ -177,13 +330,13 @@ export default function OrganizationManagementPage() {
 
   const handleDeleteSubject = async (id: number) => {
     if (!confirm('정말 삭제하시겠습니까?')) return
-    
+
     try {
       const response = await fetch(`/api/admin/subjects?id=${id}`, {
         method: 'DELETE',
         credentials: 'include'
       })
-      
+
       if (response.ok) {
         toast.success('과목이 삭제되었습니다.')
         fetchSubjects()
@@ -209,7 +362,7 @@ export default function OrganizationManagementPage() {
           subjectId: parseInt(branchForm.subjectId)
         })
       })
-      
+
       if (response.ok) {
         toast.success('지사가 추가되었습니다.')
         setIsBranchDialogOpen(false)
@@ -226,15 +379,47 @@ export default function OrganizationManagementPage() {
     }
   }
 
+  const handleUpdateBranch = async () => {
+    if (!editingBranch) return
+
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/admin/branches?id=${editingBranch.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: branchForm.name,
+          code: branchForm.code
+        })
+      })
+
+      if (response.ok) {
+        toast.success('지사가 수정되었습니다.')
+        setIsBranchDialogOpen(false)
+        setEditingBranch(null)
+        setBranchForm({ subjectId: '', name: '', code: '' })
+        fetchBranches()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || '지사 수정 실패')
+      }
+    } catch (error) {
+      toast.error('지사 수정 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleDeleteBranch = async (id: number) => {
     if (!confirm('정말 삭제하시겠습니까?')) return
-    
+
     try {
       const response = await fetch(`/api/admin/branches?id=${id}`, {
         method: 'DELETE',
         credentials: 'include'
       })
-      
+
       if (response.ok) {
         toast.success('지사가 삭제되었습니다.')
         fetchBranches()
@@ -260,7 +445,7 @@ export default function OrganizationManagementPage() {
           branchId: parseInt(academyForm.branchId)
         })
       })
-      
+
       if (response.ok) {
         toast.success('학원이 추가되었습니다.')
         setIsAcademyDialogOpen(false)
@@ -277,15 +462,49 @@ export default function OrganizationManagementPage() {
     }
   }
 
+  const handleUpdateAcademy = async () => {
+    if (!editingAcademy) return
+
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/admin/academies?id=${editingAcademy.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: academyForm.name,
+          address: academyForm.address,
+          phone: academyForm.phone,
+          registrationNumber: academyForm.registrationNumber
+        })
+      })
+
+      if (response.ok) {
+        toast.success('학원이 수정되었습니다.')
+        setIsAcademyDialogOpen(false)
+        setEditingAcademy(null)
+        setAcademyForm({ branchId: '', name: '', address: '', phone: '', registrationNumber: '' })
+        fetchAcademies()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || '학원 수정 실패')
+      }
+    } catch (error) {
+      toast.error('학원 수정 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleDeleteAcademy = async (id: number) => {
     if (!confirm('정말 삭제하시겠습니까?')) return
-    
+
     try {
       const response = await fetch(`/api/admin/academies?id=${id}`, {
         method: 'DELETE',
         credentials: 'include'
       })
-      
+
       if (response.ok) {
         toast.success('학원이 삭제되었습니다.')
         fetchAcademies()
@@ -322,6 +541,8 @@ export default function OrganizationManagementPage() {
 
     if (activeTab === 'academies') {
       // 학원 CSV 검증
+      const subjectBranchMap = new Map<string, Set<string>>()
+
       for (let i = 0; i < dataLines.length; i++) {
         const line = dataLines[i]
         const [subjectName, branchName, academyName, address, phone] =
@@ -351,12 +572,19 @@ export default function OrganizationManagementPage() {
             }
           }
 
-          // 지사 확인
-          const branch = branches.find(b => b.name === branchName)
-          if (!branch) {
-            if (!validation.newBranches.includes(branchName)) {
-              validation.newBranches.push(branchName)
-            }
+          // 지사 확인 (과목별로 구분)
+          const branchKey = `${subjectName}:${branchName}`
+          if (!subjectBranchMap.has(subjectName)) {
+            subjectBranchMap.set(subjectName, new Set())
+          }
+          subjectBranchMap.get(subjectName)?.add(branchName)
+
+          const branch = branches.find(b =>
+            b.name === branchName && b.subject.name === subjectName
+          )
+
+          if (!branch && !validation.newBranches.includes(branchKey)) {
+            validation.newBranches.push(branchKey)
           }
 
           validation.valid++
@@ -400,638 +628,798 @@ export default function OrganizationManagementPage() {
           details: result.details || []
         })
 
-        toast.success(`업로드 완료: ${result.success}개 성공, ${result.failed}개 실패`)
+        // 업로드 성공 후 데이터 새로고침
+        fetchSubjects()
+        fetchBranches()
+        fetchAcademies()
 
-        // Refresh data
-        if (activeTab === 'subjects') fetchSubjects()
-        else if (activeTab === 'branches') fetchBranches()
-        else if (activeTab === 'academies') fetchAcademies()
+        toast.success(`업로드 완료: 성공 ${result.success}건, 실패 ${result.failed}건`)
       } else {
         toast.error(result.error || 'CSV 업로드 실패')
-        setUploadResult({
-          success: 0,
-          failed: csvData.length,
-          details: [result.error || '업로드 중 오류 발생']
-        })
       }
     } catch (error) {
       toast.error('CSV 업로드 중 오류가 발생했습니다.')
-      setUploadResult({
-        success: 0,
-        failed: csvData.length,
-        details: ['네트워크 오류가 발생했습니다']
-      })
     } finally {
       setIsUploading(false)
     }
   }
 
-  // Download sample CSV
+  // Sample CSV download
   const downloadSampleCSV = () => {
     let content = ''
     let filename = ''
 
+    // Add BOM for proper encoding in Excel
+    const BOM = '\uFEFF'
+
     if (activeTab === 'subjects') {
-      content = '과목명,과목코드\n미래엔영어,english\n미래엔수학,math\n미래엔독서,reading'
-      filename = 'subjects_sample.csv'
+      content = BOM + '과목명,과목코드\n수학,math\n영어,english\n과학,science'
+      filename = 'sample_subjects.csv'
     } else if (activeTab === 'branches') {
-      content = '과목명,지사명,지사코드\n미래엔영어,강남지사,gangnam\n미래엔수학,서초지사,seocho'
-      filename = 'branches_sample.csv'
+      content = BOM + '과목명,지사명,지사코드\n수학,강남점,gangnam\n수학,서초점,seocho\n영어,강남점,gangnam'
+      filename = 'sample_branches.csv'
     } else if (activeTab === 'academies') {
-      content = '과목명,지사명,학원명,주소,전화번호\n미래엔영어,강남지사,강남영어학원,서울시 강남구 테헤란로 123,02-1234-5678\n미래엔수학,서초지사,서초수학학원,서울시 서초구 서초대로 456,02-2345-6789'
-      filename = 'academies_sample.csv'
+      content = BOM + '과목명,지사명,학원명,주소,전화번호\n수학,강남점,한빛수학학원,서울시 강남구,02-1234-5678\n영어,서초점,영어마을학원,서울시 서초구,02-2345-6789'
+      filename = 'sample_academies.csv'
     }
 
-    // Add UTF-8 BOM for proper Korean encoding in Excel
-    const BOM = '\uFEFF'
-    const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
+    link.href = url
     link.download = filename
     link.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
-    <div className="w-full">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">조직 관리</h1>
-          <p className="text-gray-600 mt-2">과목, 지사, 학원을 관리합니다.</p>
-        </div>
+    <div className="container mx-auto py-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>조직 구조 관리</CardTitle>
+          <CardDescription>
+            과목, 지사, 학원을 관리합니다
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={(value) => {
+            setActiveTab(value)
+            setSelectedAcademies(new Set())
+            setSelectedBranches(new Set())
+            setSelectAll(false)
+            setSelectedSubject('all')
+            setSelectedBranch('all')
+            setSearchText('')
+          }}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="subjects">과목 관리</TabsTrigger>
+              <TabsTrigger value="branches">지사 관리</TabsTrigger>
+              <TabsTrigger value="academies">학원 관리</TabsTrigger>
+            </TabsList>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="subjects">
-              <School className="w-4 h-4 mr-2" />
-              과목 관리
-            </TabsTrigger>
-            <TabsTrigger value="branches">
-              <Building2 className="w-4 h-4 mr-2" />
-              지사 관리
-            </TabsTrigger>
-            <TabsTrigger value="academies">
-              <Users className="w-4 h-4 mr-2" />
-              학원 관리
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Subjects Tab */}
-          <TabsContent value="subjects">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>과목 목록</CardTitle>
-                    <CardDescription>등록된 과목을 관리합니다.</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline"
-                      onClick={() => setIsCSVDialogOpen(true)}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      CSV 업로드
-                    </Button>
-                    <Button 
-                      onClick={() => setIsSubjectDialogOpen(true)}
-                      className="bg-accent-blue hover:bg-secondary-blue text-white"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      과목 추가
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {subjects.map(subject => (
-                    <div key={subject.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-semibold">{subject.name}</h3>
-                        <p className="text-sm text-gray-600">코드: {subject.code}</p>
-                        <p className="text-sm text-gray-600">
-                          지사: {subject._count?.branches || 0}개, 
-                          사용자: {subject._count?.userSubjects || 0}명
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteSubject(subject.id)}
-                        disabled={
-                          (subject._count?.branches || 0) > 0 || 
-                          (subject._count?.userSubjects || 0) > 0
-                        }
-                      >
-                        <Trash2 className="w-4 h-4" />
+            {/* 과목 관리 */}
+            <TabsContent value="subjects" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">과목 목록</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadSampleCSV}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    샘플 CSV
+                  </Button>
+                  <Dialog open={isSubjectDialogOpen} onOpenChange={setIsSubjectDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        과목 추가
                       </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Branches Tab */}
-          <TabsContent value="branches">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>지사 목록</CardTitle>
-                    <CardDescription>과목별 지사를 관리합니다.</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline"
-                      onClick={() => setIsCSVDialogOpen(true)}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      CSV 업로드
-                    </Button>
-                    <Button 
-                      onClick={() => setIsBranchDialogOpen(true)}
-                      className="bg-accent-blue hover:bg-secondary-blue text-white"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      지사 추가
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {branches.map(branch => (
-                    <div key={branch.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-semibold">{branch.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          과목: {branch.subject.name} | 코드: {branch.code || '-'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          학원: {branch._count?.academies || 0}개, 
-                          사용자: {branch._count?.userSubjects || 0}명
-                        </p>
-                        {branch.manager && (
-                          <p className="text-sm text-gray-600">
-                            매니저: {branch.manager.name} ({branch.manager.email})
-                          </p>
-                        )}
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>새 과목 추가</DialogTitle>
+                        <DialogDescription>
+                          새로운 과목을 추가합니다
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="subject-name">과목명</Label>
+                          <Input
+                            id="subject-name"
+                            value={subjectForm.name}
+                            onChange={(e) => setSubjectForm({ ...subjectForm, name: e.target.value })}
+                            placeholder="예: 수학"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="subject-code">과목 코드</Label>
+                          <Input
+                            id="subject-code"
+                            value={subjectForm.code}
+                            onChange={(e) => setSubjectForm({ ...subjectForm, code: e.target.value })}
+                            placeholder="예: math"
+                          />
+                        </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteBranch(branch.id)}
-                        disabled={
-                          (branch._count?.academies || 0) > 0 || 
-                          (branch._count?.userSubjects || 0) > 0
-                        }
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                      <DialogFooter>
+                        <Button onClick={handleAddSubject} disabled={loading}>
+                          추가
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Academies Tab */}
-          <TabsContent value="academies">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>학원 목록</CardTitle>
-                    <CardDescription>지사별 학원을 관리합니다.</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline"
-                      onClick={() => setIsCSVDialogOpen(true)}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      CSV 업로드
-                    </Button>
-                    <Button 
-                      onClick={() => setIsAcademyDialogOpen(true)}
-                      className="bg-accent-blue hover:bg-secondary-blue text-white"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      학원 추가
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {academies.map(academy => (
-                    <div key={academy.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-semibold">{academy.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          {academy.branch.subject.name} - {academy.branch.name}
-                        </p>
-                        {academy.address && (
-                          <p className="text-sm text-gray-600">주소: {academy.address}</p>
-                        )}
-                        {academy.phone && (
-                          <p className="text-sm text-gray-600">전화: {academy.phone}</p>
-                        )}
-                        {academy.registrationNumber && (
-                          <p className="text-sm text-gray-600">사업자번호: {academy.registrationNumber}</p>
-                        )}
-                        <p className="text-sm text-gray-600">
-                          사용자: {academy._count?.userSubjects || 0}명
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteAcademy(academy.id)}
-                        disabled={(academy._count?.userSubjects || 0) > 0}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Subject Add Dialog */}
-        <Dialog open={isSubjectDialogOpen} onOpenChange={setIsSubjectDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>과목 추가</DialogTitle>
-              <DialogDescription>새로운 과목을 추가합니다.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-gray-700 font-medium">과목명</Label>
-                <Input
-                  value={subjectForm.name}
-                  onChange={(e) => setSubjectForm({...subjectForm, name: e.target.value})}
-                  placeholder="미래엔영어"
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                />
               </div>
-              <div>
-                <Label className="text-gray-700 font-medium">과목 코드</Label>
-                <Input
-                  value={subjectForm.code}
-                  onChange={(e) => setSubjectForm({...subjectForm, code: e.target.value})}
-                  placeholder="english"
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsSubjectDialogOpen(false)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700"
-              >
-                취소
-              </Button>
-              <Button 
-                onClick={handleAddSubject} 
-                disabled={loading || !subjectForm.name || !subjectForm.code}
-                className="bg-accent-blue hover:bg-secondary-blue text-white"
-              >
-                추가
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
-        {/* Branch Add Dialog */}
-        <Dialog open={isBranchDialogOpen} onOpenChange={setIsBranchDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>지사 추가</DialogTitle>
-              <DialogDescription>새로운 지사를 추가합니다.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-gray-700 font-medium">과목 선택</Label>
-                <Select
-                  value={branchForm.subjectId}
-                  onValueChange={(value) => setBranchForm({...branchForm, subjectId: value})}
-                >
-                  <SelectTrigger className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue">
-                    <SelectValue placeholder="과목을 선택하세요" />
+              <div className="border rounded-lg">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="p-3 text-left">과목명</th>
+                      <th className="p-3 text-left">코드</th>
+                      <th className="p-3 text-left">지사 수</th>
+                      <th className="p-3 text-left">사용자 수</th>
+                      <th className="p-3 text-right">작업</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subjects.map((subject) => (
+                      <tr key={subject.id} className="border-b">
+                        <td className="p-3 font-medium">{subject.name}</td>
+                        <td className="p-3">{subject.code}</td>
+                        <td className="p-3">{subject._count?.branches || 0}</td>
+                        <td className="p-3">{subject._count?.userSubjects || 0}</td>
+                        <td className="p-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteSubject(subject.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+
+            {/* 지사 관리 */}
+            <TabsContent value="branches" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">지사 목록</h3>
+                <div className="flex gap-2">
+                  {selectedBranches.size > 0 && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      선택 삭제 ({selectedBranches.size})
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadSampleCSV}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    샘플 CSV
+                  </Button>
+                  <Dialog open={isBranchDialogOpen} onOpenChange={(open) => {
+                    setIsBranchDialogOpen(open)
+                    if (!open) {
+                      setEditingBranch(null)
+                      setBranchForm({ subjectId: '', name: '', code: '' })
+                    }
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        지사 추가
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{editingBranch ? '지사 수정' : '새 지사 추가'}</DialogTitle>
+                        <DialogDescription>
+                          {editingBranch ? '지사 정보를 수정합니다' : '새로운 지사를 추가합니다'}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        {!editingBranch && (
+                          <div className="grid gap-2">
+                            <Label htmlFor="branch-subject">과목</Label>
+                            <Select
+                              value={branchForm.subjectId}
+                              onValueChange={(value) => setBranchForm({ ...branchForm, subjectId: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="과목 선택" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {subjects.map((subject) => (
+                                  <SelectItem key={subject.id} value={subject.id.toString()}>
+                                    {subject.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        <div className="grid gap-2">
+                          <Label htmlFor="branch-name">지사명</Label>
+                          <Input
+                            id="branch-name"
+                            value={branchForm.name}
+                            onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })}
+                            placeholder="예: 강남점"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="branch-code">지사 코드 (선택)</Label>
+                          <Input
+                            id="branch-code"
+                            value={branchForm.code}
+                            onChange={(e) => setBranchForm({ ...branchForm, code: e.target.value })}
+                            placeholder="예: gangnam"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={editingBranch ? handleUpdateBranch : handleAddBranch} disabled={loading}>
+                          {editingBranch ? '수정' : '추가'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+
+              {/* 필터 */}
+              <div className="flex gap-4">
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="과목 선택" />
                   </SelectTrigger>
                   <SelectContent>
-                    {subjects.map(subject => (
+                    <SelectItem value="all">전체 과목</SelectItem>
+                    {subjects.map((subject) => (
                       <SelectItem key={subject.id} value={subject.id.toString()}>
                         {subject.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label className="text-gray-700 font-medium">지사명</Label>
                 <Input
-                  value={branchForm.name}
-                  onChange={(e) => setBranchForm({...branchForm, name: e.target.value})}
-                  placeholder="강남지사"
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
+                  placeholder="지사명 검색..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="max-w-sm"
                 />
               </div>
-              <div>
-                <Label className="text-gray-700 font-medium">지사 코드 (선택)</Label>
-                <Input
-                  value={branchForm.code}
-                  onChange={(e) => setBranchForm({...branchForm, code: e.target.value})}
-                  placeholder="gangnam"
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsBranchDialogOpen(false)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700"
-              >
-                취소
-              </Button>
-              <Button 
-                onClick={handleAddBranch} 
-                disabled={loading || !branchForm.subjectId || !branchForm.name}
-                className="bg-accent-blue hover:bg-secondary-blue text-white"
-              >
-                추가
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
-        {/* Academy Add Dialog */}
-        <Dialog open={isAcademyDialogOpen} onOpenChange={setIsAcademyDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>학원 추가</DialogTitle>
-              <DialogDescription>새로운 학원을 추가합니다.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-gray-700 font-medium">지사 선택</Label>
-                <Select
-                  value={academyForm.branchId}
-                  onValueChange={(value) => setAcademyForm({...academyForm, branchId: value})}
-                >
-                  <SelectTrigger className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue">
-                    <SelectValue placeholder="지사를 선택하세요" />
+              <div className="border rounded-lg">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="p-3 w-10">
+                        <Checkbox
+                          checked={selectAll}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </th>
+                      <th className="p-3 text-left">과목</th>
+                      <th className="p-3 text-left">지사명</th>
+                      <th className="p-3 text-left">코드</th>
+                      <th className="p-3 text-left">학원 수</th>
+                      <th className="p-3 text-left">담당자</th>
+                      <th className="p-3 text-right">작업</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredBranches.map((branch) => (
+                      <tr key={branch.id} className="border-b">
+                        <td className="p-3">
+                          <Checkbox
+                            checked={selectedBranches.has(branch.id)}
+                            onCheckedChange={(checked) => handleSelectBranch(branch.id, checked as boolean)}
+                          />
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-1 bg-gray-100 rounded text-sm">
+                            {branch.subject.name}
+                          </span>
+                        </td>
+                        <td className="p-3 font-medium">{branch.name}</td>
+                        <td className="p-3">{branch.code || '-'}</td>
+                        <td className="p-3">{branch._count?.academies || 0}</td>
+                        <td className="p-3">{branch.manager?.name || '-'}</td>
+                        <td className="p-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingBranch(branch)
+                              setBranchForm({
+                                subjectId: branch.subjectId.toString(),
+                                name: branch.name,
+                                code: branch.code || ''
+                              })
+                              setIsBranchDialogOpen(true)
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteBranch(branch.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+
+            {/* 학원 관리 */}
+            <TabsContent value="academies" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">학원 목록</h3>
+                <div className="flex gap-2">
+                  {selectedAcademies.size > 0 && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      선택 삭제 ({selectedAcademies.size})
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadSampleCSV}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    샘플 CSV
+                  </Button>
+                  <Dialog open={isCSVDialogOpen} onOpenChange={setIsCSVDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Upload className="h-4 w-4 mr-2" />
+                        CSV 업로드
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh]">
+                      <DialogHeader>
+                        <DialogTitle>CSV 업로드</DialogTitle>
+                        <DialogDescription>
+                          학원 데이터를 CSV 파일로 일괄 등록합니다. (과목/지사 자동 생성)
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-4 overflow-y-auto">
+                        {/* 파일 업로드 */}
+                        {csvData.length === 0 && (
+                          <div className="border-2 border-dashed rounded-lg p-6">
+                            <Input
+                              type="file"
+                              accept=".csv"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  await validateCSVFile(file)
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* 검증 결과 */}
+                        {csvData.length > 0 && !uploadResult && (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-3 gap-4">
+                              <Card>
+                                <CardContent className="p-4">
+                                  <div className="text-2xl font-bold text-green-600">{csvValidation.valid}</div>
+                                  <div className="text-sm text-gray-600">유효한 데이터</div>
+                                </CardContent>
+                              </Card>
+                              <Card>
+                                <CardContent className="p-4">
+                                  <div className="text-2xl font-bold text-red-600">{csvValidation.invalid}</div>
+                                  <div className="text-sm text-gray-600">오류 데이터</div>
+                                </CardContent>
+                              </Card>
+                              <Card>
+                                <CardContent className="p-4">
+                                  <div className="text-2xl font-bold text-blue-600">{csvData.length}</div>
+                                  <div className="text-sm text-gray-600">전체 데이터</div>
+                                </CardContent>
+                              </Card>
+                            </div>
+
+                            {/* 자동 생성될 항목 */}
+                            {(csvValidation.newSubjects.length > 0 || csvValidation.newBranches.length > 0) && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 className="font-semibold mb-2">자동 생성될 항목</h4>
+                                {csvValidation.newSubjects.length > 0 && (
+                                  <div>
+                                    <span className="text-sm font-medium">새 과목: </span>
+                                    <span className="text-sm">{csvValidation.newSubjects.join(', ')}</span>
+                                  </div>
+                                )}
+                                {csvValidation.newBranches.length > 0 && (
+                                  <div>
+                                    <span className="text-sm font-medium">새 지사: </span>
+                                    <span className="text-sm">{csvValidation.newBranches.map(b => b.split(':').join(' - ')).join(', ')}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* 데이터 미리보기 */}
+                            <div className="border rounded-lg overflow-hidden">
+                              <table className="w-full text-sm">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="p-2 text-left">상태</th>
+                                    <th className="p-2 text-left">과목명</th>
+                                    <th className="p-2 text-left">지사명</th>
+                                    <th className="p-2 text-left">학원명</th>
+                                    <th className="p-2 text-left">주소</th>
+                                    <th className="p-2 text-left">전화번호</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {csvData.slice(0, 10).map((row, index) => (
+                                    <tr key={index} className={row.valid ? '' : 'bg-red-50'}>
+                                      <td className="p-2">
+                                        {row.valid ? (
+                                          <span className="text-green-600">✓</span>
+                                        ) : (
+                                          <span className="text-red-600">✗</span>
+                                        )}
+                                      </td>
+                                      <td className="p-2">{row.subjectName}</td>
+                                      <td className="p-2">{row.branchName}</td>
+                                      <td className="p-2">{row.academyName}</td>
+                                      <td className="p-2">{row.address || '-'}</td>
+                                      <td className="p-2">{row.phone || '-'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              {csvData.length > 10 && (
+                                <div className="p-2 text-center text-sm text-gray-500">
+                                  ... {csvData.length - 10}개 더 있음
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 업로드 결과 */}
+                        {uploadResult && (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <Card>
+                                <CardContent className="p-4">
+                                  <div className="text-2xl font-bold text-green-600">{uploadResult.success}</div>
+                                  <div className="text-sm text-gray-600">성공</div>
+                                </CardContent>
+                              </Card>
+                              <Card>
+                                <CardContent className="p-4">
+                                  <div className="text-2xl font-bold text-red-600">{uploadResult.failed}</div>
+                                  <div className="text-sm text-gray-600">실패</div>
+                                </CardContent>
+                              </Card>
+                            </div>
+
+                            {uploadResult.details.length > 0 && (
+                              <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
+                                <h4 className="font-semibold mb-2">상세 결과</h4>
+                                <div className="space-y-1">
+                                  {uploadResult.details.map((detail, index) => (
+                                    <div key={index} className="text-sm">{detail}</div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <DialogFooter>
+                        {csvData.length > 0 && !uploadResult && (
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setCsvData([])
+                                setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
+                              }}
+                            >
+                              취소
+                            </Button>
+                            <Button
+                              onClick={handleCSVUpload}
+                              disabled={isUploading || csvValidation.valid === 0}
+                            >
+                              {isUploading ? '업로드 중...' : `${csvValidation.valid}개 업로드`}
+                            </Button>
+                          </>
+                        )}
+                        {uploadResult && (
+                          <Button
+                            onClick={() => {
+                              setIsCSVDialogOpen(false)
+                              setCsvData([])
+                              setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
+                              setUploadResult(null)
+                            }}
+                          >
+                            닫기
+                          </Button>
+                        )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={isAcademyDialogOpen} onOpenChange={(open) => {
+                    setIsAcademyDialogOpen(open)
+                    if (!open) {
+                      setEditingAcademy(null)
+                      setAcademyForm({ branchId: '', name: '', address: '', phone: '', registrationNumber: '' })
+                    }
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        학원 추가
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{editingAcademy ? '학원 수정' : '새 학원 추가'}</DialogTitle>
+                        <DialogDescription>
+                          {editingAcademy ? '학원 정보를 수정합니다' : '새로운 학원을 추가합니다'}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        {!editingAcademy && (
+                          <div className="grid gap-2">
+                            <Label htmlFor="academy-branch">지사</Label>
+                            <Select
+                              value={academyForm.branchId}
+                              onValueChange={(value) => setAcademyForm({ ...academyForm, branchId: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="지사 선택" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {branches.map((branch) => (
+                                  <SelectItem key={branch.id} value={branch.id.toString()}>
+                                    [{branch.subject.name}] {branch.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        <div className="grid gap-2">
+                          <Label htmlFor="academy-name">학원명</Label>
+                          <Input
+                            id="academy-name"
+                            value={academyForm.name}
+                            onChange={(e) => setAcademyForm({ ...academyForm, name: e.target.value })}
+                            placeholder="예: 한빛수학학원"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="academy-address">주소 (선택)</Label>
+                          <Input
+                            id="academy-address"
+                            value={academyForm.address}
+                            onChange={(e) => setAcademyForm({ ...academyForm, address: e.target.value })}
+                            placeholder="예: 서울시 강남구"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="academy-phone">전화번호 (선택)</Label>
+                          <Input
+                            id="academy-phone"
+                            value={academyForm.phone}
+                            onChange={(e) => setAcademyForm({ ...academyForm, phone: e.target.value })}
+                            placeholder="예: 02-1234-5678"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="academy-reg-number">사업자등록번호 (선택)</Label>
+                          <Input
+                            id="academy-reg-number"
+                            value={academyForm.registrationNumber}
+                            onChange={(e) => setAcademyForm({ ...academyForm, registrationNumber: e.target.value })}
+                            placeholder="예: 123-45-67890"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={editingAcademy ? handleUpdateAcademy : handleAddAcademy} disabled={loading}>
+                          {editingAcademy ? '수정' : '추가'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+
+              {/* 필터 */}
+              <div className="flex gap-4">
+                <Select value={selectedSubject} onValueChange={(value) => {
+                  setSelectedSubject(value)
+                  setSelectedBranch('all')
+                }}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="과목 선택" />
                   </SelectTrigger>
                   <SelectContent>
-                    {branches.map(branch => (
-                      <SelectItem key={branch.id} value={branch.id.toString()}>
-                        {branch.subject.name} - {branch.name}
+                    <SelectItem value="all">전체 과목</SelectItem>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id.toString()}>
+                        {subject.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label className="text-gray-700 font-medium">학원명</Label>
+                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="지사 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">전체 지사</SelectItem>
+                    {branches
+                      .filter(b => selectedSubject === 'all' || b.subjectId === parseInt(selectedSubject))
+                      .map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id.toString()}>
+                          {branch.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
                 <Input
-                  value={academyForm.name}
-                  onChange={(e) => setAcademyForm({...academyForm, name: e.target.value})}
-                  placeholder="강남영어학원"
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
+                  placeholder="학원명, 주소, 전화번호 검색..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="max-w-sm"
                 />
-              </div>
-              <div>
-                <Label className="text-gray-700 font-medium">주소 (선택)</Label>
-                <Input
-                  value={academyForm.address}
-                  onChange={(e) => setAcademyForm({...academyForm, address: e.target.value})}
-                  placeholder="서울시 강남구..."
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-700 font-medium">전화번호 (선택)</Label>
-                <Input
-                  value={academyForm.phone}
-                  onChange={(e) => setAcademyForm({...academyForm, phone: e.target.value})}
-                  placeholder="02-1234-5678"
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-700 font-medium">사업자등록번호 (선택)</Label>
-                <Input
-                  value={academyForm.registrationNumber}
-                  onChange={(e) => setAcademyForm({...academyForm, registrationNumber: e.target.value})}
-                  placeholder="123-45-67890"
-                  className="mt-1 border-gray-300 focus:border-accent-blue focus:ring-accent-blue"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsAcademyDialogOpen(false)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700"
-              >
-                취소
-              </Button>
-              <Button 
-                onClick={handleAddAcademy} 
-                disabled={loading || !academyForm.branchId || !academyForm.name}
-                className="bg-accent-blue hover:bg-secondary-blue text-white"
-              >
-                추가
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* CSV Upload Dialog */}
-        <Dialog
-          open={isCSVDialogOpen}
-          onOpenChange={(open) => {
-            setIsCSVDialogOpen(open)
-            if (!open) {
-              setCsvData([])
-              setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
-              setUploadResult(null)
-            }
-          }}
-        >
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>CSV 업로드</DialogTitle>
-              <DialogDescription>
-                {activeTab === 'subjects' && '과목 정보를 CSV 파일로 일괄 업로드합니다.'}
-                {activeTab === 'branches' && '지사 정보를 CSV 파일로 일괄 업로드합니다.'}
-                {activeTab === 'academies' && '학원 정보를 CSV 파일로 일괄 업로드합니다.'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* File Upload Area */}
-              {csvData.length === 0 && !uploadResult && (
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                  <input
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    id="csv-upload"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        await validateCSVFile(file)
-                      }
-                    }}
-                  />
-                  <label htmlFor="csv-upload" className="cursor-pointer">
-                    <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">
-                      클릭하여 CSV 파일 선택
-                    </p>
-                  </label>
-                </div>
-              )}
-
-              {/* Validation Results */}
-              {csvData.length > 0 && !uploadResult && (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">데이터 검증 결과</h3>
-                    <div className="space-y-1 text-sm">
-                      <p>✅ 유효한 데이터: {csvValidation.valid}개</p>
-                      {csvValidation.invalid > 0 && (
-                        <p className="text-red-600">❌ 오류 데이터: {csvValidation.invalid}개</p>
-                      )}
-                      {csvValidation.newSubjects.length > 0 && (
-                        <p className="text-orange-600">
-                          📝 생성될 과목: {csvValidation.newSubjects.join(', ')}
-                        </p>
-                      )}
-                      {csvValidation.newBranches.length > 0 && (
-                        <p className="text-orange-600">
-                          📝 생성될 지사: {csvValidation.newBranches.join(', ')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Data Preview */}
-                  <div>
-                    <h3 className="font-semibold mb-2">데이터 미리보기</h3>
-                    <div className="max-h-60 overflow-y-auto border rounded-lg">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 sticky top-0">
-                          <tr>
-                            <th className="text-left p-2">과목명</th>
-                            <th className="text-left p-2">지사명</th>
-                            <th className="text-left p-2">학원명</th>
-                            <th className="text-left p-2">주소</th>
-                            <th className="text-left p-2">전화번호</th>
-                            <th className="text-left p-2">상태</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {csvData.map((row, idx) => (
-                            <tr key={idx} className={row.valid ? '' : 'bg-red-50'}>
-                              <td className="p-2">{row.subjectName}</td>
-                              <td className="p-2">{row.branchName}</td>
-                              <td className="p-2">{row.academyName}</td>
-                              <td className="p-2">{row.address || '-'}</td>
-                              <td className="p-2">{row.phone || '-'}</td>
-                              <td className="p-2">
-                                {row.valid ? (
-                                  <span className="text-green-600">✓</span>
-                                ) : (
-                                  <span className="text-red-600" title={row.errors.join(', ')}>✗</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => {
-                        setCsvData([])
-                        setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
-                      }}
-                      variant="outline"
-                    >
-                      다시 선택
-                    </Button>
-                    <Button
-                      onClick={handleCSVUpload}
-                      disabled={csvValidation.valid === 0 || isUploading}
-                      className="flex-1"
-                    >
-                      {isUploading ? (
-                        <>처리 중...</>
-                      ) : (
-                        <>데이터 업로드 ({csvValidation.valid}개)</>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Upload Results */}
-              {uploadResult && (
-                <div className="space-y-4">
-                  <div className={`p-4 rounded-lg ${uploadResult.success > 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <h3 className="font-semibold mb-2">업로드 결과</h3>
-                    <div className="space-y-1 text-sm">
-                      <p>✅ 성공: {uploadResult.success}개</p>
-                      {uploadResult.failed > 0 && (
-                        <p className="text-red-600">❌ 실패: {uploadResult.failed}개</p>
-                      )}
-                    </div>
-                    {uploadResult.details.length > 0 && (
-                      <div className="mt-2 p-2 bg-white rounded border text-xs">
-                        {uploadResult.details.map((detail, idx) => (
-                          <p key={idx}>{detail}</p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {searchText && (
                   <Button
-                    onClick={() => {
-                      setCsvData([])
-                      setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
-                      setUploadResult(null)
-                    }}
-                    className="w-full"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchText('')}
                   >
-                    새 파일 업로드
+                    <X className="h-4 w-4" />
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Sample Download */}
-              {csvData.length === 0 && !uploadResult && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={downloadSampleCSV}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  샘플 CSV 다운로드
-                </Button>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+              {/* 통계 */}
+              <div className="grid grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold">{filteredAcademies.length}</div>
+                    <div className="text-sm text-gray-600">검색 결과</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold">{academies.length}</div>
+                    <div className="text-sm text-gray-600">전체 학원</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold">{branches.length}</div>
+                    <div className="text-sm text-gray-600">전체 지사</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold">{subjects.length}</div>
+                    <div className="text-sm text-gray-600">전체 과목</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="border rounded-lg">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="p-3 w-10">
+                        <Checkbox
+                          checked={selectAll}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </th>
+                      <th className="p-3 text-left">과목</th>
+                      <th className="p-3 text-left">지사</th>
+                      <th className="p-3 text-left">학원명</th>
+                      <th className="p-3 text-left">주소</th>
+                      <th className="p-3 text-left">전화번호</th>
+                      <th className="p-3 text-left">사용자 수</th>
+                      <th className="p-3 text-right">작업</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAcademies.map((academy) => (
+                      <tr key={academy.id} className="border-b">
+                        <td className="p-3">
+                          <Checkbox
+                            checked={selectedAcademies.has(academy.id)}
+                            onCheckedChange={(checked) => handleSelectAcademy(academy.id, checked as boolean)}
+                          />
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-1 bg-blue-100 rounded text-sm">
+                            {academy.branch.subject.name}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-1 bg-gray-100 rounded text-sm">
+                            {academy.branch.name}
+                          </span>
+                        </td>
+                        <td className="p-3 font-medium">{academy.name}</td>
+                        <td className="p-3">{academy.address || '-'}</td>
+                        <td className="p-3">{academy.phone || '-'}</td>
+                        <td className="p-3">{academy._count?.userSubjects || 0}</td>
+                        <td className="p-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingAcademy(academy)
+                              setAcademyForm({
+                                branchId: academy.branchId.toString(),
+                                name: academy.name,
+                                address: academy.address || '',
+                                phone: academy.phone || '',
+                                registrationNumber: academy.registrationNumber || ''
+                              })
+                              setIsAcademyDialogOpen(true)
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteAcademy(academy.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   )
 }

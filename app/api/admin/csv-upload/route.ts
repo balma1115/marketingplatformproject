@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
               results.details.push(`✅ 과목 '${subjectName}' 생성됨`)
             }
 
-            // 2. 지사 생성 또는 조회
+            // 2. 지사 생성 또는 조회 (과목별로 구분)
             let branch = await prisma.branch.findFirst({
               where: {
                 subjectId: subject.id,
@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
             })
 
             if (!branch) {
-              // 지사가 없으면 생성
-              const branchCode = branchName.toLowerCase().replace(/[^a-z0-9]/g, '')
+              // 지사가 없으면 생성 (과목별로 고유한 지사)
+              const branchCode = `${subjectName.toLowerCase().replace(/[^a-z0-9]/g, '')}_${branchName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
               branch = await prisma.branch.create({
                 data: {
                   subjectId: subject.id,
@@ -68,10 +68,10 @@ export async function POST(req: NextRequest) {
                   code: branchCode
                 }
               })
-              results.details.push(`✅ 지사 '${branchName}' 생성됨`)
+              results.details.push(`✅ [${subjectName}] 과목의 지사 '${branchName}' 생성됨`)
             }
 
-            // 3. 학원 생성 (중복 체크)
+            // 3. 학원 생성 (지사별로 중복 체크)
             const existingAcademy = await prisma.academy.findFirst({
               where: {
                 branchId: branch.id,
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
             if (existingAcademy) {
               results.failed++
-              results.details.push(`⚠️ 학원 '${academyName}'은(는) 이미 존재합니다`)
+              results.details.push(`⚠️ [${subjectName} > ${branchName}] 학원 '${academyName}'은(는) 이미 존재합니다`)
             } else {
               await prisma.academy.create({
                 data: {
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
                 }
               })
               results.success++
-              results.details.push(`✅ 학원 '${academyName}' 등록됨`)
+              results.details.push(`✅ [${subjectName} > ${branchName}] 학원 '${academyName}' 등록됨`)
             }
           } catch (error) {
             results.failed++

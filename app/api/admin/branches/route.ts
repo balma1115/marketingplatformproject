@@ -136,15 +136,18 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id, name, code, managerId } = await req.json()
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ error: 'Branch ID is required' }, { status: 400 })
     }
 
+    const { name, code, managerId } = await req.json()
+
     // 지사 존재 확인
     const branch = await prisma.branch.findUnique({
-      where: { id }
+      where: { id: parseInt(id) }
     })
 
     if (!branch) {
@@ -157,7 +160,7 @@ export async function PUT(req: NextRequest) {
         where: {
           subjectId: branch.subjectId,
           name,
-          NOT: { id }
+          NOT: { id: parseInt(id) }
         }
       })
 
@@ -182,7 +185,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const updatedBranch = await prisma.branch.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: {
         ...(name && { name }),
         ...(code !== undefined && { code }),
