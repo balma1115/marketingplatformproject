@@ -47,825 +47,861 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 }
 
 
-// Validate ..\..\app\blog\keywords\monthly\page.tsx
+// Validate ..\app\blog\keywords\monthly\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\blog\\keywords\\monthly\\page.js")
+  const handler = {} as typeof import("..\\app\\blog\\keywords\\monthly\\page.js")
   handler satisfies AppPageConfig<"/blog/keywords/monthly">
 }
 
-// Validate ..\..\app\blog\keywords\page.tsx
+// Validate ..\app\blog\keywords\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\blog\\keywords\\page.js")
+  const handler = {} as typeof import("..\\app\\blog\\keywords\\page.js")
   handler satisfies AppPageConfig<"/blog/keywords">
 }
 
-// Validate ..\..\app\blog\keywords\trend\[keywordId]\page.tsx
+// Validate ..\app\blog\keywords\trend\[keywordId]\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\blog\\keywords\\trend\\[keywordId]\\page.js")
+  const handler = {} as typeof import("..\\app\\blog\\keywords\\trend\\[keywordId]\\page.js")
   handler satisfies AppPageConfig<"/blog/keywords/trend/[keywordId]">
 }
 
-// Validate ..\..\app\dashboard\academy\page.tsx
+// Validate ..\app\dashboard\academy\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\academy\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\academy\\page.js")
   handler satisfies AppPageConfig<"/dashboard/academy">
 }
 
-// Validate ..\..\app\dashboard\admin\agencies\page.tsx
+// Validate ..\app\dashboard\admin\agencies\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\agencies\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\agencies\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/agencies">
 }
 
-// Validate ..\..\app\dashboard\admin\api\page.tsx
+// Validate ..\app\dashboard\admin\api\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\api\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\api\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/api">
 }
 
-// Validate ..\..\app\dashboard\admin\organization\page.tsx
+// Validate ..\app\dashboard\admin\organization\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\organization\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\organization\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/organization">
 }
 
-// Validate ..\..\app\dashboard\admin\page.tsx
+// Validate ..\app\dashboard\admin\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin">
 }
 
-// Validate ..\..\app\dashboard\admin\settings\page.tsx
+// Validate ..\app\dashboard\admin\settings\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\settings\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\settings\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/settings">
 }
 
-// Validate ..\..\app\dashboard\admin\tracking\[userId]\blog\page.tsx
+// Validate ..\app\dashboard\admin\tracking\[userId]\blog\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\tracking\\[userId]\\blog\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\tracking\\[userId]\\blog\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/tracking/[userId]/blog">
 }
 
-// Validate ..\..\app\dashboard\admin\tracking\[userId]\smartplace\page.tsx
+// Validate ..\app\dashboard\admin\tracking\[userId]\smartplace\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\tracking\\[userId]\\smartplace\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\tracking\\[userId]\\smartplace\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/tracking/[userId]/smartplace">
 }
 
-// Validate ..\..\app\dashboard\admin\tracking\page.tsx
+// Validate ..\app\dashboard\admin\tracking\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\tracking\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\tracking\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/tracking">
 }
 
-// Validate ..\..\app\dashboard\admin\users\page.tsx
+// Validate ..\app\dashboard\admin\users\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\admin\\users\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\admin\\users\\page.js")
   handler satisfies AppPageConfig<"/dashboard/admin/users">
 }
 
-// Validate ..\..\app\dashboard\ads\adgroups\[adgroupId]\page.tsx
+// Validate ..\app\dashboard\ads\adgroups\[adgroupId]\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\adgroups\\[adgroupId]\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\ads\\adgroups\\[adgroupId]\\page.js")
   handler satisfies AppPageConfig<"/dashboard/ads/adgroups/[adgroupId]">
 }
 
-// Validate ..\..\app\dashboard\ads\campaigns\[campaignId]\create-adgroup\page.tsx
+// Validate ..\app\dashboard\ads\campaigns\[campaignId]\create-adgroup\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\campaigns\\[campaignId]\\create-adgroup\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\ads\\campaigns\\[campaignId]\\create-adgroup\\page.js")
   handler satisfies AppPageConfig<"/dashboard/ads/campaigns/[campaignId]/create-adgroup">
 }
 
-// Validate ..\..\app\dashboard\ads\campaigns\[campaignId]\page.tsx
+// Validate ..\app\dashboard\ads\campaigns\[campaignId]\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\campaigns\\[campaignId]\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\ads\\campaigns\\[campaignId]\\page.js")
   handler satisfies AppPageConfig<"/dashboard/ads/campaigns/[campaignId]">
 }
 
-// Validate ..\..\app\dashboard\ads\page.tsx
+// Validate ..\app\dashboard\ads\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\ads\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\ads\\page.js")
   handler satisfies AppPageConfig<"/dashboard/ads">
 }
 
-// Validate ..\..\app\dashboard\agency\page.tsx
+// Validate ..\app\dashboard\agency\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\agency\\page.js")
   handler satisfies AppPageConfig<"/dashboard/agency">
 }
 
-// Validate ..\..\app\dashboard\agency\tracking\[userId]\blog\page.tsx
+// Validate ..\app\dashboard\agency\tracking\[userId]\blog\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\tracking\\[userId]\\blog\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\agency\\tracking\\[userId]\\blog\\page.js")
   handler satisfies AppPageConfig<"/dashboard/agency/tracking/[userId]/blog">
 }
 
-// Validate ..\..\app\dashboard\agency\tracking\[userId]\smartplace\page.tsx
+// Validate ..\app\dashboard\agency\tracking\[userId]\smartplace\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\tracking\\[userId]\\smartplace\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\agency\\tracking\\[userId]\\smartplace\\page.js")
   handler satisfies AppPageConfig<"/dashboard/agency/tracking/[userId]/smartplace">
 }
 
-// Validate ..\..\app\dashboard\agency\tracking\page.tsx
+// Validate ..\app\dashboard\agency\tracking\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\agency\\tracking\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\agency\\tracking\\page.js")
   handler satisfies AppPageConfig<"/dashboard/agency/tracking">
 }
 
-// Validate ..\..\app\dashboard\branch\page.tsx
+// Validate ..\app\dashboard\branch\academies\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\branch\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\branch\\academies\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/branch/academies">
+}
+
+// Validate ..\app\dashboard\branch\page.tsx
+{
+  const handler = {} as typeof import("..\\app\\dashboard\\branch\\page.js")
   handler satisfies AppPageConfig<"/dashboard/branch">
 }
 
-// Validate ..\..\app\dashboard\plan\page.tsx
+// Validate ..\app\dashboard\branch\users\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\plan\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\branch\\users\\page.js")
+  handler satisfies AppPageConfig<"/dashboard/branch/users">
+}
+
+// Validate ..\app\dashboard\plan\page.tsx
+{
+  const handler = {} as typeof import("..\\app\\dashboard\\plan\\page.js")
   handler satisfies AppPageConfig<"/dashboard/plan">
 }
 
-// Validate ..\..\app\dashboard\user\page.tsx
+// Validate ..\app\dashboard\user\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\user\\page.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\user\\page.js")
   handler satisfies AppPageConfig<"/dashboard/user">
 }
 
-// Validate ..\..\app\design\thumbnail\page.tsx
+// Validate ..\app\design\thumbnail\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\design\\thumbnail\\page.js")
+  const handler = {} as typeof import("..\\app\\design\\thumbnail\\page.js")
   handler satisfies AppPageConfig<"/design/thumbnail">
 }
 
-// Validate ..\..\app\diagnosis\page.tsx
+// Validate ..\app\diagnosis\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\diagnosis\\page.js")
+  const handler = {} as typeof import("..\\app\\diagnosis\\page.js")
   handler satisfies AppPageConfig<"/diagnosis">
 }
 
-// Validate ..\..\app\diagnosis\smartplace\page.tsx
+// Validate ..\app\diagnosis\smartplace\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\diagnosis\\smartplace\\page.js")
+  const handler = {} as typeof import("..\\app\\diagnosis\\smartplace\\page.js")
   handler satisfies AppPageConfig<"/diagnosis/smartplace">
 }
 
-// Validate ..\..\app\forgot-password\page.tsx
+// Validate ..\app\forgot-password\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\forgot-password\\page.js")
+  const handler = {} as typeof import("..\\app\\forgot-password\\page.js")
   handler satisfies AppPageConfig<"/forgot-password">
 }
 
-// Validate ..\..\app\keyword-analysis\page.tsx
+// Validate ..\app\keyword-analysis\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\keyword-analysis\\page.js")
+  const handler = {} as typeof import("..\\app\\keyword-analysis\\page.js")
   handler satisfies AppPageConfig<"/keyword-analysis">
 }
 
-// Validate ..\..\app\login\page.tsx
+// Validate ..\app\login\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\login\\page.js")
+  const handler = {} as typeof import("..\\app\\login\\page.js")
   handler satisfies AppPageConfig<"/login">
 }
 
-// Validate ..\..\app\management\keywords\page.tsx
+// Validate ..\app\management\keywords\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\management\\keywords\\page.js")
+  const handler = {} as typeof import("..\\app\\management\\keywords\\page.js")
   handler satisfies AppPageConfig<"/management/keywords">
 }
 
-// Validate ..\..\app\management\page.tsx
+// Validate ..\app\management\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\management\\page.js")
+  const handler = {} as typeof import("..\\app\\management\\page.js")
   handler satisfies AppPageConfig<"/management">
 }
 
-// Validate ..\..\app\mypage\page.tsx
+// Validate ..\app\mypage\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\mypage\\page.js")
+  const handler = {} as typeof import("..\\app\\mypage\\page.js")
   handler satisfies AppPageConfig<"/mypage">
 }
 
-// Validate ..\..\app\page.tsx
+// Validate ..\app\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\page.js")
+  const handler = {} as typeof import("..\\app\\page.js")
   handler satisfies AppPageConfig<"/">
 }
 
-// Validate ..\..\app\privacy\page.tsx
+// Validate ..\app\privacy\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\privacy\\page.js")
+  const handler = {} as typeof import("..\\app\\privacy\\page.js")
   handler satisfies AppPageConfig<"/privacy">
 }
 
-// Validate ..\..\app\register\page.tsx
+// Validate ..\app\register\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\register\\page.js")
+  const handler = {} as typeof import("..\\app\\register\\page.js")
   handler satisfies AppPageConfig<"/register">
 }
 
-// Validate ..\..\app\smartplace\keywords\monthly\page.tsx
+// Validate ..\app\smartplace\keywords\monthly\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\smartplace\\keywords\\monthly\\page.js")
+  const handler = {} as typeof import("..\\app\\smartplace\\keywords\\monthly\\page.js")
   handler satisfies AppPageConfig<"/smartplace/keywords/monthly">
 }
 
-// Validate ..\..\app\smartplace\keywords\page.tsx
+// Validate ..\app\smartplace\keywords\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\smartplace\\keywords\\page.js")
+  const handler = {} as typeof import("..\\app\\smartplace\\keywords\\page.js")
   handler satisfies AppPageConfig<"/smartplace/keywords">
 }
 
-// Validate ..\..\app\smartplace\keywords\trend\[keywordId]\page.tsx
+// Validate ..\app\smartplace\keywords\trend\[keywordId]\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\smartplace\\keywords\\trend\\[keywordId]\\page.js")
+  const handler = {} as typeof import("..\\app\\smartplace\\keywords\\trend\\[keywordId]\\page.js")
   handler satisfies AppPageConfig<"/smartplace/keywords/trend/[keywordId]">
 }
 
-// Validate ..\..\app\terms\page.tsx
+// Validate ..\app\terms\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\terms\\page.js")
+  const handler = {} as typeof import("..\\app\\terms\\page.js")
   handler satisfies AppPageConfig<"/terms">
 }
 
-// Validate ..\..\app\test-sse\page.tsx
+// Validate ..\app\test-sse\page.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\test-sse\\page.js")
+  const handler = {} as typeof import("..\\app\\test-sse\\page.js")
   handler satisfies AppPageConfig<"/test-sse">
 }
 
-// Validate ..\..\app\api\admin\academies\route.ts
+// Validate ..\app\api\admin\academies\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\academies\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\academies\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/academies">
 }
 
-// Validate ..\..\app\api\admin\ads-refresh\route.ts
+// Validate ..\app\api\admin\ads-refresh\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\ads-refresh\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\ads-refresh\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/ads-refresh">
 }
 
-// Validate ..\..\app\api\admin\api-usage\route.ts
+// Validate ..\app\api\admin\api-usage\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\api-usage\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\api-usage\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/api-usage">
 }
 
-// Validate ..\..\app\api\admin\branches\route.ts
+// Validate ..\app\api\admin\branches\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\branches\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\branches\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/branches">
 }
 
-// Validate ..\..\app\api\admin\csv-upload\route.ts
+// Validate ..\app\api\admin\csv-upload\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\csv-upload\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\csv-upload\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/csv-upload">
 }
 
-// Validate ..\..\app\api\admin\scheduler\route.ts
+// Validate ..\app\api\admin\scheduler\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\scheduler\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\scheduler\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/scheduler">
 }
 
-// Validate ..\..\app\api\admin\settings\route.ts
+// Validate ..\app\api\admin\settings\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\settings\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\settings\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/settings">
 }
 
-// Validate ..\..\app\api\admin\subjects\route.ts
+// Validate ..\app\api\admin\subjects\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\subjects\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\subjects\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/subjects">
 }
 
-// Validate ..\..\app\api\admin\tracking\[userId]\route.ts
+// Validate ..\app\api\admin\tracking\[userId]\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\[userId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\[userId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/[userId]">
 }
 
-// Validate ..\..\app\api\admin\tracking\route.ts
+// Validate ..\app\api\admin\tracking\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking">
 }
 
-// Validate ..\..\app\api\admin\tracking\sse-fixed\route.ts
+// Validate ..\app\api\admin\tracking\sse-fixed\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-fixed\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\sse-fixed\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-fixed">
 }
 
-// Validate ..\..\app\api\admin\tracking\sse-realtime\route.ts
+// Validate ..\app\api\admin\tracking\sse-realtime\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-realtime\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\sse-realtime\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-realtime">
 }
 
-// Validate ..\..\app\api\admin\tracking\sse-simple\route.ts
+// Validate ..\app\api\admin\tracking\sse-simple\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-simple\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\sse-simple\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-simple">
 }
 
-// Validate ..\..\app\api\admin\tracking\sse-test\route.ts
+// Validate ..\app\api\admin\tracking\sse-test\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-test\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\sse-test\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-test">
 }
 
-// Validate ..\..\app\api\admin\tracking\sse-working\route.ts
+// Validate ..\app\api\admin\tracking\sse-working\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\sse-working\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\sse-working\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/sse-working">
 }
 
-// Validate ..\..\app\api\admin\tracking\status\route.ts
+// Validate ..\app\api\admin\tracking\status\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\status\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\status\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/status">
 }
 
-// Validate ..\..\app\api\admin\tracking\stream\route.ts
+// Validate ..\app\api\admin\tracking\stream\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\stream\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\stream\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/stream">
 }
 
-// Validate ..\..\app\api\admin\tracking\test-event\route.ts
+// Validate ..\app\api\admin\tracking\test-event\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\tracking\\test-event\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\tracking\\test-event\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/tracking/test-event">
 }
 
-// Validate ..\..\app\api\admin\users\[userId]\approve\route.ts
+// Validate ..\app\api\admin\users\[userId]\approve\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\users\\[userId]\\approve\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\users\\[userId]\\approve\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/users/[userId]/approve">
 }
 
-// Validate ..\..\app\api\admin\users\[userId]\route.ts
+// Validate ..\app\api\admin\users\[userId]\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\users\\[userId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\users\\[userId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/users/[userId]">
 }
 
-// Validate ..\..\app\api\admin\users\route.ts
+// Validate ..\app\api\admin\users\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\admin\\users\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\admin\\users\\route.js")
   handler satisfies RouteHandlerConfig<"/api/admin/users">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\ad-extensions\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\ad-extensions\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\ad-extensions\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\ad-extensions\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/ad-extensions">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\ads\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\ads\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\ads\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\ads\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/ads">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\extended-search\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\extended-search\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\extended-search\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\extended-search\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/extended-search">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\extensions\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\extensions\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\extensions\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\extensions\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/extensions">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\keywords\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\keywords\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\keywords\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\keywords\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/keywords">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\negative-keywords\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\negative-keywords\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\negative-keywords\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\negative-keywords\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/negative-keywords">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\products\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\products\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\products\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\products\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/products">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\restricted-keywords\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\restricted-keywords\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\restricted-keywords\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\restricted-keywords\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]/restricted-keywords">
 }
 
-// Validate ..\..\app\api\ads\adgroups\[adgroupId]\route.ts
+// Validate ..\app\api\ads\adgroups\[adgroupId]\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\[adgroupId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\[adgroupId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/[adgroupId]">
 }
 
-// Validate ..\..\app\api\ads\adgroups\create\route.ts
+// Validate ..\app\api\ads\adgroups\create\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\create\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\create\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups/create">
 }
 
-// Validate ..\..\app\api\ads\adgroups\route.ts
+// Validate ..\app\api\ads\adgroups\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\adgroups\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\adgroups\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/adgroups">
 }
 
-// Validate ..\..\app\api\ads\campaigns\[campaignId]\adgroups\route.ts
+// Validate ..\app\api\ads\campaigns\[campaignId]\adgroups\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\[campaignId]\\adgroups\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\campaigns\\[campaignId]\\adgroups\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/campaigns/[campaignId]/adgroups">
 }
 
-// Validate ..\..\app\api\ads\campaigns\[campaignId]\route.ts
+// Validate ..\app\api\ads\campaigns\[campaignId]\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\[campaignId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\campaigns\\[campaignId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/campaigns/[campaignId]">
 }
 
-// Validate ..\..\app\api\ads\campaigns\[campaignId]\toggle\route.ts
+// Validate ..\app\api\ads\campaigns\[campaignId]\toggle\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\[campaignId]\\toggle\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\campaigns\\[campaignId]\\toggle\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/campaigns/[campaignId]/toggle">
 }
 
-// Validate ..\..\app\api\ads\campaigns\bulk-delete\route.ts
+// Validate ..\app\api\ads\campaigns\bulk-delete\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\bulk-delete\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\campaigns\\bulk-delete\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/campaigns/bulk-delete">
 }
 
-// Validate ..\..\app\api\ads\campaigns\create\route.ts
+// Validate ..\app\api\ads\campaigns\create\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\create\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\campaigns\\create\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/campaigns/create">
 }
 
-// Validate ..\..\app\api\ads\campaigns\route.ts
+// Validate ..\app\api\ads\campaigns\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\campaigns\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\campaigns\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/campaigns">
 }
 
-// Validate ..\..\app\api\ads\dashboard\route.ts
+// Validate ..\app\api\ads\dashboard\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\dashboard\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\dashboard\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/dashboard">
 }
 
-// Validate ..\..\app\api\ads\keywords\[keywordId]\toggle\route.ts
+// Validate ..\app\api\ads\keywords\[keywordId]\toggle\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\[keywordId]\\toggle\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\keywords\\[keywordId]\\toggle\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/keywords/[keywordId]/toggle">
 }
 
-// Validate ..\..\app\api\ads\keywords\route.ts
+// Validate ..\app\api\ads\keywords\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\keywords\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/keywords">
 }
 
-// Validate ..\..\app\api\ads\keywords\stats\route.ts
+// Validate ..\app\api\ads\keywords\stats\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\stats\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\keywords\\stats\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/keywords/stats">
 }
 
-// Validate ..\..\app\api\ads\keywords\suggestions\route.ts
+// Validate ..\app\api\ads\keywords\suggestions\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\keywords\\suggestions\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\keywords\\suggestions\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/keywords/suggestions">
 }
 
-// Validate ..\..\app\api\ads\performance\route.ts
+// Validate ..\app\api\ads\performance\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\performance\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\performance\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/performance">
 }
 
-// Validate ..\..\app\api\ads\places\naver\route.ts
+// Validate ..\app\api\ads\places\naver\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\places\\naver\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\places\\naver\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/places/naver">
 }
 
-// Validate ..\..\app\api\ads\places\route.ts
+// Validate ..\app\api\ads\places\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\places\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\places\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/places">
 }
 
-// Validate ..\..\app\api\ads\processed-data\route.ts
+// Validate ..\app\api\ads\processed-data\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ads\\processed-data\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ads\\processed-data\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ads/processed-data">
 }
 
-// Validate ..\..\app\api\ai\generate-image\route.ts
+// Validate ..\app\api\ai\generate-image\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\ai\\generate-image\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\ai\\generate-image\\route.js")
   handler satisfies RouteHandlerConfig<"/api/ai/generate-image">
 }
 
-// Validate ..\..\app\api\auth\login\route.ts
+// Validate ..\app\api\auth\login\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\auth\\login\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\auth\\login\\route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/login">
 }
 
-// Validate ..\..\app\api\auth\logout\route.ts
+// Validate ..\app\api\auth\logout\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\auth\\logout\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\auth\\logout\\route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/logout">
 }
 
-// Validate ..\..\app\api\auth\me\route.ts
+// Validate ..\app\api\auth\me\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\auth\\me\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\auth\\me\\route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/me">
 }
 
-// Validate ..\..\app\api\auth\register\route.ts
+// Validate ..\app\api\auth\register\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\auth\\register\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\auth\\register\\route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/register">
 }
 
-// Validate ..\..\app\api\auth\send-verification\route.ts
+// Validate ..\app\api\auth\send-verification\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\auth\\send-verification\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\auth\\send-verification\\route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/send-verification">
 }
 
-// Validate ..\..\app\api\auth\test-login\route.ts
+// Validate ..\app\api\auth\test-login\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\auth\\test-login\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\auth\\test-login\\route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/test-login">
 }
 
-// Validate ..\..\app\api\auth\verify-code\route.ts
+// Validate ..\app\api\auth\verify-code\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\auth\\verify-code\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\auth\\verify-code\\route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/verify-code">
 }
 
-// Validate ..\..\app\api\blog-keywords\[keywordId]\route.ts
+// Validate ..\app\api\blog-keywords\[keywordId]\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\[keywordId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\[keywordId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/[keywordId]">
 }
 
-// Validate ..\..\app\api\blog-keywords\[keywordId]\toggle\route.ts
+// Validate ..\app\api\blog-keywords\[keywordId]\toggle\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\[keywordId]\\toggle\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\[keywordId]\\toggle\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/[keywordId]/toggle">
 }
 
-// Validate ..\..\app\api\blog-keywords\[keywordId]\trend\route.ts
+// Validate ..\app\api\blog-keywords\[keywordId]\trend\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\[keywordId]\\trend\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\[keywordId]\\trend\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/[keywordId]/trend">
 }
 
-// Validate ..\..\app\api\blog-keywords\add\route.ts
+// Validate ..\app\api\blog-keywords\add\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\add\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\add\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/add">
 }
 
-// Validate ..\..\app\api\blog-keywords\clear-all\route.ts
+// Validate ..\app\api\blog-keywords\clear-all\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\clear-all\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\clear-all\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/clear-all">
 }
 
-// Validate ..\..\app\api\blog-keywords\list\route.ts
+// Validate ..\app\api\blog-keywords\list\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\list\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\list\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/list">
 }
 
-// Validate ..\..\app\api\blog-keywords\monthly-data\route.ts
+// Validate ..\app\api\blog-keywords\monthly-data\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\monthly-data\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\monthly-data\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/monthly-data">
 }
 
-// Validate ..\..\app\api\blog-keywords\my-blog\route.ts
+// Validate ..\app\api\blog-keywords\my-blog\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\my-blog\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\my-blog\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/my-blog">
 }
 
-// Validate ..\..\app\api\blog-keywords\projects\route.ts
+// Validate ..\app\api\blog-keywords\projects\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\projects\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\projects\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/projects">
 }
 
-// Validate ..\..\app\api\blog-keywords\register-blog\route.ts
+// Validate ..\app\api\blog-keywords\register-blog\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\register-blog\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\register-blog\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/register-blog">
 }
 
-// Validate ..\..\app\api\blog-keywords\track-all\route.ts
+// Validate ..\app\api\blog-keywords\track-all\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\track-all\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\track-all\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/track-all">
 }
 
-// Validate ..\..\app\api\blog-keywords\update-blog\route.ts
+// Validate ..\app\api\blog-keywords\update-blog\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\blog-keywords\\update-blog\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\update-blog\\route.js")
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/update-blog">
 }
 
-// Validate ..\..\app\api\focus-keywords\[source]\[keywordId]\route.ts
+// Validate ..\app\api\branch\academies\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\[source]\\[keywordId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\branch\\academies\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/branch/academies">
+}
+
+// Validate ..\app\api\branch\users\[userId]\approve\route.ts
+{
+  const handler = {} as typeof import("..\\app\\api\\branch\\users\\[userId]\\approve\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/branch/users/[userId]/approve">
+}
+
+// Validate ..\app\api\branch\users\[userId]\reject\route.ts
+{
+  const handler = {} as typeof import("..\\app\\api\\branch\\users\\[userId]\\reject\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/branch/users/[userId]/reject">
+}
+
+// Validate ..\app\api\branch\users\route.ts
+{
+  const handler = {} as typeof import("..\\app\\api\\branch\\users\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/branch/users">
+}
+
+// Validate ..\app\api\focus-keywords\[source]\[keywordId]\route.ts
+{
+  const handler = {} as typeof import("..\\app\\api\\focus-keywords\\[source]\\[keywordId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/focus-keywords/[source]/[keywordId]">
 }
 
-// Validate ..\..\app\api\focus-keywords\add-to-blog\route.ts
+// Validate ..\app\api\focus-keywords\add-to-blog\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\add-to-blog\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\focus-keywords\\add-to-blog\\route.js")
   handler satisfies RouteHandlerConfig<"/api/focus-keywords/add-to-blog">
 }
 
-// Validate ..\..\app\api\focus-keywords\add-to-smartplace\route.ts
+// Validate ..\app\api\focus-keywords\add-to-smartplace\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\add-to-smartplace\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\focus-keywords\\add-to-smartplace\\route.js")
   handler satisfies RouteHandlerConfig<"/api/focus-keywords/add-to-smartplace">
 }
 
-// Validate ..\..\app\api\focus-keywords\unified\route.ts
+// Validate ..\app\api\focus-keywords\unified\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\focus-keywords\\unified\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\focus-keywords\\unified\\route.js")
   handler satisfies RouteHandlerConfig<"/api/focus-keywords/unified">
 }
 
-// Validate ..\..\app\api\keyword-analysis\route.ts
+// Validate ..\app\api\keyword-analysis\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\keyword-analysis\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\keyword-analysis\\route.js")
   handler satisfies RouteHandlerConfig<"/api/keyword-analysis">
 }
 
-// Validate ..\..\app\api\public\academies\route.ts
+// Validate ..\app\api\public\academies\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\public\\academies\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\public\\academies\\route.js")
   handler satisfies RouteHandlerConfig<"/api/public/academies">
 }
 
-// Validate ..\..\app\api\public\branches\route.ts
+// Validate ..\app\api\public\branches\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\public\\branches\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\public\\branches\\route.js")
   handler satisfies RouteHandlerConfig<"/api/public/branches">
 }
 
-// Validate ..\..\app\api\public\subjects\route.ts
+// Validate ..\app\api\public\subjects\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\public\\subjects\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\public\\subjects\\route.js")
   handler satisfies RouteHandlerConfig<"/api/public/subjects">
 }
 
-// Validate ..\..\app\api\scheduler\init\route.ts
+// Validate ..\app\api\scheduler\init\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\scheduler\\init\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\scheduler\\init\\route.js")
   handler satisfies RouteHandlerConfig<"/api/scheduler/init">
 }
 
-// Validate ..\..\app\api\settings\api-keys\route.ts
+// Validate ..\app\api\settings\api-keys\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\settings\\api-keys\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\settings\\api-keys\\route.js")
   handler satisfies RouteHandlerConfig<"/api/settings/api-keys">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\[keywordId]\route.ts
+// Validate ..\app\api\smartplace-keywords\[keywordId]\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\[keywordId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\[keywordId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/[keywordId]">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\[keywordId]\toggle\route.ts
+// Validate ..\app\api\smartplace-keywords\[keywordId]\toggle\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\[keywordId]\\toggle\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\[keywordId]\\toggle\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/[keywordId]/toggle">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\[keywordId]\trend\route.ts
+// Validate ..\app\api\smartplace-keywords\[keywordId]\trend\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\[keywordId]\\trend\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\[keywordId]\\trend\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/[keywordId]/trend">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\add\route.ts
+// Validate ..\app\api\smartplace-keywords\add\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\add\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\add\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/add">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\list\route.ts
+// Validate ..\app\api\smartplace-keywords\list\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\list\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\list\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/list">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\monthly-data\route.ts
+// Validate ..\app\api\smartplace-keywords\monthly-data\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\monthly-data\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\monthly-data\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/monthly-data">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\my-place\route.ts
+// Validate ..\app\api\smartplace-keywords\my-place\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\my-place\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\my-place\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/my-place">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\projects\route.ts
+// Validate ..\app\api\smartplace-keywords\projects\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\projects\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\projects\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/projects">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\register-place\route.ts
+// Validate ..\app\api\smartplace-keywords\register-place\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\register-place\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\register-place\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/register-place">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\sessions\route.ts
+// Validate ..\app\api\smartplace-keywords\sessions\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\sessions\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\sessions\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/sessions">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\track-all-realtime\route.ts
+// Validate ..\app\api\smartplace-keywords\track-all-realtime\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\track-all-realtime\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\track-all-realtime\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/track-all-realtime">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\track-all-v4\route.ts
+// Validate ..\app\api\smartplace-keywords\track-all-v4\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\track-all-v4\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\track-all-v4\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/track-all-v4">
 }
 
-// Validate ..\..\app\api\smartplace-keywords\track-all\route.ts
+// Validate ..\app\api\smartplace-keywords\track-all\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace-keywords\\track-all\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\track-all\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/track-all">
 }
 
-// Validate ..\..\app\api\smartplace\analyze\route.ts
+// Validate ..\app\api\smartplace\analyze\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace\\analyze\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace\\analyze\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace/analyze">
 }
 
-// Validate ..\..\app\api\smartplace\diagnosis\route.ts
+// Validate ..\app\api\smartplace\diagnosis\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace\\diagnosis\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace\\diagnosis\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace/diagnosis">
 }
 
-// Validate ..\..\app\api\smartplace\info\[placeId]\route.ts
+// Validate ..\app\api\smartplace\info\[placeId]\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace\\info\\[placeId]\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace\\info\\[placeId]\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace/info/[placeId]">
 }
 
-// Validate ..\..\app\api\smartplace\resolve-url\route.ts
+// Validate ..\app\api\smartplace\resolve-url\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\smartplace\\resolve-url\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\smartplace\\resolve-url\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace/resolve-url">
 }
 
-// Validate ..\..\app\api\test-adgroups-simple\route.ts
+// Validate ..\app\api\test-adgroups-simple\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\test-adgroups-simple\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\test-adgroups-simple\\route.js")
   handler satisfies RouteHandlerConfig<"/api/test-adgroups-simple">
 }
 
-// Validate ..\..\app\api\user\update-plan\route.ts
+// Validate ..\app\api\user\update-plan\route.ts
 {
-  const handler = {} as typeof import("..\\..\\app\\api\\user\\update-plan\\route.js")
+  const handler = {} as typeof import("..\\app\\api\\user\\update-plan\\route.js")
   handler satisfies RouteHandlerConfig<"/api/user/update-plan">
 }
 
@@ -873,26 +909,26 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 
 
 
-// Validate ..\..\app\dashboard\layout.tsx
+// Validate ..\app\dashboard\layout.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\dashboard\\layout.js")
+  const handler = {} as typeof import("..\\app\\dashboard\\layout.js")
   handler satisfies LayoutConfig<"/dashboard">
 }
 
-// Validate ..\..\app\design\thumbnail\layout.tsx
+// Validate ..\app\design\thumbnail\layout.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\design\\thumbnail\\layout.js")
+  const handler = {} as typeof import("..\\app\\design\\thumbnail\\layout.js")
   handler satisfies LayoutConfig<"/design/thumbnail">
 }
 
-// Validate ..\..\app\diagnosis\layout.tsx
+// Validate ..\app\diagnosis\layout.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\diagnosis\\layout.js")
+  const handler = {} as typeof import("..\\app\\diagnosis\\layout.js")
   handler satisfies LayoutConfig<"/diagnosis">
 }
 
-// Validate ..\..\app\layout.tsx
+// Validate ..\app\layout.tsx
 {
-  const handler = {} as typeof import("..\\..\\app\\layout.js")
+  const handler = {} as typeof import("..\\app\\layout.js")
   handler satisfies LayoutConfig<"/">
 }

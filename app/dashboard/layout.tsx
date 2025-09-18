@@ -45,6 +45,13 @@ const roleMenus = {
     { href: '/dashboard/branch/performance', label: '성과 분석', icon: Target },
     { href: '/dashboard/branch/reports', label: '리포트', icon: FileText }
   ],
+  branch_manager: [
+    { href: '/dashboard/branch', label: '대시보드', icon: LayoutDashboard },
+    { href: '/dashboard/branch/academies', label: '학원 관리', icon: GraduationCap },
+    { href: '/dashboard/branch/users', label: '사용자 관리', icon: Users },
+    { href: '/dashboard/branch/performance', label: '성과 분석', icon: Target },
+    { href: '/dashboard/branch/reports', label: '리포트', icon: FileText }
+  ],
   academy: [
     { href: '/dashboard/academy', label: '대시보드', icon: LayoutDashboard },
     { href: '/dashboard/academy/blog', label: '블로그 관리', icon: FileText },
@@ -86,8 +93,8 @@ export default function DashboardLayout({
 
   const menus = roleMenus[user.role as keyof typeof roleMenus] || []
 
-  // For branch, academy, and user roles, don't show the dashboard layout
-  if (['branch', 'academy', 'user'].includes(user.role)) {
+  // For branch_manager, branch, academy, and user roles, don't show the dashboard layout
+  if (['branch_manager', 'branch', 'academy', 'user'].includes(user.role)) {
     return <>{children}</>
   }
 
