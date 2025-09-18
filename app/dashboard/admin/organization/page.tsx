@@ -84,6 +84,20 @@ export default function OrganizationManagementPage() {
   const [isBranchDialogOpen, setIsBranchDialogOpen] = useState(false)
   const [isAcademyDialogOpen, setIsAcademyDialogOpen] = useState(false)
   const [isCSVDialogOpen, setIsCSVDialogOpen] = useState(false)
+  const [csvData, setCsvData] = useState<any[]>([])
+  const [csvValidation, setCsvValidation] = useState<{
+    valid: number
+    invalid: number
+    errors: string[]
+    newSubjects: string[]
+    newBranches: string[]
+  }>({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState<{
+    success: number
+    failed: number
+    details: string[]
+  } | null>(null)
 
   // Fetch data
   const fetchSubjects = useCallback(async () => {
@@ -284,34 +298,131 @@ export default function OrganizationManagementPage() {
     }
   }
 
+  // CSV File Validation
+  const validateCSVFile = async (file: File) => {
+    setUploadResult(null)
+
+    let text = await file.text()
+    // Remove BOM if present
+    if (text.charCodeAt(0) === 0xFEFF) {
+      text = text.substring(1)
+    }
+
+    const lines = text.split('\n').filter(line => line.trim())
+    const dataLines = lines.slice(1) // Skip header
+
+    const parsedData: any[] = []
+    const validation = {
+      valid: 0,
+      invalid: 0,
+      errors: [] as string[],
+      newSubjects: [] as string[],
+      newBranches: [] as string[]
+    }
+
+    if (activeTab === 'academies') {
+      // 학원 CSV 검증
+      for (let i = 0; i < dataLines.length; i++) {
+        const line = dataLines[i]
+        const [subjectName, branchName, academyName, address, phone] =
+          line.split(',').map(s => s.trim())
+
+        const rowData = {
+          subjectName,
+          branchName,
+          academyName,
+          address,
+          phone,
+          valid: true,
+          errors: [] as string[]
+        }
+
+        // 필수 필드 검증
+        if (!subjectName || !branchName || !academyName) {
+          rowData.valid = false
+          rowData.errors.push('필수 필드가 누락되었습니다')
+          validation.invalid++
+        } else {
+          // 과목 확인
+          const subject = subjects.find(s => s.name === subjectName)
+          if (!subject) {
+            if (!validation.newSubjects.includes(subjectName)) {
+              validation.newSubjects.push(subjectName)
+            }
+          }
+
+          // 지사 확인
+          const branch = branches.find(b => b.name === branchName)
+          if (!branch) {
+            if (!validation.newBranches.includes(branchName)) {
+              validation.newBranches.push(branchName)
+            }
+          }
+
+          validation.valid++
+        }
+
+        parsedData.push(rowData)
+      }
+    }
+
+    setCsvData(parsedData)
+    setCsvValidation(validation)
+  }
+
   // CSV Upload
-  const handleCSVUpload = async (file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('type', activeTab)
+  const handleCSVUpload = async () => {
+    if (csvData.length === 0) return
+
+    setIsUploading(true)
+    setUploadResult(null)
 
     try {
       const response = await fetch('/api/admin/csv-upload', {
         method: 'POST',
         credentials: 'include',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: activeTab,
+          data: csvData.filter(d => d.valid),
+          autoCreate: true // 과목/지사 자동 생성 플래그
+        })
       })
 
+      const result = await response.json()
+
       if (response.ok) {
-        const data = await response.json()
-        toast.success(`CSV 업로드 완료: ${data.success}개 성공, ${data.failed}개 실패`)
-        
+        setUploadResult({
+          success: result.success,
+          failed: result.failed,
+          details: result.details || []
+        })
+
+        toast.success(`업로드 완료: ${result.success}개 성공, ${result.failed}개 실패`)
+
         // Refresh data
         if (activeTab === 'subjects') fetchSubjects()
         else if (activeTab === 'branches') fetchBranches()
         else if (activeTab === 'academies') fetchAcademies()
-        
-        setIsCSVDialogOpen(false)
       } else {
-        toast.error('CSV 업로드 실패')
+        toast.error(result.error || 'CSV 업로드 실패')
+        setUploadResult({
+          success: 0,
+          failed: csvData.length,
+          details: [result.error || '업로드 중 오류 발생']
+        })
       }
     } catch (error) {
       toast.error('CSV 업로드 중 오류가 발생했습니다.')
+      setUploadResult({
+        success: 0,
+        failed: csvData.length,
+        details: ['네트워크 오류가 발생했습니다']
+      })
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -743,8 +854,18 @@ export default function OrganizationManagementPage() {
         </Dialog>
 
         {/* CSV Upload Dialog */}
-        <Dialog open={isCSVDialogOpen} onOpenChange={setIsCSVDialogOpen}>
-          <DialogContent>
+        <Dialog
+          open={isCSVDialogOpen}
+          onOpenChange={(open) => {
+            setIsCSVDialogOpen(open)
+            if (!open) {
+              setCsvData([])
+              setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
+              setUploadResult(null)
+            }
+          }}
+        >
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>CSV 업로드</DialogTitle>
               <DialogDescription>
@@ -754,32 +875,159 @@ export default function OrganizationManagementPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  id="csv-upload"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleCSVUpload(file)
-                  }}
-                />
-                <label htmlFor="csv-upload" className="cursor-pointer">
-                  <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600">
-                    클릭하여 CSV 파일 선택
-                  </p>
-                </label>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={downloadSampleCSV}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                샘플 CSV 다운로드
-              </Button>
+              {/* File Upload Area */}
+              {csvData.length === 0 && !uploadResult && (
+                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    id="csv-upload"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        await validateCSVFile(file)
+                      }
+                    }}
+                  />
+                  <label htmlFor="csv-upload" className="cursor-pointer">
+                    <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600">
+                      클릭하여 CSV 파일 선택
+                    </p>
+                  </label>
+                </div>
+              )}
+
+              {/* Validation Results */}
+              {csvData.length > 0 && !uploadResult && (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="font-semibold mb-2">데이터 검증 결과</h3>
+                    <div className="space-y-1 text-sm">
+                      <p>✅ 유효한 데이터: {csvValidation.valid}개</p>
+                      {csvValidation.invalid > 0 && (
+                        <p className="text-red-600">❌ 오류 데이터: {csvValidation.invalid}개</p>
+                      )}
+                      {csvValidation.newSubjects.length > 0 && (
+                        <p className="text-orange-600">
+                          📝 생성될 과목: {csvValidation.newSubjects.join(', ')}
+                        </p>
+                      )}
+                      {csvValidation.newBranches.length > 0 && (
+                        <p className="text-orange-600">
+                          📝 생성될 지사: {csvValidation.newBranches.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Data Preview */}
+                  <div>
+                    <h3 className="font-semibold mb-2">데이터 미리보기</h3>
+                    <div className="max-h-60 overflow-y-auto border rounded-lg">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 sticky top-0">
+                          <tr>
+                            <th className="text-left p-2">과목명</th>
+                            <th className="text-left p-2">지사명</th>
+                            <th className="text-left p-2">학원명</th>
+                            <th className="text-left p-2">주소</th>
+                            <th className="text-left p-2">전화번호</th>
+                            <th className="text-left p-2">상태</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {csvData.map((row, idx) => (
+                            <tr key={idx} className={row.valid ? '' : 'bg-red-50'}>
+                              <td className="p-2">{row.subjectName}</td>
+                              <td className="p-2">{row.branchName}</td>
+                              <td className="p-2">{row.academyName}</td>
+                              <td className="p-2">{row.address || '-'}</td>
+                              <td className="p-2">{row.phone || '-'}</td>
+                              <td className="p-2">
+                                {row.valid ? (
+                                  <span className="text-green-600">✓</span>
+                                ) : (
+                                  <span className="text-red-600" title={row.errors.join(', ')}>✗</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setCsvData([])
+                        setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
+                      }}
+                      variant="outline"
+                    >
+                      다시 선택
+                    </Button>
+                    <Button
+                      onClick={handleCSVUpload}
+                      disabled={csvValidation.valid === 0 || isUploading}
+                      className="flex-1"
+                    >
+                      {isUploading ? (
+                        <>처리 중...</>
+                      ) : (
+                        <>데이터 업로드 ({csvValidation.valid}개)</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Results */}
+              {uploadResult && (
+                <div className="space-y-4">
+                  <div className={`p-4 rounded-lg ${uploadResult.success > 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                    <h3 className="font-semibold mb-2">업로드 결과</h3>
+                    <div className="space-y-1 text-sm">
+                      <p>✅ 성공: {uploadResult.success}개</p>
+                      {uploadResult.failed > 0 && (
+                        <p className="text-red-600">❌ 실패: {uploadResult.failed}개</p>
+                      )}
+                    </div>
+                    {uploadResult.details.length > 0 && (
+                      <div className="mt-2 p-2 bg-white rounded border text-xs">
+                        {uploadResult.details.map((detail, idx) => (
+                          <p key={idx}>{detail}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setCsvData([])
+                      setCsvValidation({ valid: 0, invalid: 0, errors: [], newSubjects: [], newBranches: [] })
+                      setUploadResult(null)
+                    }}
+                    className="w-full"
+                  >
+                    새 파일 업로드
+                  </Button>
+                </div>
+              )}
+
+              {/* Sample Download */}
+              {csvData.length === 0 && !uploadResult && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={downloadSampleCSV}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  샘플 CSV 다운로드
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>
