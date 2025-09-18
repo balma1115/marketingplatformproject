@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { Plus, Trash2, Edit, Upload, Download, Building2, Users, School, Filter, X } from 'lucide-react'
+import { Plus, Trash2, Edit, Upload, Download, Building2, Users, School, Filter, X, AlertTriangle } from 'lucide-react'
+import { parseAcademyCSVLine, formatCSVContent } from '@/lib/utils/csv-parser'
 
 interface Subject {
   id: number
@@ -99,6 +100,7 @@ export default function OrganizationManagementPage() {
   const [isBranchDialogOpen, setIsBranchDialogOpen] = useState(false)
   const [isAcademyDialogOpen, setIsAcademyDialogOpen] = useState(false)
   const [isCSVDialogOpen, setIsCSVDialogOpen] = useState(false)
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false)
   const [csvData, setCsvData] = useState<any[]>([])
   const [csvValidation, setCsvValidation] = useState<{
     valid: number
@@ -224,6 +226,40 @@ export default function OrganizationManagementPage() {
       newSelected.delete(id)
     }
     setSelectedBranches(newSelected)
+  }
+
+  // 전체 데이터 삭제
+  const handleDeleteAllData = async () => {
+    setLoading(true)
+
+    try {
+      // 1. 모든 학원 삭제
+      for (const academy of academies) {
+        await fetch(`/api/admin/academies?id=${academy.id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        })
+      }
+
+      // 2. 모든 지사 삭제
+      for (const branch of branches) {
+        await fetch(`/api/admin/branches?id=${branch.id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        })
+      }
+
+      toast.success('모든 지사와 학원 데이터가 삭제되었습니다.')
+
+      // 데이터 새로고침
+      fetchBranches()
+      fetchAcademies()
+      setIsDeleteAllDialogOpen(false)
+    } catch (error) {
+      toast.error('데이터 삭제 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // 일괄 삭제
@@ -545,8 +581,7 @@ export default function OrganizationManagementPage() {
 
       for (let i = 0; i < dataLines.length; i++) {
         const line = dataLines[i]
-        const [subjectName, branchName, academyName, address, phone] =
-          line.split(',').map(s => s.trim())
+        const { subjectName, branchName, academyName, address, phone } = parseAcademyCSVLine(line)
 
         const rowData = {
           subjectName,
@@ -646,22 +681,35 @@ export default function OrganizationManagementPage() {
 
   // Sample CSV download
   const downloadSampleCSV = () => {
-    let content = ''
+    let data: string[][] = []
     let filename = ''
 
-    // Add BOM for proper encoding in Excel
-    const BOM = '\uFEFF'
-
     if (activeTab === 'subjects') {
-      content = BOM + '과목명,과목코드\n수학,math\n영어,english\n과학,science'
+      data = [
+        ['과목명', '과목코드'],
+        ['수학', 'math'],
+        ['영어', 'english'],
+        ['과학', 'science']
+      ]
       filename = 'sample_subjects.csv'
     } else if (activeTab === 'branches') {
-      content = BOM + '과목명,지사명,지사코드\n수학,강남점,gangnam\n수학,서초점,seocho\n영어,강남점,gangnam'
+      data = [
+        ['과목명', '지사명', '지사코드'],
+        ['수학', '강남점', 'gangnam'],
+        ['수학', '서초점', 'seocho'],
+        ['영어', '강남점', 'gangnam']
+      ]
       filename = 'sample_branches.csv'
     } else if (activeTab === 'academies') {
-      content = BOM + '과목명,지사명,학원명,주소,전화번호\n수학,강남점,한빛수학학원,서울시 강남구,02-1234-5678\n영어,서초점,영어마을학원,서울시 서초구,02-2345-6789'
+      data = [
+        ['과목명', '지사명', '학원명', '주소', '전화번호'],
+        ['수학', '강남점', '한빛수학학원', '서울시 강남구 테헤란로 123 (역삼동, 강남빌딩)', '02-1234-5678'],
+        ['영어', '서초점', '영어마을학원', '서울시 서초구 서초대로 456 (서초동, 서초타워)', '02-2345-6789']
+      ]
       filename = 'sample_academies.csv'
     }
+
+    const content = formatCSVContent(data)
 
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -793,6 +841,54 @@ export default function OrganizationManagementPage() {
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">지사 목록</h3>
                 <div className="flex gap-2">
+                  {branches.length > 0 && (
+                    <Dialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <AlertTriangle className="h-4 w-4 mr-2" />
+                          전체 삭제
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>전체 데이터 삭제</DialogTitle>
+                          <DialogDescription>
+                            ⚠️ 주의: 이 작업은 되돌릴 수 없습니다!
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                          <p className="text-sm text-gray-600 mb-2">
+                            다음 데이터가 모두 삭제됩니다:
+                          </p>
+                          <ul className="text-sm space-y-1">
+                            <li>• {academies.length}개의 학원</li>
+                            <li>• {branches.length}개의 지사</li>
+                          </ul>
+                          <p className="text-sm text-red-600 mt-4">
+                            사용자에게 연결된 데이터는 삭제할 수 없습니다.
+                          </p>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteAllDialogOpen(false)}
+                          >
+                            취소
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={handleDeleteAllData}
+                            disabled={loading}
+                          >
+                            {loading ? '삭제 중...' : '전체 삭제 확인'}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                   {selectedBranches.size > 0 && (
                     <Button
                       variant="destructive"
