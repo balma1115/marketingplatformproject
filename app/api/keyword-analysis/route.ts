@@ -327,21 +327,28 @@ export async function POST(request: Request) {
     console.log('Main keyword data:', keywordData)
 
     // 2. 연관 키워드 가져오기
-    const relatedResponse = await axios({
-      method: 'GET',
-      url: `${BASE_URL}${path}`,
-      params: {
-        hintKeywords: keyword,
-        showDetail: '1',
-        returnTp: '1'  // 연관 키워드 포함
-      },
-      headers: {
-        'X-Timestamp': timestamp,
-        'X-API-KEY': API_KEY,
-        'X-Customer': CUSTOMER_ID,
-        'X-Signature': signature
-      }
-    })
+    let relatedResponse
+    try {
+      relatedResponse = await axios({
+        method: 'GET',
+        url: `${BASE_URL}${path}`,
+        params: {
+          hintKeywords: keyword,
+          showDetail: '1'
+          // returnTp 파라미터 제거 - 네이버 API에서 지원하지 않을 수 있음
+        },
+        headers: {
+          'X-Timestamp': timestamp,
+          'X-API-KEY': API_KEY,
+          'X-Customer': CUSTOMER_ID,
+          'X-Signature': signature
+        }
+      })
+    } catch (relatedError: any) {
+      console.error('Related keywords API Error:', relatedError.response?.status, relatedError.response?.data)
+      // 연관 키워드 실패 시 기본 키워드만 사용
+      relatedResponse = { data: { keywordList: [keywordData] } }
+    }
 
     const relatedKeywords = relatedResponse.data.keywordList || []
     console.log('Related keywords count:', relatedKeywords.length)
