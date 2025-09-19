@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyAuth } from '@/lib/auth'
+import { verifyAuth } from '@/lib/auth-middleware'
 
 // GET - 사용자 프로필 조회
 export async function GET(req: NextRequest) {
   try {
-    const userId = await verifyAuth(req)
-    if (!userId) {
+    const authResult = await verifyAuth(req)
+    if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = authResult.userId
 
     const user = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
@@ -36,10 +37,11 @@ export async function GET(req: NextRequest) {
 // PUT - 사용자 프로필 업데이트
 export async function PUT(req: NextRequest) {
   try {
-    const userId = await verifyAuth(req)
-    if (!userId) {
+    const authResult = await verifyAuth(req)
+    if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = authResult.userId
 
     const body = await req.json()
     const { name, phone, academyName, academyAddress } = body

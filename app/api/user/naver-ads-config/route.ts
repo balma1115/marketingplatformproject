@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyAuth } from '@/lib/auth'
+import { verifyAuth } from '@/lib/auth-middleware'
 
 // GET - 네이버 광고 설정 조회
 export async function GET(req: NextRequest) {
   try {
-    const userId = await verifyAuth(req)
-    if (!userId) {
+    const authResult = await verifyAuth(req)
+    if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = authResult.userId
 
     const config = await prisma.naverAdsConfig.findFirst({
       where: { userId: parseInt(userId) },
@@ -29,10 +30,11 @@ export async function GET(req: NextRequest) {
 // PUT - 네이버 광고 설정 업데이트
 export async function PUT(req: NextRequest) {
   try {
-    const userId = await verifyAuth(req)
-    if (!userId) {
+    const authResult = await verifyAuth(req)
+    if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = authResult.userId
 
     const body = await req.json()
     const { customerId, apiKey, secretKey } = body
