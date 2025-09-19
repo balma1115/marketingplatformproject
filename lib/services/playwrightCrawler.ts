@@ -529,30 +529,34 @@ export class PlaywrightCrawlerService {
 
       // Extract image dates from photo tab
       console.log('Extracting image dates...')
-      const photoTabElement = await workingPage.$('a:has-text("사진")')
-      if (photoTabElement) {
-        await photoTabElement.click()
-        await page.waitForTimeout(3000)
-        
-        // Get first 5 images
-        const imgElements = await workingPage.$$('img[src*="phinf.naver.net"], img[src*="search.pstatic.net"]')
-        const maxImages = Math.min(5, imgElements.length)
-        
-        for (let i = 0; i < maxImages; i++) {
-          const src = await imgElements[i].getAttribute('src')
-          if (src) {
-            // Extract date from URL (format: YYYYMMDD)
-            const dateMatch = src.match(/(\d{8})/)
-            if (dateMatch) {
-              const dateStr = dateMatch[1]
-              const formattedDate = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`
-              placeDetail.imageRegistrationDates?.push(formattedDate)
-            } else {
-              placeDetail.imageRegistrationDates?.push('날짜 정보 없음')
+      try {
+        const photoTabElement = await workingPage.$('a:has-text("사진")')
+        if (photoTabElement) {
+          await photoTabElement.click()
+          await page.waitForTimeout(2000)
+
+          // Get first 5 images - don't navigate through gallery to avoid timeout
+          const imgElements = await workingPage.$$('img[src*="phinf.naver.net"], img[src*="search.pstatic.net"]')
+          const maxImages = Math.min(5, imgElements.length)
+
+          for (let i = 0; i < maxImages; i++) {
+            const src = await imgElements[i].getAttribute('src')
+            if (src) {
+              // Extract date from URL (format: YYYYMMDD)
+              const dateMatch = src.match(/(\d{8})/)
+              if (dateMatch) {
+                const dateStr = dateMatch[1]
+                const formattedDate = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`
+                placeDetail.imageRegistrationDates?.push(formattedDate)
+              } else {
+                placeDetail.imageRegistrationDates?.push('날짜 정보 없음')
+              }
             }
           }
+          console.log('Image dates extracted:', placeDetail.imageRegistrationDates)
         }
-        console.log('Image dates extracted:', placeDetail.imageRegistrationDates)
+      } catch (photoError) {
+        console.log('Error extracting photo dates, continuing:', photoError.message)
       }
 
       // Extract review details
@@ -771,6 +775,13 @@ export class PlaywrightCrawlerService {
     } catch (error) {
       console.error('Error during crawling:', error)
       await context.close()
+
+      // Return partial data instead of throwing error
+      if (placeDetail && placeDetail.name) {
+        console.log('Returning partial data due to error')
+        return placeDetail
+      }
+
       throw error
     }
   }
