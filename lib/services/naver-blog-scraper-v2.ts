@@ -205,7 +205,7 @@ export class NaverBlogScraperV2 {
               let currentBlogId = ''
               
               // 작성자 링크에서 블로그 ID 추출 (가장 정확)
-              const authorLink = item.querySelector('.sub_txt.sub_name, .user_info > a') as HTMLAnchorElement
+              const authorLink = item.querySelector('.sub_txt.sub_name, .user_info > a, .user_box_inner a.name') as HTMLAnchorElement
               if (authorLink && authorLink.href) {
                 const match = authorLink.href.match(/blog\.naver\.com\/([^/?]+)/)
                 if (match) {
@@ -254,11 +254,22 @@ export class NaverBlogScraperV2 {
           
           // 블로그 ID 추출
           let currentBlogId = ''
-          const authorLink = item.querySelector('.sub_txt.sub_name') as HTMLAnchorElement
+          const authorLink = item.querySelector('.sub_txt.sub_name, .user_info > a, .user_box_inner a.name') as HTMLAnchorElement
           if (authorLink && authorLink.href) {
             const match = authorLink.href.match(/blog\.naver\.com\/([^/?]+)/)
             if (match) {
               currentBlogId = match[1]
+            }
+          }
+
+          // 폴백: 제목 링크에서 추출
+          if (!currentBlogId) {
+            const titleLink = item.querySelector('a[href*="blog.naver.com"]') as HTMLAnchorElement
+            if (titleLink && titleLink.href) {
+              const match = titleLink.href.match(/blog\.naver\.com\/([^/?]+)/)
+              if (match) {
+                currentBlogId = match[1]
+              }
             }
           }
           

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { Save, AlertCircle, Building2, Globe, Key, User } from 'lucide-react'
+import { Save, AlertCircle, Building2, Globe, Key, User, Lock, School, MapPin, Mail } from 'lucide-react'
 import Header from '@/components/layout/Header'
 
 export default function SettingsPage() {
@@ -19,6 +19,20 @@ export default function SettingsPage() {
     phone: '',
     academyName: '',
     academyAddress: '',
+  })
+
+  // 조직 정보
+  const [organizationInfo, setOrganizationInfo] = useState({
+    subjects: [] as any[],
+    branches: [] as any[],
+    academies: [] as any[]
+  })
+
+  // 비밀번호 변경
+  const [passwordInfo, setPasswordInfo] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   })
 
   // 스마트플레이스 정보
@@ -50,6 +64,7 @@ export default function SettingsPage() {
       return
     }
     fetchUserData()
+    fetchOrganizationData()
   }, [user])
 
   const fetchUserData = async () => {
@@ -109,6 +124,19 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Failed to fetch user data:', error)
       setMessage({ type: 'error', text: '데이터를 불러오는데 실패했습니다.' })
+    }
+  }
+
+  // 조직 정보 불러오기
+  const fetchOrganizationData = async () => {
+    try {
+      const orgRes = await fetch('/api/user/organization')
+      if (orgRes.ok) {
+        const orgData = await orgRes.json()
+        setOrganizationInfo(orgData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch organization data:', error)
     }
   }
 
@@ -181,12 +209,57 @@ export default function SettingsPage() {
     }
   }
 
+  // 비밀번호 변경
+  const changePassword = async () => {
+    if (passwordInfo.newPassword !== passwordInfo.confirmPassword) {
+      setMessage({ type: 'error', text: '새 비밀번호가 일치하지 않습니다.' })
+      return false
+    }
+
+    if (passwordInfo.newPassword.length < 6) {
+      setMessage({ type: 'error', text: '비밀번호는 6자 이상이어야 합니다.' })
+      return false
+    }
+
+    try {
+      const res = await fetch('/api/user/change-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordInfo.currentPassword,
+          newPassword: passwordInfo.newPassword
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to change password')
+      }
+
+      setPasswordInfo({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setMessage({ type: 'success', text: '비밀번호가 변경되었습니다.' })
+      return true
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || '비밀번호 변경에 실패했습니다.' })
+      return false
+    }
+  }
+
   // 모든 정보 저장
   const saveAllSettings = async () => {
     setLoading(true)
     setMessage(null)
 
     try {
+      // 비밀번호 변경이 있으면 먼저 처리
+      if (passwordInfo.newPassword || passwordInfo.confirmPassword) {
+        const passwordChanged = await changePassword()
+        if (!passwordChanged) {
+          setLoading(false)
+          return
+        }
+      }
+
       await Promise.all([
         saveUserInfo(),
         smartPlaceInfo.placeName && saveSmartPlaceInfo(),
@@ -218,14 +291,24 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* 사용자 정보 섹션 */}
+        {/* 계정 정보 섹션 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center space-x-2 mb-4">
-            <User className="text-gray-600" size={20} />
-            <h2 className="text-xl font-bold">사용자 정보</h2>
+            <Mail className="text-gray-600" size={20} />
+            <h2 className="text-xl font-bold">계정 정보</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">아이디 (이메일)</label>
+              <input
+                type="email"
+                value={userInfo.email}
+                disabled
+                className="input input-bordered w-full bg-gray-50"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-2">이름</label>
               <input
@@ -233,16 +316,6 @@ export default function SettingsPage() {
                 value={userInfo.name}
                 onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
                 className="input input-bordered w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">이메일</label>
-              <input
-                type="email"
-                value={userInfo.email}
-                disabled
-                className="input input-bordered w-full bg-gray-50"
               />
             </div>
 
@@ -276,6 +349,77 @@ export default function SettingsPage() {
               />
             </div>
           </div>
+
+          {/* 조직 정보 표시 */}
+          {organizationInfo.subjects.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="text-sm font-medium mb-3">소속 정보</h3>
+              <div className="space-y-2 text-sm">
+                {organizationInfo.subjects.map((item: any, idx: number) => (
+                  <div key={idx} className="flex items-center space-x-2">
+                    <School className="text-gray-400" size={16} />
+                    <span>
+                      <span className="font-medium">{item.subjectName}</span> ›
+                      <span className="ml-1">{item.branchName}</span>
+                      {item.academyName && (
+                        <span className="ml-1">› {item.academyName}</span>
+                      )}
+                      {item.isBranchManager && (
+                        <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">지사장</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 비밀번호 변경 섹션 */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <Lock className="text-gray-600" size={20} />
+            <h2 className="text-xl font-bold">비밀번호 변경</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">현재 비밀번호</label>
+              <input
+                type="password"
+                value={passwordInfo.currentPassword}
+                onChange={(e) => setPasswordInfo({ ...passwordInfo, currentPassword: e.target.value })}
+                className="input input-bordered w-full"
+                placeholder="현재 비밀번호"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">새 비밀번호</label>
+              <input
+                type="password"
+                value={passwordInfo.newPassword}
+                onChange={(e) => setPasswordInfo({ ...passwordInfo, newPassword: e.target.value })}
+                className="input input-bordered w-full"
+                placeholder="6자 이상"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">새 비밀번호 확인</label>
+              <input
+                type="password"
+                value={passwordInfo.confirmPassword}
+                onChange={(e) => setPasswordInfo({ ...passwordInfo, confirmPassword: e.target.value })}
+                className="input input-bordered w-full"
+                placeholder="비밀번호 재입력"
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500 mt-2">
+            ※ 비밀번호를 변경하지 않으려면 비워두세요
+          </p>
         </div>
 
         {/* 스마트플레이스 정보 섹션 */}
@@ -419,12 +563,14 @@ export default function SettingsPage() {
           <button
             onClick={saveAllSettings}
             disabled={loading}
-            className="btn btn-primary"
+            className="px-6 py-3 bg-accent-blue hover:bg-secondary-blue text-white rounded-lg font-medium
+                     transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                     flex items-center space-x-2 shadow-sm hover:shadow-md"
           >
             {loading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              <Save size={20} />
+              <Save size={18} />
             )}
             <span>모든 설정 저장</span>
           </button>

@@ -7,14 +7,50 @@ import { trackingEventManager } from '@/lib/services/event-manager'
 
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
+    // Lambda를 사용할지 로컬 실행할지 결정
+    const useLambda = process.env.USE_LAMBDA === 'true'
+
+    // Lambda 사용 시
+    if (useLambda) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/lambda/trigger-tracking`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': req.headers.get('cookie') || ''
+          },
+          body: JSON.stringify({
+            type: 'blog',
+            userId: userId.toString(),
+            keywords: [] // 전체 추적
+          })
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          return NextResponse.json({ error: error.error || 'Lambda 실행 실패' }, { status: response.status })
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Lambda를 통해 추적이 시작되었습니다.',
+          executionType: 'lambda'
+        })
+      } catch (error) {
+        console.error('Lambda execution failed:', error)
+        // Lambda 실패 시 로컬로 폴백
+      }
+    }
+
+    // 로컬 실행 (기존 코드)
     let scraper = null
-    
+
     // 사용자 정보 조회
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { name: true, email: true }
     })
-    
+
     // TrackingManager에 작업 등록
     const jobId = trackingManager.addJob({
       userId: userId.toString(),
@@ -25,7 +61,7 @@ export async function POST(req: NextRequest) {
       startedAt: new Date(),
       progress: { current: 0, total: 0 }
     })
-    
+
     try {
       // 작업 상태를 running으로 업데이트
       trackingManager.updateJob(jobId, { status: 'running' })
