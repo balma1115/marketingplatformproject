@@ -5,7 +5,7 @@
 
 import { SQSEvent, Context } from 'aws-lambda'
 import chromium from '@sparticuz/chromium'
-import puppeteer from 'puppeteer-core'
+import * as puppeteer from 'puppeteer-core'
 import { PrismaClient } from '@prisma/client'
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
 
@@ -52,7 +52,7 @@ function normalizeText(text: string): string {
  * 순위 추출 함수
  */
 async function extractRankings(
-  page: puppeteer.Page,
+  page: any,
   targetPlaceName: string
 ): Promise<RankingResult> {
   const results = await page.evaluate((targetName) => {
@@ -149,7 +149,7 @@ export const handler = async (event: SQSEvent, context: Context) => {
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
         executablePath: await chromium.executablePath(),
-        headless: chromium.headless
+        headless: chromium.headless as boolean
       })
 
       const page = await browser.newPage()
@@ -184,18 +184,18 @@ export const handler = async (event: SQSEvent, context: Context) => {
       const checkDate = getKSTDate()
       await prisma.smartPlaceRanking.create({
         data: {
-          keywordId: message.keywordId,
+          keywordId: String(message.keywordId),
           checkDate,
           organicRank: rankings.organicRank,
           adRank: rankings.adRank,
-          topTenPlaces: rankings.topTenPlaces,
-          found: rankings.found
+          topTenPlaces: rankings.topTenPlaces
+          //found: rankings.found
         }
       })
 
       // 키워드 최종 확인 시간 업데이트
       await prisma.smartPlaceKeyword.update({
-        where: { id: message.keywordId },
+        where: { id: String(message.keywordId) },
         data: { lastChecked: checkDate }
       })
 

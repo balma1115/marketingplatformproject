@@ -13,17 +13,20 @@
     "build:prisma-layer": "cd layers/prisma && npm install && npx prisma generate && cd ../.."
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
-    "@sparticuz/chromium": "^119.0.2",
-    "aws-sdk": "^2.1539.0",
-    "puppeteer-core": "^21.6.1"
+    "@aws-sdk/client-cloudwatch": "^3.729.0",
+    "@aws-sdk/client-sqs": "^3.729.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.131",
-    "@types/node": "^20.10.5",
+    "@prisma/client": "^6.16.2",
+    "@sparticuz/chromium": "^119.0.2",
+    "@types/aws-lambda": "^8.10.152",
+    "@types/node": "^20.19.17",
+    "prisma": "^6.16.2",
+    "puppeteer-core": "^24.22.0",
     "serverless": "^3.38.0",
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-offline": "^13.9.0",
     "serverless-plugin-typescript": "^2.1.5",
-    "serverless-offline": "^13.3.0",
     "typescript": "^5.3.3"
   }
 }

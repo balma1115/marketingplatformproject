@@ -21,8 +21,7 @@ export const handler = async (event: ScheduledEvent, context: Context) => {
     const smartPlaceKeywords = await prisma.smartPlaceKeyword.findMany({
       where: { isActive: true },
       include: {
-        smartPlace: true,
-        user: true
+        smartPlace: true
       }
     })
 
@@ -34,8 +33,8 @@ export const handler = async (event: ScheduledEvent, context: Context) => {
         keywordId: keyword.id,
         keyword: keyword.keyword,
         userId: keyword.userId,
-        placeId: keyword.smartPlace.placeId,
-        placeName: keyword.smartPlace.placeName
+        placeId: (keyword as any).smartPlace?.placeId || '',
+        placeName: (keyword as any).smartPlace?.placeName || ''
       }
 
       await sqs.send(new SendMessageCommand({

@@ -695,6 +695,12 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   handler satisfies RouteHandlerConfig<"/api/blog-keywords/register-blog">
 }
 
+// Validate ..\app\api\blog-keywords\track-all-lambda\route.ts
+{
+  const handler = {} as typeof import("..\\app\\api\\blog-keywords\\track-all-lambda\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/blog-keywords/track-all-lambda">
+}
+
 // Validate ..\app\api\blog-keywords\track-all\route.ts
 {
   const handler = {} as typeof import("..\\app\\api\\blog-keywords\\track-all\\route.js")
@@ -759,6 +765,12 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   const handler = {} as typeof import("..\\app\\api\\keyword-analysis\\route.js")
   handler satisfies RouteHandlerConfig<"/api/keyword-analysis">
+}
+
+// Validate ..\app\api\lambda\trigger-tracking\route.ts
+{
+  const handler = {} as typeof import("..\\app\\api\\lambda\\trigger-tracking\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/lambda/trigger-tracking">
 }
 
 // Validate ..\app\api\public\academies\route.ts
@@ -849,6 +861,12 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\sessions\\route.js")
   handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/sessions">
+}
+
+// Validate ..\app\api\smartplace-keywords\track-all-lambda\route.ts
+{
+  const handler = {} as typeof import("..\\app\\api\\smartplace-keywords\\track-all-lambda\\route.js")
+  handler satisfies RouteHandlerConfig<"/api/smartplace-keywords/track-all-lambda">
 }
 
 // Validate ..\app\api\smartplace-keywords\track-all-realtime\route.ts

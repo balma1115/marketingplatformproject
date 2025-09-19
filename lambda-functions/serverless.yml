@@ -13,6 +13,7 @@ provider:
     DATABASE_URL: ${env:DATABASE_URL}
     NODE_ENV: ${self:provider.stage}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+    # AWS_REGION is automatically set by Lambda, don't include it
 
   # VPC Configuration for RDS access
   vpc:
@@ -42,35 +43,45 @@ provider:
           Resource: '*'
 
 plugins:
+  - serverless-dotenv-plugin
   - serverless-plugin-typescript
   - serverless-offline
+
+package:
+  patterns:
+    - '!node_modules/aws-sdk/**' # AWS SDK is provided by Lambda runtime
+    - '!node_modules/@sparticuz/chromium/**' # Should be in layer
+    - '!node_modules/puppeteer-core/**' # Should be in layer
+    - '!.git/**'
+    - '!.serverless/**'
+    - '!layers/**'
+    - '!test/**'
+    - '!*.md'
+    - '!.env*'
+    - '!deploy*.js'
+    - '!deploy*.bat'
+    - '!deploy*.ps1'
 
 functions:
   smartplaceTracker:
     handler: smartplace-tracker/index.handler
     description: Track SmartPlace rankings on Naver Map
-    reservedConcurrentExecutions: 50 # Limit concurrent executions
-    layers:
-      - !Ref ChromiumLambdaLayer
-      - !Ref PrismaLambdaLayer
+    # reservedConcurrentExecutions: 50 # Not supported in Serverless v3
     events:
       - sqs:
           arn: !GetAtt SmartPlaceTrackingQueue.Arn
           batchSize: 1
-          maximumBatchingWindowInSeconds: 0
+          # maximumBatchingWindowInSeconds: 0
 
   blogTracker:
     handler: blog-tracker/index.handler
     description: Track Blog rankings on Naver Search
-    reservedConcurrentExecutions: 30 # Limit concurrent executions
-    layers:
-      - !Ref ChromiumLambdaLayer
-      - !Ref PrismaLambdaLayer
+    # reservedConcurrentExecutions: 30 # Not supported in Serverless v3
     events:
       - sqs:
           arn: !GetAtt BlogTrackingQueue.Arn
           batchSize: 1
-          maximumBatchingWindowInSeconds: 0
+          # maximumBatchingWindowInSeconds: 0
 
   # Scheduled trigger for daily tracking (optional)
   scheduledTrigger:
@@ -81,45 +92,45 @@ functions:
           rate: cron(0 15 * * ? *) # UTC 15:00 = KST 00:00 (midnight)
           enabled: ${self:custom.scheduleEnabled.${self:provider.stage}}
 
-layers:
-  chromium:
-    path: layers/chromium-layer.zip
-    name: ${self:service}-chromium-${self:provider.stage}
-    description: Chromium binary for Lambda
-    compatibleRuntimes:
-      - nodejs18.x
-    retain: false
-
-  prisma:
-    path: layers/prisma-layer.zip
-    name: ${self:service}-prisma-${self:provider.stage}
-    description: Prisma ORM client
-    compatibleRuntimes:
-      - nodejs18.x
-    retain: false
+# layers:
+#   chromium:
+#     path: layers/chromium-layer.zip
+#     name: ${self:service}-chromium-${self:provider.stage}
+#     description: Chromium binary for Lambda
+#     compatibleRuntimes:
+#       - nodejs18.x
+#     retain: false
+#
+#   prisma:
+#     path: layers/prisma-layer.zip
+#     name: ${self:service}-prisma-${self:provider.stage}
+#     description: Prisma ORM client
+#     compatibleRuntimes:
+#       - nodejs18.x
+#     retain: false
 
 resources:
   Resources:
-    # Lambda Layers
-    ChromiumLambdaLayer:
-      Type: AWS::Lambda::LayerVersion
-      Properties:
-        LayerName: ${self:service}-chromium-${self:provider.stage}
-        Content:
-          S3Bucket: !Ref ServerlessDeploymentBucket
-          S3Key: layers/chromium-layer.zip
-        CompatibleRuntimes:
-          - nodejs18.x
-
-    PrismaLambdaLayer:
-      Type: AWS::Lambda::LayerVersion
-      Properties:
-        LayerName: ${self:service}-prisma-${self:provider.stage}
-        Content:
-          S3Bucket: !Ref ServerlessDeploymentBucket
-          S3Key: layers/prisma-layer.zip
-        CompatibleRuntimes:
-          - nodejs18.x
+    # Lambda Layers - Commented out for now
+    # ChromiumLambdaLayer:
+    #   Type: AWS::Lambda::LayerVersion
+    #   Properties:
+    #     LayerName: ${self:service}-chromium-${self:provider.stage}
+    #     Content:
+    #       S3Bucket: !Ref ServerlessDeploymentBucket
+    #       S3Key: layers/chromium-layer.zip
+    #     CompatibleRuntimes:
+    #       - nodejs18.x
+    #
+    # PrismaLambdaLayer:
+    #   Type: AWS::Lambda::LayerVersion
+    #   Properties:
+    #     LayerName: ${self:service}-prisma-${self:provider.stage}
+    #     Content:
+    #       S3Bucket: !Ref ServerlessDeploymentBucket
+    #       S3Key: layers/prisma-layer.zip
+    #     CompatibleRuntimes:
+    #       - nodejs18.x
 
     # SQS Queues
     SmartPlaceTrackingQueue:

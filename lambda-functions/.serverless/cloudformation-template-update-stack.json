@@ -1,0 +1,675 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      }
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "SmartplaceTrackerLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/marketingplat-tracking-production-smartplaceTracker"
+      }
+    },
+    "BlogTrackerLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/marketingplat-tracking-production-blogTracker"
+      }
+    },
+    "ScheduledTriggerLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/marketingplat-tracking-production-scheduledTrigger"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "marketingplat-tracking",
+                  "production",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:TagResource"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/marketingplat-tracking-production*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/marketingplat-tracking-production*:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:*",
+                    "cloudwatch:PutMetricData",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:CreateNetworkInterface",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DeleteNetworkInterface"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "SmartPlaceTrackingQueue",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "BlogTrackingQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "marketingplat-tracking",
+              "production",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    "SmartplaceTrackerLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/marketingplat-tracking/production/1758246938664-2025-09-19T01:55:38.664Z/marketingplat-tracking.zip"
+        },
+        "Handler": "smartplace-tracker/index.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "marketingplat-tracking-production-smartplaceTracker",
+        "MemorySize": 2048,
+        "Timeout": 120,
+        "Description": "Track SmartPlace rankings on Naver Map",
+        "Environment": {
+          "Variables": {
+            "DATABASE_URL": "postgresql://postgres:Asungmini77A@marketingplat-db.c1a2b3c4d5e6.ap-northeast-2.rds.amazonaws.com:5432/marketingplat",
+            "NODE_ENV": "production",
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+            "SMARTPLACE_QUEUE_URL": "https://sqs.ap-northeast-2.amazonaws.com/YOUR_ACCOUNT_ID/marketingplat-smartplace-queue-production",
+            "BLOG_QUEUE_URL": "https://sqs.ap-northeast-2.amazonaws.com/YOUR_ACCOUNT_ID/marketingplat-blog-queue-production",
+            "LAMBDA_SECURITY_GROUP_ID": "sg-0584fd2a2cc9d17e1",
+            "LAMBDA_SUBNET_ID_1": "subnet-0d07a6427c0454dc7",
+            "LAMBDA_SUBNET_ID_2": "subnet-00a38eb1a1c14c391",
+            "VPC_ID": "vpc-0e65493a347d22bc8",
+            "CLOUDWATCH_NAMESPACE": "MarketingPlat/Tracking"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            "sg-0584fd2a2cc9d17e1"
+          ],
+          "SubnetIds": [
+            "subnet-0d07a6427c0454dc7",
+            "subnet-00a38eb1a1c14c391"
+          ]
+        }
+      },
+      "DependsOn": [
+        "SmartplaceTrackerLogGroup"
+      ]
+    },
+    "BlogTrackerLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/marketingplat-tracking/production/1758246938664-2025-09-19T01:55:38.664Z/marketingplat-tracking.zip"
+        },
+        "Handler": "blog-tracker/index.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "marketingplat-tracking-production-blogTracker",
+        "MemorySize": 2048,
+        "Timeout": 120,
+        "Description": "Track Blog rankings on Naver Search",
+        "Environment": {
+          "Variables": {
+            "DATABASE_URL": "postgresql://postgres:Asungmini77A@marketingplat-db.c1a2b3c4d5e6.ap-northeast-2.rds.amazonaws.com:5432/marketingplat",
+            "NODE_ENV": "production",
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+            "SMARTPLACE_QUEUE_URL": "https://sqs.ap-northeast-2.amazonaws.com/YOUR_ACCOUNT_ID/marketingplat-smartplace-queue-production",
+            "BLOG_QUEUE_URL": "https://sqs.ap-northeast-2.amazonaws.com/YOUR_ACCOUNT_ID/marketingplat-blog-queue-production",
+            "LAMBDA_SECURITY_GROUP_ID": "sg-0584fd2a2cc9d17e1",
+            "LAMBDA_SUBNET_ID_1": "subnet-0d07a6427c0454dc7",
+            "LAMBDA_SUBNET_ID_2": "subnet-00a38eb1a1c14c391",
+            "VPC_ID": "vpc-0e65493a347d22bc8",
+            "CLOUDWATCH_NAMESPACE": "MarketingPlat/Tracking"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            "sg-0584fd2a2cc9d17e1"
+          ],
+          "SubnetIds": [
+            "subnet-0d07a6427c0454dc7",
+            "subnet-00a38eb1a1c14c391"
+          ]
+        }
+      },
+      "DependsOn": [
+        "BlogTrackerLogGroup"
+      ]
+    },
+    "ScheduledTriggerLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/marketingplat-tracking/production/1758246938664-2025-09-19T01:55:38.664Z/marketingplat-tracking.zip"
+        },
+        "Handler": "scheduled-trigger/index.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "marketingplat-tracking-production-scheduledTrigger",
+        "MemorySize": 2048,
+        "Timeout": 120,
+        "Description": "Trigger daily tracking at midnight KST",
+        "Environment": {
+          "Variables": {
+            "DATABASE_URL": "postgresql://postgres:Asungmini77A@marketingplat-db.c1a2b3c4d5e6.ap-northeast-2.rds.amazonaws.com:5432/marketingplat",
+            "NODE_ENV": "production",
+            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+            "SMARTPLACE_QUEUE_URL": "https://sqs.ap-northeast-2.amazonaws.com/YOUR_ACCOUNT_ID/marketingplat-smartplace-queue-production",
+            "BLOG_QUEUE_URL": "https://sqs.ap-northeast-2.amazonaws.com/YOUR_ACCOUNT_ID/marketingplat-blog-queue-production",
+            "LAMBDA_SECURITY_GROUP_ID": "sg-0584fd2a2cc9d17e1",
+            "LAMBDA_SUBNET_ID_1": "subnet-0d07a6427c0454dc7",
+            "LAMBDA_SUBNET_ID_2": "subnet-00a38eb1a1c14c391",
+            "VPC_ID": "vpc-0e65493a347d22bc8",
+            "CLOUDWATCH_NAMESPACE": "MarketingPlat/Tracking"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            "sg-0584fd2a2cc9d17e1"
+          ],
+          "SubnetIds": [
+            "subnet-0d07a6427c0454dc7",
+            "subnet-00a38eb1a1c14c391"
+          ]
+        }
+      },
+      "DependsOn": [
+        "ScheduledTriggerLogGroup"
+      ]
+    },
+    "SmartplaceTrackerLambdaVersionCvh91CSD6uMOJ0ZLpugu5LWbIvSWj42ySRS2ASME8": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "SmartplaceTrackerLambdaFunction"
+        },
+        "CodeSha256": "4Zp8LxZwe8Y6Xrbb0QhAGjioDawLpwPTEbMo8v76E0E=",
+        "Description": "Track SmartPlace rankings on Naver Map"
+      }
+    },
+    "BlogTrackerLambdaVersionQQEPpVTweFgbVfqCIy4o3CO44uNdr0uSUn1oqb9jbTo": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "BlogTrackerLambdaFunction"
+        },
+        "CodeSha256": "4Zp8LxZwe8Y6Xrbb0QhAGjioDawLpwPTEbMo8v76E0E=",
+        "Description": "Track Blog rankings on Naver Search"
+      }
+    },
+    "ScheduledTriggerLambdaVersionph4CZ9UIvrX57UAavf8yhV8qAm8t4TLODdcLFItI8": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "ScheduledTriggerLambdaFunction"
+        },
+        "CodeSha256": "4Zp8LxZwe8Y6Xrbb0QhAGjioDawLpwPTEbMo8v76E0E=",
+        "Description": "Trigger daily tracking at midnight KST"
+      }
+    },
+    "ScheduledTriggerEventsRuleSchedule1": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "ScheduleExpression": "cron(0 15 * * ? *)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "ScheduledTriggerLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Id": "scheduledTriggerSchedule"
+          }
+        ]
+      }
+    },
+    "ScheduledTriggerLambdaPermissionEventsRuleSchedule1": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ScheduledTriggerLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "ScheduledTriggerEventsRuleSchedule1",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "SmartplaceTrackerEventSourceMappingSQSSmartPlaceTrackingQueue": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "DependsOn": [
+        "IamRoleLambdaExecution"
+      ],
+      "Properties": {
+        "BatchSize": 1,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "SmartPlaceTrackingQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SmartplaceTrackerLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Enabled": true
+      }
+    },
+    "BlogTrackerEventSourceMappingSQSBlogTrackingQueue": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "DependsOn": [
+        "IamRoleLambdaExecution"
+      ],
+      "Properties": {
+        "BatchSize": 1,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "BlogTrackingQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "BlogTrackerLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Enabled": true
+      }
+    },
+    "SmartPlaceTrackingQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "marketingplat-tracking-smartplace-queue-production",
+        "VisibilityTimeout": 300,
+        "MessageRetentionPeriod": 1209600,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "SmartPlaceDeadLetterQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 3
+        }
+      }
+    },
+    "SmartPlaceDeadLetterQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "marketingplat-tracking-smartplace-dlq-production",
+        "MessageRetentionPeriod": 1209600
+      }
+    },
+    "BlogTrackingQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "marketingplat-tracking-blog-queue-production",
+        "VisibilityTimeout": 300,
+        "MessageRetentionPeriod": 1209600,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "BlogDeadLetterQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 3
+        }
+      }
+    },
+    "BlogDeadLetterQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "marketingplat-tracking-blog-dlq-production",
+        "MessageRetentionPeriod": 1209600
+      }
+    },
+    "SmartPlaceErrorAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "marketingplat-tracking-smartplace-errors-production",
+        "AlarmDescription": "Alert when SmartPlace tracking errors exceed threshold",
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 5,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": "marketingplat-tracking-production-smartplaceTracker"
+          }
+        ]
+      }
+    },
+    "BlogErrorAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "marketingplat-tracking-blog-errors-production",
+        "AlarmDescription": "Alert when Blog tracking errors exceed threshold",
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 5,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": "marketingplat-tracking-production-blogTracker"
+          }
+        ]
+      }
+    },
+    "DLQAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "marketingplat-tracking-dlq-messages-production",
+        "AlarmDescription": "Alert when messages are sent to DLQ",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": "marketingplat-tracking-smartplace-dlq-production"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      },
+      "Export": {
+        "Name": "sls-marketingplat-tracking-production-ServerlessDeploymentBucketName"
+      }
+    },
+    "SmartplaceTrackerLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "SmartplaceTrackerLambdaVersionCvh91CSD6uMOJ0ZLpugu5LWbIvSWj42ySRS2ASME8"
+      },
+      "Export": {
+        "Name": "sls-marketingplat-tracking-production-SmartplaceTrackerLambdaFunctionQualifiedArn"
+      }
+    },
+    "BlogTrackerLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "BlogTrackerLambdaVersionQQEPpVTweFgbVfqCIy4o3CO44uNdr0uSUn1oqb9jbTo"
+      },
+      "Export": {
+        "Name": "sls-marketingplat-tracking-production-BlogTrackerLambdaFunctionQualifiedArn"
+      }
+    },
+    "ScheduledTriggerLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "ScheduledTriggerLambdaVersionph4CZ9UIvrX57UAavf8yhV8qAm8t4TLODdcLFItI8"
+      },
+      "Export": {
+        "Name": "sls-marketingplat-tracking-production-ScheduledTriggerLambdaFunctionQualifiedArn"
+      }
+    },
+    "SmartPlaceQueueUrl": {
+      "Description": "URL of the SmartPlace tracking SQS queue",
+      "Value": {
+        "Ref": "SmartPlaceTrackingQueue"
+      },
+      "Export": {
+        "Name": "marketingplat-tracking-smartplace-queue-url-production"
+      }
+    },
+    "BlogQueueUrl": {
+      "Description": "URL of the Blog tracking SQS queue",
+      "Value": {
+        "Ref": "BlogTrackingQueue"
+      },
+      "Export": {
+        "Name": "marketingplat-tracking-blog-queue-url-production"
+      }
+    },
+    "SmartPlaceQueueArn": {
+      "Description": "ARN of the SmartPlace tracking SQS queue",
+      "Value": {
+        "Fn::GetAtt": [
+          "SmartPlaceTrackingQueue",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "marketingplat-tracking-smartplace-queue-arn-production"
+      }
+    },
+    "BlogQueueArn": {
+      "Description": "ARN of the Blog tracking SQS queue",
+      "Value": {
+        "Fn::GetAtt": [
+          "BlogTrackingQueue",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "marketingplat-tracking-blog-queue-arn-production"
+      }
+    }
+  }
+}

@@ -32,7 +32,7 @@
     "@aws-sdk/client-lambda": "^3.888.0",
     "@aws-sdk/client-s3": "^3.888.0",
     "@aws-sdk/client-secrets-manager": "^3.888.0",
-    "@aws-sdk/client-sqs": "^3.888.0",
+    "@aws-sdk/client-sqs": "^3.891.0",
     "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@prisma/client": "^6.15.0",

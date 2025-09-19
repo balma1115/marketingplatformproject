@@ -1,0 +1,600 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   Int                   @id @default(autoincrement())
+  email                String                @unique
+  password             String
+  name                 String
+  phone                String?
+  role                 String                @default("user")
+  plan                 String                @default("basic")
+  isActive             Boolean               @default(true) @map("is_active")
+  academyName          String?               @map("academy_name")
+  academyAddress       String?               @map("academy_address")
+  agencyId             Int?                  @map("agency_id")
+  branchId             Int?                  @map("branch_id")
+  coin                 Float                 @default(100.00)
+  usedCoin             Float                 @default(0.00) @map("used_coin")
+  purchasedCoin        Float                 @default(0.00) @map("purchased_coin")
+  joinDate             DateTime              @default(now()) @map("join_date")
+  planExpiry           DateTime?             @map("plan_expiry")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  // 네이버 광고 API 필드 (기존)
+  naverAdApiKey        String?               @map("naver_ad_api_key") @db.Text
+  naverAdSecret        String?               @map("naver_ad_secret") @db.Text
+  naverAdCustomerId    String?               @map("naver_ad_customer_id")
+
+  // 추가 네이버 광고 API 필드
+  naverAdsAccessKey    String?               @map("naver_ads_access_key") @db.Text
+  naverAdsSecretKey    String?               @map("naver_ads_secret_key") @db.Text
+  naverAdsCustomerId   String?               @map("naver_ads_customer_id")
+
+  // 네이버 플레이스 정보
+  naverPlaceId         String?               @map("naver_place_id")
+  placeName            String?               @map("place_name")
+  businessName         String?               @map("business_name")
+  businessNumber       String?               @map("business_number")
+  businessAddress      String?               @map("business_address") @db.Text
+
+  instagramAccessToken String?               @map("instagram_access_token") @db.Text
+  instagramUserId      String?               @map("instagram_user_id")
+
+  // 승인 관련 필드
+  isApproved           Boolean               @default(false) @map("is_approved")
+  approvedAt           DateTime?             @map("approved_at")
+  approvedBy           Int?                  @map("approved_by")
+
+  // KT패스 인증 관련 필드
+  ktPassVerified       Boolean               @default(false) @map("kt_pass_verified")
+  ktPassVerifiedAt     DateTime?             @map("kt_pass_verified_at")
+
+  // Relations
+  aiGenerationLogs     AIGenerationLog[]
+  apiUsageLogs         APIUsageLog[]
+  blogContent          BlogContent[]
+  blogProjects         BlogProject[]
+  blogTrackingProjects BlogTrackingProject[]
+  keywords             Keyword[]
+  rankingResults       RankingResult[]
+  sessions             Session[]
+  smartplaceInfo       SmartplaceInfo[]
+  smartPlace           SmartPlace?
+  trackingProjects     TrackingProject[]
+  trackingSessions     TrackingSession[]
+  userSubjects         UserSubject[]
+  managedBranches      Branch[]              @relation("BranchManager")
+  approver             User?                 @relation("ApproverRelation", fields: [approvedBy], references: [id])
+  approvedUsers        User[]                @relation("ApproverRelation")
+  naverAdsCampaigns    NaverAdsCampaign[]
+  naverAdsPlaces       NaverAdsPlace[]
+  naverAdsData         NaverAdsData[]
+
+  @@map("users")
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model BlogProject {
+  id             Int             @id @default(autoincrement())
+  userId         Int             @map("user_id")
+  blogName       String?         @map("blog_name")
+  blogUrl        String?         @map("blog_url")
+  name           String
+  targetBlogUrl  String?         @map("target_blog_url")
+  description    String?         @db.Text
+  isActive       Boolean         @default(true) @map("is_active")
+  lastUpdated    DateTime?       @map("last_updated")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords       BlogKeyword[]
+  oldKeywords    Keyword[]       @relation("oldKeywords")
+  rankingResults RankingResult[]
+
+  @@map("blog_projects")
+}
+
+model BlogKeyword {
+  id          String          @id @default(cuid())
+  userId      Int             @map("user_id")
+  projectId   Int             @map("project_id")
+  keyword     String
+  isActive    Boolean         @default(true) @map("is_active")
+  lastChecked DateTime?       @map("last_checked")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  project     BlogProject     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rankings    BlogRanking[]
+
+  @@map("blog_keywords")
+}
+
+model BlogRanking {
+  id             String      @id @default(cuid())
+  keywordId      String      @map("keyword_id")
+  checkDate      DateTime    @map("check_date")
+  rank           Int?        // Blog tab rank (1-30)
+  mainTabExposed Boolean     @default(false) @map("main_tab_exposed") // Main tab exposure
+  found          Boolean     @default(false)
+  url            String?
+  title          String?
+  totalResults   Int         @default(0) @map("total_results")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  keyword        BlogKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@map("blog_rankings")
+}
+
+model Keyword {
+  id             Int             @id @default(autoincrement())
+  projectId      Int?            @map("project_id")
+  userId         Int             @map("user_id")
+  keyword        String
+  location       String?
+  type           String          @default("general")
+  searchVolume   Int?            @map("search_volume")
+  competition    String?
+  avgCpc         Float?          @map("avg_cpc")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project        BlogProject?    @relation("oldKeywords", fields: [projectId], references: [id], onDelete: Cascade)
+  rankingResults RankingResult[]
+
+  @@map("keywords")
+}
+
+model RankingResult {
+  id        Int          @id @default(autoincrement())
+  keywordId Int          @map("keyword_id")
+  projectId Int?         @map("project_id")
+  userId    Int          @map("user_id")
+  checkDate DateTime     @map("check_date")
+  rank      Int?
+  found     Boolean      @default(false)
+  url       String?
+  title     String?
+  type      String       @default("organic")
+  createdAt DateTime     @default(now()) @map("created_at")
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   BlogProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  keyword   Keyword      @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@map("ranking_results")
+}
+
+model SmartPlace {
+  id          String               @id @default(cuid())
+  userId      Int                  @unique @map("user_id")
+  placeId     String               @unique @map("place_id")
+  placeName   String               @map("place_name")
+  address     String?
+  phone       String?
+  rating      Float?
+  reviewCount Int?                 @map("review_count")
+  category    String?
+  lastUpdated DateTime?            @map("last_updated")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords    SmartPlaceKeyword[]
+
+  @@map("smartplaces")
+}
+
+model SmartPlaceKeyword {
+  id          String               @id @default(cuid())
+  userId      Int                  @map("user_id")
+  smartPlaceId String              @map("smartplace_id")
+  keyword     String
+  isActive    Boolean              @default(true) @map("is_active")
+  lastChecked DateTime?            @map("last_checked")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  smartPlace  SmartPlace           @relation(fields: [smartPlaceId], references: [id], onDelete: Cascade)
+  rankings    SmartPlaceRanking[]
+
+  @@map("smartplace_keywords")
+}
+
+model SmartPlaceRanking {
+  id           String            @id @default(cuid())
+  keywordId    String            @map("keyword_id")
+  checkDate    DateTime          @map("check_date")
+  organicRank  Int?              @map("organic_rank")
+  adRank       Int?              @map("ad_rank")
+  totalResults Int               @default(0) @map("total_results")
+  topTenPlaces Json?             @map("top_ten_places")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  keyword      SmartPlaceKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@map("smartplace_rankings")
+}
+
+model SmartplaceInfo {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  placeId     String   @unique @map("place_id")
+  name        String
+  address     String?
+  phone       String?
+  rating      Float?
+  reviewCount Int?     @map("review_count")
+  category    String?
+  lastUpdated DateTime @default(now()) @map("last_updated")
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("smartplace_info")
+}
+
+model AIGenerationLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  serviceType String   @map("service_type")
+  prompt      String?  @db.Text
+  response    String?  @db.Text
+  model       String?
+  tokensUsed  Int?     @map("tokens_used")
+  costInNyang Float?   @map("cost_in_nyang")
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_generation_logs")
+}
+
+model APIUsageLog {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  serviceType  String   @map("service_type")
+  endpoint     String?
+  costInNyang  Float?   @map("cost_in_nyang")
+  responseTime Int?     @map("response_time")
+  statusCode   Int?     @map("status_code")
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_usage_logs")
+}
+
+model BlogContent {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  title       String
+  content     String    @db.Text
+  toc         String?   @db.Text
+  keywords    String?   @db.Text
+  gptType     String?   @map("gpt_type")
+  status      String    @default("draft")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("blog_content")
+}
+
+model TrackingProject {
+  id          Int                @id @default(autoincrement())
+  userId      Int                @map("user_id")
+  placeName   String             @map("place_name")
+  placeId     String             @map("place_id")
+  isActive    Boolean            @default(true) @map("is_active")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  lastUpdated DateTime?          @map("last_updated")
+  keywords    TrackingKeyword[]
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedules   TrackingSchedule[]
+  sessions    TrackingSession[]
+  snapshots   TrackingSnapshot[]
+
+  @@unique([userId, placeId])
+  @@index([userId])
+  @@index([placeId])
+  @@map("tracking_projects")
+}
+
+model TrackingKeyword {
+  id        Int               @id @default(autoincrement())
+  projectId Int               @map("project_id")
+  keyword   String
+  addedDate DateTime          @default(now()) @map("added_date")
+  isActive  Boolean           @default(true) @map("is_active")
+  createdAt DateTime          @default(now()) @map("created_at")
+  project   TrackingProject   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rankings  TrackingRanking[]
+
+  @@unique([projectId, keyword])
+  @@index([projectId])
+  @@index([keyword])
+  @@index([isActive])
+  @@map("tracking_keywords")
+}
+
+model TrackingRanking {
+  id           Int             @id @default(autoincrement())
+  keywordId    Int             @map("keyword_id")
+  sessionId    String?         @map("session_id")
+  organicRank  Int?            @map("organic_rank")
+  adRank       Int?            @map("ad_rank")
+  checkDate    DateTime        @map("check_date")
+  topTenPlaces String?         @db.Text @map("top_ten_places")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  keyword      TrackingKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordId, checkDate])
+  @@index([keywordId])
+  @@index([checkDate])
+  @@index([sessionId])
+  @@map("tracking_rankings")
+}
+
+model TrackingSchedule {
+  id           Int             @id @default(autoincrement())
+  projectId    Int             @map("project_id")
+  scheduleName String?         @map("schedule_name")
+  scheduleTime String          @map("schedule_time")
+  isActive     Boolean         @default(true) @map("is_active")
+  lastRun      DateTime?       @map("last_run")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  project      TrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([isActive])
+  @@map("tracking_schedules")
+}
+
+model TrackingSession {
+  id                String            @id @default(uuid())
+  userId            Int               @map("user_id")
+  projectId         Int?              @map("project_id")
+  totalKeywords     Int               @map("total_keywords")
+  completedKeywords Int               @default(0) @map("completed_keywords")
+  status            String            @default("pending")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  project           TrackingProject?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshot          TrackingSnapshot?
+
+  @@index([userId])
+  @@index([status])
+  @@map("tracking_sessions")
+}
+
+model TrackingSnapshot {
+  id                     Int             @id @default(autoincrement())
+  sessionId              String          @unique @map("session_id")
+  projectId              Int             @map("project_id")
+  checkDate              DateTime        @map("check_date")
+  placeName              String          @map("place_name")
+  category               String?         @map("category")
+  directions             String?         @db.Text
+  introduction           String?         @db.Text
+  representativeKeywords String?         @db.Text @map("representative_keywords")
+  businessHours          String?         @db.Text @map("business_hours")
+  phone                  String?
+  address                String?
+  createdAt              DateTime        @default(now()) @map("created_at")
+  project                TrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  session                TrackingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([checkDate])
+  @@map("tracking_snapshots")
+}
+
+model BlogTrackingProject {
+  id            Int                    @id @default(autoincrement())
+  userId        Int                    @map("user_id")
+  blogUrl       String                 @map("blog_url")
+  blogName      String                 @map("blog_name")
+  blogId        String?                @map("blog_id")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+  lastTrackedAt DateTime?              @map("last_tracked_at")
+  keywords      BlogTrackingKeyword[]
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedules     BlogTrackingSchedule[]
+
+  @@index([userId])
+  @@index([blogId])
+  @@map("blog_tracking_projects")
+}
+
+model BlogTrackingKeyword {
+  id        Int                  @id @default(autoincrement())
+  projectId Int                  @map("project_id")
+  keyword   String
+  addedDate DateTime             @default(now()) @map("added_date")
+  isActive  Boolean              @default(true) @map("is_active")
+  createdAt DateTime             @default(now()) @map("created_at")
+  project   BlogTrackingProject  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  results   BlogTrackingResult[]
+
+  @@unique([projectId, keyword])
+  @@index([projectId])
+  @@index([keyword])
+  @@index([isActive])
+  @@map("blog_tracking_keywords")
+}
+
+model BlogTrackingResult {
+  id             Int                 @id @default(autoincrement())
+  keywordId      Int                 @map("keyword_id")
+  mainTabExposed Boolean             @default(false) @map("main_tab_exposed")
+  mainTabRank    Int?                @map("main_tab_rank")
+  blogTabRank    Int?                @map("blog_tab_rank")
+  viewTabRank    Int?                @map("view_tab_rank")
+  adRank         Int?                @map("ad_rank")
+  rankingType    String              @default("organic") @map("ranking_type")
+  trackingDate   DateTime            @map("tracking_date")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  keyword        BlogTrackingKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@index([trackingDate])
+  @@index([keywordId, trackingDate])
+  @@map("blog_tracking_results")
+}
+
+model BlogTrackingSchedule {
+  id           Int                 @id @default(autoincrement())
+  projectId    Int                 @map("project_id")
+  scheduleTime String              @map("schedule_time")
+  isActive     Boolean             @default(true) @map("is_active")
+  lastRun      DateTime?           @map("last_run")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  project      BlogTrackingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, scheduleTime])
+  @@index([projectId])
+  @@index([isActive])
+  @@map("blog_tracking_schedules")
+}
+
+// 과목 테이블
+model Subject {
+  id           Int            @id @default(autoincrement())
+  name         String         @unique // 미래엔영어, 미래엔수학, 미래엔독서
+  code         String         @unique // english, math, reading
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  branches     Branch[]
+  userSubjects UserSubject[]
+
+  @@map("subjects")
+}
+
+// 지사 테이블
+model Branch {
+  id           Int            @id @default(autoincrement())
+  subjectId    Int            @map("subject_id")
+  name         String         // 지사명
+  code         String?        // 지사 코드
+  managerId    Int?           @map("manager_id") // 지사 관리자 user id
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  subject      Subject        @relation(fields: [subjectId], references: [id])
+  manager      User?          @relation("BranchManager", fields: [managerId], references: [id])
+  academies    Academy[]
+  userSubjects UserSubject[]
+
+  @@unique([subjectId, name])
+  @@index([subjectId])
+  @@index([managerId])
+  @@map("branches")
+}
+
+// 학원 테이블
+model Academy {
+  id                 Int            @id @default(autoincrement())
+  branchId           Int            @map("branch_id")
+  name               String         // 학원명
+  address            String?        // 학원 주소
+  phone              String?        // 학원 전화번호
+  registrationNumber String?        @map("registration_number") // 사업자등록번호
+  isActive           Boolean        @default(true) @map("is_active")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  branch             Branch         @relation(fields: [branchId], references: [id])
+  userSubjects       UserSubject[]
+
+  @@unique([branchId, name])
+  @@index([branchId])
+  @@map("academies")
+}
+
+// 사용자-과목별 지사/학원 연결 테이블
+model UserSubject {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  subjectId      Int      @map("subject_id")
+  branchId       Int?     @map("branch_id")
+  academyId      Int?     @map("academy_id")
+  isBranchManager Boolean @default(false) @map("is_branch_manager")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject        Subject  @relation(fields: [subjectId], references: [id])
+  branch         Branch?  @relation(fields: [branchId], references: [id])
+  academy        Academy? @relation(fields: [academyId], references: [id])
+
+  @@unique([userId, subjectId])
+  @@index([userId])
+  @@index([subjectId])
+  @@index([branchId])
+  @@index([academyId])
+  @@map("user_subjects")
+}
+
+// 네이버 광고 캠페인 테이블
+model NaverAdsCampaign {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  campaignId    String   @map("campaign_id")  // 네이버 광고 캠페인 ID
+  campaignType  String   @map("campaign_type") // WEB_SITE, PLACE, POWER_CONTENTS 등
+  name          String
+  status        String   @default("PAUSED")    // ENABLED, PAUSED, DELETED
+  dailyBudget   Float    @default(0) @map("daily_budget")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, campaignId])
+  @@index([userId])
+  @@map("naver_ads_campaigns")
+}
+
+// 네이버 광고 플레이스 테이블
+model NaverAdsPlace {
+  id           String   @id @default(cuid())
+  userId       Int      @map("user_id")
+  placeId      String   @map("place_id")       // 네이버 플레이스 ID
+  placeName    String   @map("place_name")     // 업체명
+  address      String?                         // 주소
+  phoneNumber  String?  @map("phone_number")   // 전화번호
+  category     String?                         // 업종
+  description  String?  @db.Text               // 설명
+  adGroupId    String?  @map("ad_group_id")    // 연결된 광고그룹 ID
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, placeId])
+  @@index([userId])
+  @@index([placeId])
+  @@map("naver_ads_places")
+}
+
+// 네이버 광고 데이터 저장 (90일 TSV 데이터)
+model NaverAdsData {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dataType    String   // e.g., 'DAILY_STATS_90'
+  data        Json     // JSON 형태로 저장된 광고 데이터
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([dataType])
+  @@map("naver_ads_data")
+}
