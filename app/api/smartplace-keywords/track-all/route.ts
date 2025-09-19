@@ -41,7 +41,10 @@ function createSSEStream() {
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     // Lambda를 사용할지 로컬 실행할지 결정
-    const useLambda = process.env.USE_LAMBDA === 'true'
+    // AWS 자격 증명과 큐 URL이 모두 있어야 Lambda 사용
+    const hasAwsCredentials = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
+    const hasQueueUrl = !!process.env.SMARTPLACE_QUEUE_URL
+    const useLambda = (process.env.USE_LAMBDA === 'true' && hasAwsCredentials && hasQueueUrl)
 
     // Lambda 사용 시
     if (useLambda) {

@@ -8,7 +8,10 @@ import { trackingEventManager } from '@/lib/services/event-manager'
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     // Lambda를 사용할지 로컬 실행할지 결정
-    const useLambda = process.env.USE_LAMBDA === 'true' || process.env.BLOG_QUEUE_URL
+    // AWS 자격 증명과 큐 URL이 모두 있어야 Lambda 사용
+    const hasAwsCredentials = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
+    const hasQueueUrl = !!process.env.BLOG_QUEUE_URL
+    const useLambda = (process.env.USE_LAMBDA === 'true' && hasAwsCredentials && hasQueueUrl)
 
     // Lambda 사용 시
     if (useLambda) {
@@ -23,21 +26,29 @@ export async function POST(req: NextRequest) {
 
         if (!response.ok) {
           const error = await response.json()
-          return NextResponse.json({ error: error.error || 'Lambda 실행 실패' }, { status: response.status })
-        }
 
-        const data = await response.json()
-        return NextResponse.json({
-          success: true,
-          message: data.message || 'Lambda를 통해 추적이 시작되었습니다.',
-          executionType: 'lambda',
-          ...data
-        })
+          // Lambda 구성 문제로 503 에러인 경우 로컬로 폴백
+          if (response.status === 503) {
+            console.log('Lambda not configured, falling back to local execution')
+          } else {
+            return NextResponse.json({ error: error.error || 'Lambda 실행 실패' }, { status: response.status })
+          }
+        } else {
+          const data = await response.json()
+          return NextResponse.json({
+            success: true,
+            message: data.message || 'Lambda를 통해 추적이 시작되었습니다.',
+            executionType: 'lambda',
+            ...data
+          })
+        }
       } catch (error) {
         console.error('Lambda execution failed:', error)
         // Lambda 실패 시 로컬로 폴백
         console.log('Falling back to local execution...')
       }
+    } else {
+      console.log(`Lambda not configured (AWS credentials: ${hasAwsCredentials}, Queue URL: ${hasQueueUrl}). Using local execution.`)
     }
 
     // 로컬 실행 (기존 코드)

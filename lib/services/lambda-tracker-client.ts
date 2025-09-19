@@ -34,13 +34,25 @@ interface SmartPlaceKeywordMessage {
 export class LambdaTrackerClient {
   private blogQueueUrl: string
   private smartPlaceQueueUrl: string
+  private isConfigured: boolean
 
   constructor() {
     this.blogQueueUrl = process.env.BLOG_QUEUE_URL || ''
     this.smartPlaceQueueUrl = process.env.SMARTPLACE_QUEUE_URL || ''
 
-    if (!this.blogQueueUrl || !this.smartPlaceQueueUrl) {
-      console.warn('SQS Queue URLs not configured. Lambda tracking will not work.')
+    // AWS 자격 증명 확인
+    const hasAwsCredentials = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
+    const hasQueues = !!(this.blogQueueUrl || this.smartPlaceQueueUrl)
+
+    this.isConfigured = hasAwsCredentials && hasQueues
+
+    if (!this.isConfigured) {
+      console.warn('Lambda tracking not configured:', {
+        hasAwsCredentials,
+        hasQueues,
+        blogQueueUrl: !!this.blogQueueUrl,
+        smartPlaceQueueUrl: !!this.smartPlaceQueueUrl
+      })
     }
   }
 
@@ -116,7 +128,7 @@ export class LambdaTrackerClient {
    * Lambda 추적 사용 가능 여부 확인
    */
   isAvailable(): boolean {
-    return !!(this.blogQueueUrl && this.smartPlaceQueueUrl)
+    return this.isConfigured
   }
 
   /**
