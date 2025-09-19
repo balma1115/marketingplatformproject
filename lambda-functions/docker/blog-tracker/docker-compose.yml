@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  blog-tracker-lambda:
+    build: .
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - AWS_REGION=ap-northeast-2
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./test-event.json:/var/runtime/test-event.json
+    ports:
+      - "9000:8080"
+    command: index.handler

@@ -1,0 +1,17 @@
+{
+  "name": "blog-tracker-container",
+  "version": "1.0.0",
+  "description": "Blog ranking tracker for AWS Lambda Container",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@sparticuz/chromium": "^119.0.2",
+    "puppeteer-core": "^21.11.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}

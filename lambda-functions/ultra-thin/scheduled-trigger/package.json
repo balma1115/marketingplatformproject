@@ -1,0 +1,9 @@
+{
+  "name": "scheduled-trigger-ultra-thin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "@aws-sdk/client-sqs": "^3.0.0"
+  }
+}

@@ -1,16 +1,13 @@
 /**
- * Lambda Function: Blog Ranking Tracker
- * 블로그 순위를 추적하는 Lambda 함수
+ * Lambda Function: Blog Ranking Tracker (Playwright AWS Lambda Version)
+ * playwright-aws-lambda를 사용한 블로그 순위 추적
  */
 
 import { SQSEvent, Context } from 'aws-lambda'
-import chromium from '@sparticuz/chromium-min'
-import * as puppeteer from 'puppeteer-core'
 import { PrismaClient } from '@prisma/client'
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+const playwright = require('playwright-aws-lambda')
 
 const prisma = new PrismaClient()
-const cloudwatch = new CloudWatchClient({ region: process.env.AWS_REGION || 'ap-northeast-2' })
 
 interface BlogTrackingMessage {
   type: 'BLOG_TRACKING'
@@ -42,26 +39,14 @@ function getKSTDate(): Date {
 }
 
 /**
- * URL 정규화
- */
-function normalizeUrl(url: string): string {
-  return url
-    .replace(/^https?:\/\//, '')
-    .replace(/\/$/, '')
-    .replace(/^(m\.|www\.)/, '')
-    .toLowerCase()
-}
-
-/**
  * 블로그 ID 추출
  */
 function extractBlogId(blogUrl: string): string | null {
-  // Handle various Naver blog URL formats
   const patterns = [
-    /blog\.naver\.com\/([^/?]+)/,  // https://blog.naver.com/blogid
-    /blog\.naver\.com\/PostView\.naver\?blogId=([^&]+)/,  // Old format with blogId parameter
-    /m\.blog\.naver\.com\/([^/?]+)/,  // Mobile blog URL
-    /blog\.naver\.com\/.*blogId=([^&]+)/  // Any format with blogId parameter
+    /blog\.naver\.com\/([^/?]+)/,
+    /blog\.naver\.com\/PostView\.naver\?blogId=([^&]+)/,
+    /m\.blog\.naver\.com\/([^/?]+)/,
+    /blog\.naver\.com\/.*blogId=([^&]+)/
   ]
 
   for (const pattern of patterns) {
@@ -71,7 +56,6 @@ function extractBlogId(blogUrl: string): string | null {
     }
   }
 
-  // If no pattern matches, try to extract from the URL path
   try {
     const url = new URL(blogUrl)
     const pathParts = url.pathname.split('/').filter(part => part)
@@ -114,29 +98,22 @@ async function extractBlogRankings(
   try {
     // 1. 메인 통합검색 탭에서 검색
     const searchUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(keyword)}`
-    await page.goto(searchUrl, { waitUntil: 'networkidle0' })
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(2000)
 
-    // 메인 탭 블로그 섹션 확인 - 노출 여부만 확인
+    // 메인 탭 블로그 섹션 확인 - 노출 여부만
     const mainTabInfo = await page.evaluate((blogId: string) => {
-      // 광고 필터링을 위한 셀렉터들
       const adSelectors = [
         '.link_ad', '.ad_label', '[class*="_ad"]', '[class*="splink_ad"]',
-        '.power_link', '.brand_search', '[data-cr-area*="bad"]',
-        '[class*="_fds"]', '[class*="featured"]'
+        '.power_link', '.brand_search'
       ]
 
-      // 비디오, 쇼핑 등 특수 영역 제외
-      const excludeSections = ['video', 'shop', 'news', 'image']
-
-      // 모든 블로그 링크 찾기
       const blogLinks = document.querySelectorAll('a[href*="blog.naver.com"]')
       let isExposed = false
       let firstUrl = ''
 
       blogLinks.forEach((link: any) => {
         const href = link.href || ''
-
-        // 광고 체크
         let isAd = false
         const parent = link.closest('li, article, section')
         if (parent) {
@@ -148,29 +125,13 @@ async function extractBlogRankings(
           }
         }
 
-        // 특수 섹션 제외
-        const section = link.closest('section')
-        if (section) {
-          const sectionClass = section.className.toLowerCase()
-          for (const exclude of excludeSections) {
-            if (sectionClass.includes(exclude)) {
-              isAd = true
-              break
-            }
-          }
-        }
-
-        // 광고가 아니고 해당 블로그의 게시물이면 노출로 표시
         if (!isAd && (href.includes(`/${blogId}/`) || href.includes(`/${blogId}?`) || href.includes(`blogId=${blogId}`))) {
           isExposed = true
           if (!firstUrl) firstUrl = href
         }
       })
 
-      return {
-        exposed: isExposed,
-        firstUrl: firstUrl
-      }
+      return { exposed: isExposed, firstUrl: firstUrl }
     }, blogId)
 
     console.log(`Main tab (노출 여부) for ${blogId}:`, mainTabInfo.exposed)
@@ -181,19 +142,19 @@ async function extractBlogRankings(
       result.url = mainTabInfo.firstUrl
     }
 
-    // 2. 블로그 탭에서 검색 (개선된 로직)
+    // 2. 블로그 탭에서 검색
     const blogTabUrl = `https://search.naver.com/search.naver?ssc=tab.blog.all&sm=tab_jum&query=${encodeURIComponent(keyword)}`
-    await page.goto(blogTabUrl, { waitUntil: 'networkidle0' })
+    await page.goto(blogTabUrl, { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(3000)
 
-    // 블로그 탭에서 순위 찾기 - 정확한 셀렉터 사용
+    // 블로그 탭에서 순위 찾기
     const blogTabInfo = await page.evaluate((blogId: string) => {
       let realRank = 0
       let foundRank = null
       let foundUrl = null
       let totalItems = 0
 
-      // 1. api_subject_bx 내의 블로그 아이템 처리 (상위 노출 영역)
+      // api_subject_bx 내의 블로그 아이템 처리
       const sections = document.querySelectorAll('#main_pack > section')
       sections.forEach(section => {
         const subjectBoxes = section.querySelectorAll('div.api_subject_bx')
@@ -202,17 +163,15 @@ async function extractBlogRankings(
           listItems.forEach(item => {
             totalItems++
 
-            // 광고 체크
             const isAd = item.querySelector('.link_ad') !== null ||
                         item.classList.contains('sp_nreview_ad')
 
             if (!isAd) {
               realRank++
 
-              // 블로그 ID 추출 - 여러 셀렉터 시도
               let currentBlogId = ''
 
-              // 작성자 링크에서 블로그 ID 추출 (가장 정확)
+              // 작성자 링크에서 블로그 ID 추출
               const authorLink = item.querySelector('.sub_txt.sub_name, .user_info > a, .user_box_inner a.name') as HTMLAnchorElement
               if (authorLink && authorLink.href) {
                 const match = authorLink.href.match(/blog\.naver\.com\/([^/?]+)/)
@@ -243,15 +202,13 @@ async function extractBlogRankings(
         })
       })
 
-      // 2. 일반 li.bx 아이템 처리 (api_subject_bx에 속하지 않은 것만)
+      // 일반 li.bx 아이템 처리
       const regularItems = document.querySelectorAll('li.bx')
       regularItems.forEach(item => {
-        // 이미 api_subject_bx에서 처리된 것은 제외
         if (item.closest('div.api_subject_bx')) return
 
         totalItems++
 
-        // 광고 체크
         const itemClass = item.className
         const isAd = itemClass.includes('sp_nreview_ad') ||
                      itemClass.includes('splink') ||
@@ -260,7 +217,6 @@ async function extractBlogRankings(
         if (!isAd) {
           realRank++
 
-          // 블로그 ID 추출
           let currentBlogId = ''
           const authorLink = item.querySelector('.sub_txt.sub_name, .user_info > a, .user_box_inner a.name') as HTMLAnchorElement
           if (authorLink && authorLink.href) {
@@ -270,7 +226,6 @@ async function extractBlogRankings(
             }
           }
 
-          // 폴백: 제목 링크에서 추출
           if (!currentBlogId) {
             const titleLink = item.querySelector('a[href*="blog.naver.com"]') as HTMLAnchorElement
             if (titleLink && titleLink.href) {
@@ -281,7 +236,6 @@ async function extractBlogRankings(
             }
           }
 
-          // 타겟 블로그 확인
           if (currentBlogId === blogId && !foundRank) {
             foundRank = realRank
             const link = item.querySelector('a[href*="blog.naver.com"]') as HTMLAnchorElement
@@ -309,9 +263,6 @@ async function extractBlogRankings(
       result.url = result.url || blogTabInfo.url
     }
 
-    // 3. View 탭에서 검색 (Optional - 현재는 생략)
-    // View 탭은 필요 시 추가 구현
-
   } catch (error) {
     console.error('Error extracting blog rankings:', error)
     throw error
@@ -334,16 +285,10 @@ export const handler = async (event: SQSEvent, context: Context) => {
     console.log(`Processing blog keyword: ${message.keyword} (ID: ${message.keywordId})`)
 
     try {
-      // Chromium 브라우저 실행
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'),
-        headless: chromium.headless as boolean
-      })
-
-      const page = await browser.newPage()
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36')
+      // Playwright 브라우저 실행
+      browser = await playwright.launchChromium()
+      const context = await browser.newContext()
+      const page = await context.newPage()
 
       // 블로그 순위 추출
       const rankings = await extractBlogRankings(page, message.blogUrl, message.keyword)
@@ -359,8 +304,6 @@ export const handler = async (event: SQSEvent, context: Context) => {
           blogTabRank: rankings.blogTabRank,
           viewTabRank: rankings.viewTabRank,
           adRank: rankings.adRank,
-          //found: rankings.found,
-          //url: rankings.url
         }
       })
 
@@ -370,20 +313,7 @@ export const handler = async (event: SQSEvent, context: Context) => {
         data: { /* lastChecked: trackingDate */ }
       })
 
-      // CloudWatch 메트릭 전송
       const duration = (Date.now() - startTime) / 1000
-      await cloudwatch.send(new PutMetricDataCommand({
-        Namespace: 'MarketingPlat/Tracking',
-        MetricData: [{
-          MetricName: 'TrackingDuration',
-          Value: duration,
-          Unit: 'Seconds',
-          Dimensions: [
-            { Name: 'Type', Value: 'Blog' },
-            { Name: 'UserId', Value: String(message.userId) }
-          ]
-        }]
-      }))
 
       results.push({
         keywordId: message.keywordId,
@@ -403,27 +333,12 @@ export const handler = async (event: SQSEvent, context: Context) => {
     } catch (error) {
       console.error(`Error tracking blog keyword ${message.keyword}:`, error)
 
-      // 에러 메트릭 전송
-      await cloudwatch.send(new PutMetricDataCommand({
-        Namespace: 'MarketingPlat/Tracking',
-        MetricData: [{
-          MetricName: 'TrackingErrors',
-          Value: 1,
-          Unit: 'Count',
-          Dimensions: [
-            { Name: 'Type', Value: 'Blog' },
-            { Name: 'UserId', Value: String(message.userId) }
-          ]
-        }]
-      }))
-
       results.push({
         keywordId: message.keywordId,
         success: false,
         error: error.message
       })
 
-      // 에러 발생 시 SQS 메시지를 DLQ로 보내기 위해 에러 throw
       throw error
 
     } finally {

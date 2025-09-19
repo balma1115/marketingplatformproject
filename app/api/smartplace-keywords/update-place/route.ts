@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyAuth } from '@/lib/auth'
+import { withAuth } from '@/lib/auth-middleware'
 
 // PUT - 스마트플레이스 정보 업데이트
 export async function PUT(req: NextRequest) {
-  try {
-    const userId = await verifyAuth(req)
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const body = await req.json()
-    const { placeId, placeName, address, phone } = body
+  return withAuth(req, async (request, userId) => {
+    try {
+      const body = await request.json()
+      const { placeId, placeName, address, phone } = body
 
     // 기존 스마트플레이스 찾기 또는 생성
     let smartPlace = await prisma.smartPlace.findFirst({
@@ -45,9 +41,10 @@ export async function PUT(req: NextRequest) {
       })
     }
 
-    return NextResponse.json({ smartPlace })
-  } catch (error) {
-    console.error('Failed to update SmartPlace:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+      return NextResponse.json({ smartPlace })
+    } catch (error) {
+      console.error('Failed to update SmartPlace:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+  })
 }

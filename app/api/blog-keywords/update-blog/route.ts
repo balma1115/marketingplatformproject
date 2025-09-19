@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyAuth } from '@/lib/auth'
+import { withAuth } from '@/lib/auth-middleware'
 
 // PUT - 블로그 정보 업데이트
 export async function PUT(req: NextRequest) {
-  try {
-    const userId = await verifyAuth(req)
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const body = await req.json()
-    const { blogUrl, blogName, blogId } = body
+  return withAuth(req, async (request, userId) => {
+    try {
+      const body = await request.json()
+      const { blogUrl, blogName, blogId } = body
 
     // 기존 블로그 프로젝트 찾기 또는 생성
     let project = await prisma.blogTrackingProject.findFirst({
@@ -40,9 +36,10 @@ export async function PUT(req: NextRequest) {
       })
     }
 
-    return NextResponse.json({ project })
-  } catch (error) {
-    console.error('Failed to update blog project:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+      return NextResponse.json({ project })
+    } catch (error) {
+      console.error('Failed to update blog project:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+  })
 }

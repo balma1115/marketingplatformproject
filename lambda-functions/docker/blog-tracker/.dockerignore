@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.env.local
+test-event.json
+docker-compose.yml
+build-and-deploy.ps1
+build-and-deploy.sh
+Dockerfile
+.dockerignore
