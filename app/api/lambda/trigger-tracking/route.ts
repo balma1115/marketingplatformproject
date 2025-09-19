@@ -12,8 +12,15 @@ const sqsClient = new SQSClient({
   },
 })
 
-const SMARTPLACE_QUEUE_URL = process.env.SMARTPLACE_QUEUE_URL!
-const BLOG_QUEUE_URL = process.env.BLOG_QUEUE_URL!
+const SMARTPLACE_QUEUE_URL = process.env.SMARTPLACE_QUEUE_URL
+const BLOG_QUEUE_URL = process.env.BLOG_QUEUE_URL
+
+// 환경변수 체크
+if (!SMARTPLACE_QUEUE_URL || !BLOG_QUEUE_URL) {
+  console.error('SQS Queue URLs not configured. Lambda tracking will not work.')
+  console.error('SMARTPLACE_QUEUE_URL:', SMARTPLACE_QUEUE_URL)
+  console.error('BLOG_QUEUE_URL:', BLOG_QUEUE_URL)
+}
 
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
@@ -74,6 +81,9 @@ export async function POST(req: NextRequest) {
           }
         })
 
+        console.log(`Found ${blogKeywords.length} blog keywords for user ${userId}`)
+        console.log('Blog keywords:', blogKeywords.map(k => ({ id: k.id, keyword: k.keyword })))
+
         // 각 키워드를 SQS에 전송
         for (const keyword of blogKeywords) {
           const message = {
@@ -85,10 +95,15 @@ export async function POST(req: NextRequest) {
             projectId: keyword.projectId,
           }
 
-          await sqsClient.send(new SendMessageCommand({
+          console.log(`Sending message to SQS for keyword '${keyword.keyword}':`, message)
+          console.log('Queue URL:', BLOG_QUEUE_URL)
+
+          const result = await sqsClient.send(new SendMessageCommand({
             QueueUrl: BLOG_QUEUE_URL,
             MessageBody: JSON.stringify(message),
           }))
+
+          console.log(`SQS send result for keyword '${keyword.keyword}':`, result.MessageId)
         }
 
         return NextResponse.json({

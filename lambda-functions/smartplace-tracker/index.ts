@@ -4,7 +4,7 @@
  */
 
 import { SQSEvent, Context } from 'aws-lambda'
-import chromium from '@sparticuz/chromium'
+import chromium from '@sparticuz/chromium-min'
 import * as puppeteer from 'puppeteer-core'
 import { PrismaClient } from '@prisma/client'
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
@@ -148,7 +148,7 @@ export const handler = async (event: SQSEvent, context: Context) => {
       browser = await puppeteer.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
+        executablePath: await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'),
         headless: chromium.headless as boolean
       })
 

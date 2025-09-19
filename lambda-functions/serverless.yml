@@ -50,8 +50,6 @@ plugins:
 package:
   patterns:
     - '!node_modules/aws-sdk/**' # AWS SDK is provided by Lambda runtime
-    - '!node_modules/@sparticuz/chromium/**' # Should be in layer
-    - '!node_modules/puppeteer-core/**' # Should be in layer
     - '!.git/**'
     - '!.serverless/**'
     - '!layers/**'

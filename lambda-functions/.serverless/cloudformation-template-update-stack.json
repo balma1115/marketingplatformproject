@@ -230,7 +230,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/marketingplat-tracking/production/1758246938664-2025-09-19T01:55:38.664Z/marketingplat-tracking.zip"
+          "S3Key": "serverless/marketingplat-tracking/production/1758248653940-2025-09-19T02:24:13.940Z/marketingplat-tracking.zip"
         },
         "Handler": "smartplace-tracker/index.handler",
         "Runtime": "nodejs18.x",
@@ -279,7 +279,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/marketingplat-tracking/production/1758246938664-2025-09-19T01:55:38.664Z/marketingplat-tracking.zip"
+          "S3Key": "serverless/marketingplat-tracking/production/1758248653940-2025-09-19T02:24:13.940Z/marketingplat-tracking.zip"
         },
         "Handler": "blog-tracker/index.handler",
         "Runtime": "nodejs18.x",
@@ -328,7 +328,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/marketingplat-tracking/production/1758246938664-2025-09-19T01:55:38.664Z/marketingplat-tracking.zip"
+          "S3Key": "serverless/marketingplat-tracking/production/1758248653940-2025-09-19T02:24:13.940Z/marketingplat-tracking.zip"
         },
         "Handler": "scheduled-trigger/index.handler",
         "Runtime": "nodejs18.x",
@@ -370,36 +370,36 @@
         "ScheduledTriggerLogGroup"
       ]
     },
-    "SmartplaceTrackerLambdaVersionCvh91CSD6uMOJ0ZLpugu5LWbIvSWj42ySRS2ASME8": {
+    "SmartplaceTrackerLambdaVersionrQf4lIGPRKdhTBsr0whMpg8UJ8WdC8fvpWWGjle64BU": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "SmartplaceTrackerLambdaFunction"
         },
-        "CodeSha256": "4Zp8LxZwe8Y6Xrbb0QhAGjioDawLpwPTEbMo8v76E0E=",
+        "CodeSha256": "57RxyPEzesOyx+9OoutKZ2W7ruHh0kjdNuNGidLZqMI=",
         "Description": "Track SmartPlace rankings on Naver Map"
       }
     },
-    "BlogTrackerLambdaVersionQQEPpVTweFgbVfqCIy4o3CO44uNdr0uSUn1oqb9jbTo": {
+    "BlogTrackerLambdaVersion89IA7cCByQ3q5loou3fHQslXUXztl1MWSkMpTyktUQ": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "BlogTrackerLambdaFunction"
         },
-        "CodeSha256": "4Zp8LxZwe8Y6Xrbb0QhAGjioDawLpwPTEbMo8v76E0E=",
+        "CodeSha256": "57RxyPEzesOyx+9OoutKZ2W7ruHh0kjdNuNGidLZqMI=",
         "Description": "Track Blog rankings on Naver Search"
       }
     },
-    "ScheduledTriggerLambdaVersionph4CZ9UIvrX57UAavf8yhV8qAm8t4TLODdcLFItI8": {
+    "ScheduledTriggerLambdaVersionzdnb1aXmQm1i9sVeY8gD9QXGzLgpCxQp1gUTote1c": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ScheduledTriggerLambdaFunction"
         },
-        "CodeSha256": "4Zp8LxZwe8Y6Xrbb0QhAGjioDawLpwPTEbMo8v76E0E=",
+        "CodeSha256": "57RxyPEzesOyx+9OoutKZ2W7ruHh0kjdNuNGidLZqMI=",
         "Description": "Trigger daily tracking at midnight KST"
       }
     },
@@ -605,7 +605,7 @@
     "SmartplaceTrackerLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "SmartplaceTrackerLambdaVersionCvh91CSD6uMOJ0ZLpugu5LWbIvSWj42ySRS2ASME8"
+        "Ref": "SmartplaceTrackerLambdaVersionrQf4lIGPRKdhTBsr0whMpg8UJ8WdC8fvpWWGjle64BU"
       },
       "Export": {
         "Name": "sls-marketingplat-tracking-production-SmartplaceTrackerLambdaFunctionQualifiedArn"
@@ -614,7 +614,7 @@
     "BlogTrackerLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "BlogTrackerLambdaVersionQQEPpVTweFgbVfqCIy4o3CO44uNdr0uSUn1oqb9jbTo"
+        "Ref": "BlogTrackerLambdaVersion89IA7cCByQ3q5loou3fHQslXUXztl1MWSkMpTyktUQ"
       },
       "Export": {
         "Name": "sls-marketingplat-tracking-production-BlogTrackerLambdaFunctionQualifiedArn"
@@ -623,7 +623,7 @@
     "ScheduledTriggerLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ScheduledTriggerLambdaVersionph4CZ9UIvrX57UAavf8yhV8qAm8t4TLODdcLFItI8"
+        "Ref": "ScheduledTriggerLambdaVersionzdnb1aXmQm1i9sVeY8gD9QXGzLgpCxQp1gUTote1c"
       },
       "Export": {
         "Name": "sls-marketingplat-tracking-production-ScheduledTriggerLambdaFunctionQualifiedArn"
