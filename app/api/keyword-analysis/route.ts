@@ -291,19 +291,27 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
+    // 띄어쓰기가 있는 경우 붙인 버전도 함께 검색
+    const keywordWithoutSpaces = keyword.replace(/\s+/g, '')
+    const keywordsToSearch = keyword === keywordWithoutSpaces ?
+      keyword :
+      `${keyword},${keywordWithoutSpaces}`
+
+    console.log('Searching keywords:', keywordsToSearch)
+
     // 1. 키워드 통계 가져오기
     const timestamp = Date.now().toString()
     const method = 'GET'
     const path = '/keywordstool'
     const signature = generateSignature(timestamp, method, path)
-    
+
     let statsResponse
     try {
       statsResponse = await axios({
         method: 'GET',
         url: `${BASE_URL}${path}`,
         params: {
-          hintKeywords: keyword,
+          hintKeywords: keywordsToSearch,
           showDetail: '1'
         },
         headers: {
@@ -316,8 +324,8 @@ export async function POST(request: Request) {
     } catch (apiError: any) {
       console.error('Naver API Error:', apiError.response?.status, apiError.response?.data)
       if (apiError.response?.status === 403) {
-        return NextResponse.json({ 
-          error: 'API 인증 실패. 네이버 검색광고 API 키를 확인해주세요.' 
+        return NextResponse.json({
+          error: 'API 인증 실패. 네이버 검색광고 API 키를 확인해주세요.'
         }, { status: 403 })
       }
       throw apiError
@@ -333,7 +341,7 @@ export async function POST(request: Request) {
         method: 'GET',
         url: `${BASE_URL}${path}`,
         params: {
-          hintKeywords: keyword,
+          hintKeywords: keywordsToSearch,
           showDetail: '1'
           // returnTp 파라미터 제거 - 네이버 API에서 지원하지 않을 수 있음
         },
