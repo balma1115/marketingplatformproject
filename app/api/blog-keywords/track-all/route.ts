@@ -8,22 +8,17 @@ import { trackingEventManager } from '@/lib/services/event-manager'
 export async function POST(req: NextRequest) {
   return withAuth(req, async (request, userId) => {
     // Lambda를 사용할지 로컬 실행할지 결정
-    const useLambda = process.env.USE_LAMBDA === 'true'
+    const useLambda = process.env.USE_LAMBDA === 'true' || process.env.BLOG_QUEUE_URL
 
     // Lambda 사용 시
     if (useLambda) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/lambda/trigger-tracking`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/blog-keywords/track-all-lambda`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Cookie': req.headers.get('cookie') || ''
-          },
-          body: JSON.stringify({
-            type: 'blog',
-            userId: userId.toString(),
-            keywords: [] // 전체 추적
-          })
+          }
         })
 
         if (!response.ok) {
@@ -31,14 +26,17 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: error.error || 'Lambda 실행 실패' }, { status: response.status })
         }
 
+        const data = await response.json()
         return NextResponse.json({
           success: true,
-          message: 'Lambda를 통해 추적이 시작되었습니다.',
-          executionType: 'lambda'
+          message: data.message || 'Lambda를 통해 추적이 시작되었습니다.',
+          executionType: 'lambda',
+          ...data
         })
       } catch (error) {
         console.error('Lambda execution failed:', error)
         // Lambda 실패 시 로컬로 폴백
+        console.log('Falling back to local execution...')
       }
     }
 

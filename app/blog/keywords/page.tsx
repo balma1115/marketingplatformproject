@@ -289,16 +289,69 @@ export default function BlogKeywordManagement() {
         credentials: 'include'
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        await fetchKeywords()
+        // Lambda가 백그라운드에서 처리 중임을 알림
+        if (data.executionType === 'lambda') {
+          const keywordCount = data.keywordCount || 0
+          const estimatedTime = data.estimatedProcessingTime || '약 1-2분'
+
+          alert(`Lambda 추적이 시작되었습니다.\n\n${keywordCount}개 키워드 처리 중...\n예상 소요 시간: ${estimatedTime}`)
+
+          // Lambda 처리 상태를 주기적으로 확인
+          const jobId = data.jobId
+          if (jobId) {
+            const checkInterval = setInterval(async () => {
+              try {
+                const statusResponse = await fetch(`/api/tracking/status/${jobId}`, {
+                  credentials: 'include'
+                })
+
+                if (statusResponse.ok) {
+                  const status = await statusResponse.json()
+
+                  if (status.status === 'completed') {
+                    clearInterval(checkInterval)
+                    setIsTracking(false)
+
+                    // 완료 알림
+                    alert(`Lambda 추적이 완료되었습니다!\n\n성공: ${status.results?.successCount || 0}개\n실패: ${status.results?.failedCount || 0}개`)
+
+                    // 키워드 목록 새로고침
+                    await fetchKeywords()
+                  } else if (status.status === 'failed') {
+                    clearInterval(checkInterval)
+                    setIsTracking(false)
+                    alert(`추적 실패: ${status.error?.message || '알 수 없는 오류'}`)
+                  }
+                  // processing 상태일 때는 계속 대기
+                }
+              } catch (error) {
+                console.error('Status check error:', error)
+              }
+            }, 5000) // 5초마다 상태 확인
+
+            // 최대 3분 후에는 자동으로 중단
+            setTimeout(() => {
+              clearInterval(checkInterval)
+              setIsTracking(false)
+              fetchKeywords() // 최종적으로 한 번 새로고침
+            }, 180000)
+          }
+        } else {
+          // 로컬 실행 완료
+          alert(`순위 추적 완료!\n\n성공: ${data.successCount || 0}개\n실패: ${data.failCount || 0}개`)
+          await fetchKeywords()
+          setIsTracking(false)
+        }
       } else {
-        const data = await response.json()
         alert(data.error || '순위 추적 시작에 실패했습니다.')
+        setIsTracking(false)
       }
     } catch (error) {
       console.error('Failed to track all:', error)
       alert('순위 추적 중 오류가 발생했습니다.')
-    } finally {
       setIsTracking(false)
     }
   }
