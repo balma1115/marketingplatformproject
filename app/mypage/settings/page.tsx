@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Save, AlertCircle, Building2, Globe, Key, User } from 'lucide-react'
-import Layout from '@/components/layout/Layout'
+import Header from '@/components/layout/Header'
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth()
@@ -203,8 +203,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <Layout>
-      <div className="container max-w-4xl mx-auto py-8">
+    <>
+      <Header />
+      <div className="min-h-screen pt-20 bg-gray-50">
+        <div className="container max-w-4xl mx-auto py-8">
         <h1 className="text-3xl font-bold mb-8">설정</h1>
 
         {message && (
@@ -428,6 +430,7 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
-    </Layout>
+      </div>
+    </>
   )
 }
